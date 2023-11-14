@@ -10,33 +10,60 @@ export default function Page() {
 
     const [userId, setUserId] = React.useState('');
     const [password, setPassword] = React.useState('');
+    const [email, setEmail] = React.useState('');
 
+
+    const handleSubmit = (event) => {
+        console.log(userId)
+        console.log(password)
+        console.log(email)
+
+
+        axios.post('http://192.168.1.248:5000/signup', {
+            userId: userId,
+            password: password,
+            email: email
+        }).then(response => {
+            console.log(response.data);
+            if (response.data.success === true) {
+                router.push({pathname:'/components/profile',
+                params: {userId: userId}});
+            }else{
+                console.log(response.data)
+            }
+
+        }).catch(error => {
+            console.error(error);
+        })
+
+    }
 
 
     return (
-        <View>
-            <SafeAreaView>
-                <TextInput
-                    onChangeText = {setUserId}
-                    placeholder = "username"
-                    value ={userId}
+        <SafeAreaView>
+            <TextInput
+                id="email"
+                onChangeText={setEmail}
+                placeholder= "email"
+                value = {email}
+            />
+            <TextInput
+                id="username"
+                onChangeText = {setUserId}
+                placeholder = "username"
+                value ={userId}
 
-                />
-                <TextInput
-                    onChangeText = {setPassword}
-                    value = {password}
-                    placeholder = "password"
-                />
-            </SafeAreaView>
-            <View>
-                <Button onPress={() => console.log("button pressed")}>
-                    Sign up
-                </Button>
-
-            </View>
-        </View>
+            />
+            <TextInput
+                id="password"
+                onChangeText = {setPassword}
+                value = {password}
+                placeholder = "password"
+            />
 
 
+            <Button label={"Sign up"} onPress={() => handleSubmit()}/>
+        </SafeAreaView>
 
     );
 }

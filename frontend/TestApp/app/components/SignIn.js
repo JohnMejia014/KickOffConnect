@@ -51,7 +51,7 @@ export default function Page() {
                     caretHidden={true}
                     onChangeText={setPassword}
                     value={password}
-                    placeholder=""
+                    placeholder="password"
                 />
 
                 <Button label={"Sign in"} onPress={() => handleSubmit()}/>

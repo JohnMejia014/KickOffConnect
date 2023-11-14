@@ -19,17 +19,27 @@ CORS(app)
 def signup():
     userId = request.json['userId']
     password = request.json['password']
+    email = request.json['email']
+
+    userData = db[userId]
+    userEmails = db['Emails']
 
 
-    if users_collection.find_one(userId):
-        return jsonify({'error': 'User already exists'})
+    if userData.find_one({'userId': userId}):
+        return jsonify({'error': 'Username already exists'})
 
+    if userEmails.find_one({'userEmails': email}):
+        return jsonify({'email': 'Email already associated with another account'})
+
+    userEmails.update_one( {'ref': 40}, {'$push' : {'userEmails': email}}, upsert=True)
 
     post = {
-        "userID": userId,
+        "userId": userId,
         "password": password,
+        "email": email,
     }
-    result = users_collection.insert_one(post)
+
+    result = userData.insert_one(post)
     if result.inserted_id:
         return jsonify({'success': True,
                         'userId': userId})
