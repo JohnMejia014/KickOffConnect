@@ -9,3 +9,6 @@ To initialize front end
    2.3: npx expo install expo-image-picker
    2.4: npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar react-native-gesture-handler
    2.5: npx expo install react-native-web react-dom
+   2.6: npm install expo-router
+   2.7: npm install react-native-reanimated
+
