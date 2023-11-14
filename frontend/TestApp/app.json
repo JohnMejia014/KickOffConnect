@@ -22,7 +22,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.TestApp"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -31,6 +32,5 @@
     "plugins": [
       "expo-router"
     ]
-  },
-
+  }
 }
