@@ -11,4 +11,6 @@ To initialize front end
    2.5: npx expo install react-native-web react-dom
    2.6: npm install expo-router
    2.7: npm install react-native-reanimated
+   2.8: npm install @react-native-community/geolocation
+
 
