@@ -14,7 +14,7 @@ export default function Page() {
         <Link style={styles.container} href ={"/components/SignIn"}>Sign in</Link>
         <Link style={styles.container} href ={"/components/SignUp"}>Sign up</Link>
         <Link style={styles.container} href ={"/components/GeoLocation"}>Get Location</Link>
-        <Link style={styles.container} href ={"/components/Map"}>Open Map</Link>
+        <Link style={styles.container} href ={"/components/GetMap"}>Open Map</Link>
       </View>
 
   );
