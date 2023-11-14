@@ -1,7 +1,7 @@
 # KickOffConnect
 Repo where we will develop our mobile applicatio: KickOff Connect
 To initialize front end
-1. CD into the files
+1. CD into testapp
 2. install packages with these commands:
    2.05: if you dont have expo installed run: npm install expo
    2.1: npx expo install react-dom react-native-web @expo/webpack-config
