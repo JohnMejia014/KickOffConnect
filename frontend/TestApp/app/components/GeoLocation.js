@@ -47,3 +47,4 @@ export default function getGeolocation(){
             </View>
           );
 };
+

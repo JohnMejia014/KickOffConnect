@@ -1,0 +1,33 @@
+import React from 'react';
+import MapView, { Circle } from 'react-native-maps';
+
+export default function Map(){
+  const initialRegion = {
+    latitude: 37.7749,
+    longitude: -122.4194,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  };
+
+  const circleCoordinates = {
+    latitude: 37.7749,
+    longitude: -122.4194,
+  };
+
+  return (
+    <MapView
+      style={{ flex: 1 }}
+      initialRegion={initialRegion}
+      provider={MapView.PROVIDER_GOOGLE}
+      apiKey="AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY"
+    >
+      <Circle
+        center={circleCoordinates}
+        radius={500}
+        fillColor="rgba(255, 0, 0, 0.2)"
+        strokeColor="rgba(255, 0, 0, 0.8)"
+      />
+    </MapView>
+  );
+};
+
