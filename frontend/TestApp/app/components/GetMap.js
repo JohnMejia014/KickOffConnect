@@ -1,20 +1,37 @@
 import React from 'react';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
-import { View } from 'react-native';
+import MapView, { Circle, PROVIDER_DEFAULT} from 'react-native-maps';
+import { SafeAreaView } from 'react-native';
 
-export default function GetMap() {
+const GetMap = () => {
+  const initialRegion = {
+    latitude: 37.7749,
+    longitude: -122.4194,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  };
+
+  const circleCoordinates = {
+    latitude: 37.7749,
+    longitude: -122.4194,
+  };
+
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <MapView
-        provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
-        region={{
-          latitude: 37.78825,
-          longitude: -122.4324,
-          latitudeDelta: 0.015,
-          longitudeDelta: 0.0121,
-        }}
-      />
-    </View>
+        initialRegion={initialRegion}
+        provider={MapView.PROVIDER_GOOGLE} // or MapView.PROVIDER_DEFAULT for iOS
+        apiKey="AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY"
+      >
+        <Circle
+          center={circleCoordinates}
+          radius={500}
+          fillColor="rgba(255, 0, 0, 0.2)"
+          strokeColor="rgba(255, 0, 0, 0.8)"
+        />
+      </MapView>
+    </SafeAreaView>
   );
-}
+};
+
+export default GetMap;
