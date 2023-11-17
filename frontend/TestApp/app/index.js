@@ -1,10 +1,19 @@
 import {Platform, StyleSheet, Text, View} from "react-native";
 import { Link } from 'expo-router';
+import * as Location from 'expo-location';
+import React, { useEffect, useState } from 'react';
 
 
 
 
 export default function Page() {
+
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+
+
+
   return (
 
       <View style={styles.main}>
@@ -13,8 +22,7 @@ export default function Page() {
         <Link style={styles.container} href={"/imageUpload"}>Choose image</Link>
         <Link style={styles.container} href ={"/components/SignIn"}>Sign in</Link>
         <Link style={styles.container} href ={"/components/SignUp"}>Sign up</Link>
-        <Link style={styles.container} href ={"/components/GeoLocation"}>Get Location</Link>
-        <Link style={styles.container} href ={"/components/GetMap"}>Open Map</Link>
+        <Link style={styles.container} href={"/components/GetMap"}>Open Map</Link>          
       </View>
 
   );

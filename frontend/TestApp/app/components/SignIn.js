@@ -20,7 +20,7 @@ export default function Page() {
         console.log(password)
 
 
-        axios.post('http://192.168.1.248:5000/login', {
+        axios.post('http://192.168.1.15:5000/login', {
             userId: userId,
             password: password
         }).then(response => {

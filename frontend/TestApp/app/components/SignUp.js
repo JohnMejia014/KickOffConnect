@@ -19,7 +19,7 @@ export default function Page() {
         console.log(email)
 
 
-        axios.post('http://192.168.1.248:5000/signup', {
+        axios.post('http://192.168.1.15:5000/signup', {
             userId: userId,
             password: password,
             email: email

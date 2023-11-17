@@ -34,7 +34,7 @@ export default function Page() {
 
   const sendLocationToServer = async () => {
     try {
-      const response = await fetch('http://192.168.1.14:5000/retrieve-location', {
+      const response = await fetch('http://192.168.1.15:5000/retrieve-location', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
