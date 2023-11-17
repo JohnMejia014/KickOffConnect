@@ -36,7 +36,8 @@ const GetMap = () => {
   if (errorMsg) {
     text = errorMsg;
   } else if (location) {
-    text = JSON.stringify(location);
+    text = JSON.stringify(location.latitude);
+    text += JSON.stringify(location.longitude);
 
     // Log the coordinates
     console.log('Latitude:', latitude);
@@ -86,9 +87,6 @@ const GetMap = () => {
           />
         </MapView>
       )}
-      <SafeAreaView>
-        <Text>{text}</Text>
-      </SafeAreaView>
     </View>
   );
 };
