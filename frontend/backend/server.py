@@ -13,6 +13,23 @@ users_collection = db['Users']
 
 CORS(app)
 
+@app.route('/retrieve-location', methods=['POST'])
+def retrieve_location():
+    data = request.get_json()
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    userId = data.get('userId')
+
+    userData = db[userId]
+    user = userData.find_one({'userId': userId})
+    if user:
+        userData.update_one(
+            {'userId': user['userId']},
+            {'$set': {'latitude': latitude, 'longitude': longitude}}
+        )
+        return jsonify({'message': 'Location updated successfully'})
+
+
 
 
 @app.route('/signup', methods=['POST'])
@@ -79,6 +96,6 @@ def login():
 
 # Running app
 if __name__ == '__main__':
-    app.run(host='192.168.1.248')
+    app.run(host='192.168.1.14')
 
 
