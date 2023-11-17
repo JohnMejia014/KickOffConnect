@@ -1,65 +1,58 @@
-import { Text, View } from 'react-native';
-import Button from "./Button";
-import route from 'expo-router';
-import {useLocation} from "react-router-dom";
-import Geolocation from '@react-native-community/geolocation';
-import axios from 'axios';
-
-
-import {useState} from "react";
-
+import React, { useState, useEffect } from 'react';
+import { Text, View, Button } from 'react-native';
+import * as Location from 'expo-location';
 
 export default function Page() {
+  const [location, setLocation] = useState(null);
+  const [userId, setUserId] = useState('');
 
-    const loc = window.location.search
-    const userId = loc.substring(8)
-    console.log(userId)
+  useEffect(() => {
+    // Assuming userId is set elsewhere in your component or props
+    setUserId(''); // Set your userId here
 
-    const[location,setLocation] = useState(null);
-    const getLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    setLocation({ latitude, longitude });
-                    sendLocationToServer(latitude, longitude);
-                },
-                (error) => {
-                    console.log(error);
-                },
-                { enableHighAccuracy: true, timout: 20000, maximumAge: 1000 }
-            );
-        } else {
-            console.log('Geolocation is not supported by this browser.');
-        }
-    };
+    // Request permission to access the user's location
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permission to access location was denied');
+        return;
+      }
 
-    const sendLocationToServer = async (latitude, longitude) => {
-        try {
-            const response = await fetch('http://192.168.1.14:5000/retrieve-location', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userId, latitude, longitude }),
-            });
-            console.log(response.data);
-        } catch (error) {
-            console.error(error);
-        }
-    };
+      // Get the user's current location
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location.coords);
 
+      // You can also watch for location updates if needed
+      // let subscription = await Location.watchPositionAsync({}, (newLocation) => {
+      //   setLocation(newLocation.coords);
+      // });
 
-    return(
-        <View>
-            <Text>
-                Profile page
-               <Text> <p>
-                   {userId}</p></Text>
-                {location && `Latitude: ${location.latitude}, Longitude: ${location.longitude}`}
+      // Clean up the subscription when the component unmounts
+      // return () => subscription.remove();
+    })();
+  }, []);
 
-            </Text>
-            <button onClick={getLocation}> Get Location</button>
-        </View>
-    );
+  const sendLocationToServer = async () => {
+    try {
+      const response = await fetch('http://192.168.1.14:5000/retrieve-location', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, ...location }),
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <View>
+      <Text>Profile page</Text>
+      <Text>{userId}</Text>
+      {location && <Text>Latitude: {location.latitude}, Longitude: {location.longitude}</Text>}
+      <Button title="Get Location" onPress={sendLocationToServer} />
+    </View>
+  );
 }
