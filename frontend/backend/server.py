@@ -15,13 +15,21 @@ CORS(app)
 
 @app.route('/retrieve-location', methods=['POST'])
 def retrieve_location():
+    #userId = "KevinFdz"
+    #latitude = 21
+    #longitude = 42
     data = request.get_json()
+    userId = data.get('userId')
     latitude = data.get('latitude')
     longitude = data.get('longitude')
-    userId = data.get('userId')
+
+    if not userId or not latitude or not longitude:
+        return jsonify({'error': 'Missing userId, latitude, or longitude'}), 400
 
     userData = db[userId]
     user = userData.find_one({'userId': userId})
+
+
     if user:
         userData.update_one(
             {'userId': user['userId']},
@@ -96,6 +104,4 @@ def login():
 
 # Running app
 if __name__ == '__main__':
-    app.run(host='192.168.1.15')
-
-
+    app.run(host='192.168.18.2')

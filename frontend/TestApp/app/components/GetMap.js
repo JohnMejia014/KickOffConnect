@@ -28,6 +28,7 @@ const GetMap = () => {
       } catch (error) {
         console.error('Error getting location: ', error);
         setErrorMsg('Error getting location: ' + error.message);
+        const lattt = location.coords.latitude
       }
     })();
   }, []);
@@ -38,9 +39,8 @@ const GetMap = () => {
   } else if (location) {
     text = JSON.stringify(location.latitude);
     text += JSON.stringify(location.longitude);
-
     // Log the coordinates
-    console.log('Latitude:', latitude);
+    console.log('Latitude:', lattt);
     console.log('Longitude:', longitude);
   }
 

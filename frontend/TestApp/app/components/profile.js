@@ -4,11 +4,15 @@ import * as Location from 'expo-location';
 
 export default function Page() {
   const [location, setLocation] = useState(null);
-  const [userId, setUserId] = useState('');
+  //const [userId, setUserId] = useState('');
+  const loc = window.location.search
+  const userId = loc.substring(8)
+  console.log(userId)
 
   useEffect(() => {
     // Assuming userId is set elsewhere in your component or props
-    setUserId(''); // Set your userId here
+    // setUserId(''); // Set your userId here
+
 
     // Request permission to access the user's location
     (async () => {
@@ -34,7 +38,7 @@ export default function Page() {
 
   const sendLocationToServer = async () => {
     try {
-      const response = await fetch('http://192.168.1.15:5000/retrieve-location', {
+      const response = await fetch('http://192.168.18.2:5000/retrieve-location', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
