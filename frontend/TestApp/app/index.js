@@ -8,21 +8,11 @@ import React, { useEffect, useState } from 'react';
 
 export default function Page() {
 
-  const [location, setLocation] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
-
-
-
-
   return (
 
       <View style={styles.main}>
-        <Text style={styles.title}>Hello World</Text>
-        <Link style={styles.container} href={"/components/profile"}>User Profile</Link>
-        <Link style={styles.container} href={"/imageUpload"}>Choose image</Link>
-        <Link style={styles.container} href ={"/components/SignIn"}>Sign in</Link>
-        <Link style={styles.container} href ={"/components/SignUp"}>Sign up</Link>
-        <Link style={styles.container} href={"/components/GetMap"}>Open Map</Link>          
+        <Text style={styles.title}>KickOffConnect</Text>
+        <Link style={styles.container} href={"/Navigation/Navigation"}>Enter the app</Link>
       </View>
 
   );
