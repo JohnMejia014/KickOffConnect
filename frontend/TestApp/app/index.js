@@ -1,25 +1,48 @@
-// index.js
-import React from 'react';
-import { AppRegistry } from 'react-native';
-import App from './App'; // Your main app component
-import { name as appName } from '../app.json';
-import { NavigationContainer } from '@react-navigation/native';
-import BottomTabNavigator from './BottomTabNavigator';
-import { AppProvider } from './AppContext';
+import {Platform, StyleSheet, Text, View} from "react-native";
+import { Link } from 'expo-router';
+import * as Location from 'expo-location';
+import React, { useEffect, useState } from 'react';
 
-const Root = () => {
+
+
+
+export default function Page() {
   return (
-    <NavigationContainer>
-      <AppProvider>
-        <BottomTabNavigator />
-      </AppProvider>
-    </NavigationContainer>
+
+      <View style={styles.main}>
+        <Text style={styles.title}>Hello World</Text>
+        <Link style={styles.container} href={"/components/profile"}>User Profile</Link>
+        <Link style={styles.container} href={"/imageUpload"}>Choose image</Link>
+        <Link style={styles.container} href ={"/components/SignIn"}>Sign in</Link>
+        <Link style={styles.container} href ={"/components/SignUp"}>Sign up</Link>
+        <Link style={styles.container} href={"/components/GetMap"}>Open Map</Link>          
+      </View>
+
   );
-};
+}
 
-AppRegistry.registerComponent(appName, () => Root);
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    padding: 12,
+  },
+  main: {
+    flex: 1,
+    justifyContent: "center",
+    marginHorizontal: "auto",
+  },
+  title: {
+    fontSize: 64,
+    fontWeight: "bold",
+  },
+  subtitle: {
+    fontSize: 36,
+    color: "#38434D",
+  },
+  profile:{
+    textAlign: "right",
+    fontSize: 64,
 
-// The below line is required for the app to work correctly in the Expo client
-if (module.hot) {
-    module.hot.accept();
-  }
+  },
+});

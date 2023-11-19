@@ -8,6 +8,7 @@ import ProfileScreen from './components/ProfileScreen';
 const Tab = createBottomTabNavigator();
 
 const BottomTabNavigator = () => {
+    console.log("here")
   return (
     <Tab.Navigator>
       <Tab.Screen name="Feed" component={FeedScreen} />
