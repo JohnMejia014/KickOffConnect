@@ -99,9 +99,38 @@ def login():
                 }
     return jsonify(response)
 
+@app.route('/addEvent', methods=['POST'])
+def addEvent():
+    eventName = request.json['eventName']
+    eventSport = request.json['eventSport']
+    eventDescription = request.json['eventDescription']
+    userHostingEvent = request.json['userName']
+    eventVisibility = request.json['eventVisibility']
+    userData = db[userId]
+
+    # find user in the database
+
+    user = userData.find({'userId': userId})
+
+    # check if user exists
+    if not user:
+        return jsonify({'error': 'User not found'})
+
+    dbpass = None
+    for document in user:
+        dbpass = document["password"]
+
+    # check if password is correct
+    if not password == dbpass:
+        return jsonify({'error': 'Incorrect password'})
+
+    response = {'success': True,
+                'userId': userId
+                }
+    return jsonify(response)
 
 
 
 # Running app
 if __name__ == '__main__':
-    app.run(host='192.168.18.2')
+    app.run(host='0.0.0.0')

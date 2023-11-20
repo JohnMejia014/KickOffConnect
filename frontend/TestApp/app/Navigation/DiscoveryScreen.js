@@ -12,6 +12,12 @@ const DiscoveryScreen = () => {
   const [errorMsg, setErrorMsg] = useState(null);
   const defaultLatitude = 37.7749;
   const defaultLongitude = -122.4194;
+  const [places, setPlaces] = useState([]);
+  const [selectedPlace, setSelectedPlace] = useState(null);
+
+  const handleMarkerPress = (place) => {
+    setSelectedPlace(place);
+  };
 
   useEffect(() => {
     (async () => {
@@ -34,6 +40,35 @@ const DiscoveryScreen = () => {
     })();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        // ... (existing location request)
+        // Fetch nearby places using the Google Places API
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
+            `location=${latitude},${longitude}&radius=10000&type=park|gym&key=AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY`
+        );
+        console.log("Response = ")
+        console.log(response);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch places data');
+        }
+
+        const data = await response.json();
+        console.log("Data = ")
+        console.log(data);
+        console.log("Data.results = ")
+        console.log(data.results);
+        setPlaces(data.results);
+      } catch (error) {
+        console.error('Error getting location/places: ', error);
+        setErrorMsg('Error getting location/places: ' + error.message);
+      }
+    })();
+  }, [latitude, longitude]);
+
   let text = 'Waiting...';
   if (errorMsg) {
     text = errorMsg;
@@ -53,16 +88,7 @@ const DiscoveryScreen = () => {
     longitudeDelta: 0.01,
   };
 
-  const circleCoordinates = location
-    ? {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      }
-    : {
-        latitude: defaultLatitude,
-        longitude: defaultLongitude,
-      };
-
+console.log(places);
   return (
     <View style={{ flex: 1 }}>
       {location && (
@@ -72,20 +98,34 @@ const DiscoveryScreen = () => {
           provider={MapView.PROVIDER_DEFAULT}
           apiKey="AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY"
         >
-          <Circle
-            center={circleCoordinates}
-            radius={500}
-            fillColor="rgba(255, 0, 0, 0.2)"
-            strokeColor="rgba(255, 0, 0, 0.8)"
-          />
           <Marker
-            coordinate={{
+              coordinate={{
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
-            }}
-            title="Your Location"
-            description={`Lat: ${location.coords.latitude}, Long: ${location.coords.longitude}`}
-          />
+              }}
+              title="Your Location"
+              description={`Lat: ${location.coords.latitude}, Long: ${location.coords.longitude}`}
+            />
+        {places.map((place) => (
+            <Marker
+              key={place.place_id}
+              coordinate={{
+                latitude: place.geometry.location.lat,
+                longitude: place.geometry.location.lng,
+              }}
+              title={place.name}
+              description={place.vicinity}
+              onPress={() => handleMarkerPress(place)} // Handle marker press
+            />
+          ))}
+            {/* Display additional information for the selected place */}
+                {selectedPlace && (
+           <  View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, backgroundColor: 'white' }}>
+             <Text>{selectedPlace.name}</Text>
+              <Text>{selectedPlace.vicinity}</Text>
+              {/* Add any other information you want to display */}
+            </View>
+    )}
         </MapView>
       )}
     </View>
