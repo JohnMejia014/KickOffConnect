@@ -1,10 +1,10 @@
 // DiscoveryScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import MapView, { Circle, Marker } from 'react-native-maps';
-import { SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-
+import AddEventComponent from './AddEventComponent';
+import { ActivityIndicator } from 'react-native';
 const DiscoveryScreen = () => {
   const [location, setLocation] = useState(null);
   const [longitude, setLongitude] = useState(null);
@@ -14,10 +14,8 @@ const DiscoveryScreen = () => {
   const defaultLongitude = -122.4194;
   const [places, setPlaces] = useState([]);
   const [selectedPlace, setSelectedPlace] = useState(null);
-
-  const handleMarkerPress = (place) => {
-    setSelectedPlace(place);
-  };
+  const [isAddEventModalVisible, setAddEventModalVisible] = useState(false);
+  const [isMapLoading, setMapLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -35,13 +33,16 @@ const DiscoveryScreen = () => {
       } catch (error) {
         console.error('Error getting location: ', error);
         setErrorMsg('Error getting location: ' + error.message);
-        const lattt = location.coords.latitude
+      }
+      finally{
+        setMapLoading(false);
       }
     })();
   }, []);
 
   useEffect(() => {
     (async () => {
+
       try {
         // ... (existing location request)
         // Fetch nearby places using the Google Places API
@@ -49,64 +50,69 @@ const DiscoveryScreen = () => {
           `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
             `location=${latitude},${longitude}&radius=10000&type=park|gym&key=AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY`
         );
-        console.log("Response = ")
-        console.log(response);
 
         if (!response.ok) {
           throw new Error('Failed to fetch places data');
         }
 
         const data = await response.json();
-        console.log("Data = ")
-        console.log(data);
-        console.log("Data.results = ")
-        console.log(data.results);
         setPlaces(data.results);
       } catch (error) {
         console.error('Error getting location/places: ', error);
         setErrorMsg('Error getting location/places: ' + error.message);
       }
+      finally{
+        setMapLoading(false);
+      }
     })();
   }, [latitude, longitude]);
 
-  let text = 'Waiting...';
-  if (errorMsg) {
-    text = errorMsg;
-  } else if (location) {
-    text = JSON.stringify(location.latitude);
-    text += JSON.stringify(location.longitude);
-    // Log the coordinates
-    console.log('Latitude:', latitude);
-    console.log('Longitude:', longitude);
-  }
-
-  // Set initial region and circle coordinates based on location or defaults
-  const initialRegion = {
-    latitude: location ? location.coords.latitude : defaultLatitude,
-    longitude: location ? location.coords.longitude : defaultLongitude,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
+  const handleMarkerPress = (place) => {
+    setSelectedPlace(place);
   };
 
-console.log(places);
+  const handleAddEventButtonPress = () => {
+    setAddEventModalVisible(true);
+  };
+
+  const handleAddEventSubmit = (eventData) => {
+    // Handle the submitted event data (e.g., send it to a server)
+    console.log('Submitted Event:', eventData);
+    // Close the modal
+    setAddEventModalVisible(false);
+  };
+
   return (
     <View style={{ flex: 1 }}>
-      {location && (
+       {isMapLoading && (
+        // Show the activity indicator while the map is loading
+        <ActivityIndicator
+          style={styles.loadingIndicator}
+          size="large"
+          color="blue"
+        />
+      )}
+      {location && !isMapLoading &&(
         <MapView
           style={{ flex: 1 }}
-          initialRegion={initialRegion}
+          initialRegion={{
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
           provider={MapView.PROVIDER_DEFAULT}
           apiKey="AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY"
         >
           <Marker
-              coordinate={{
+            coordinate={{
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
-              }}
-              title="Your Location"
-              description={`Lat: ${location.coords.latitude}, Long: ${location.coords.longitude}`}
-            />
-        {places.map((place) => (
+            }}
+            title="Your Location"
+            description={`Lat: ${location.coords.latitude}, Long: ${location.coords.longitude}`}
+          />
+          {places.map((place) => (
             <Marker
               key={place.place_id}
               coordinate={{
@@ -115,21 +121,65 @@ console.log(places);
               }}
               title={place.name}
               description={place.vicinity}
-              onPress={() => handleMarkerPress(place)} // Handle marker press
+              onPress={() => handleMarkerPress(place)}
             />
           ))}
-            {/* Display additional information for the selected place */}
-                {selectedPlace && (
-           <  View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, backgroundColor: 'white' }}>
-             <Text>{selectedPlace.name}</Text>
-              <Text>{selectedPlace.vicinity}</Text>
-              {/* Add any other information you want to display */}
-            </View>
-    )}
         </MapView>
+      )}
+
+      {/* Add Event Modal */}
+      <AddEventComponent
+          isVisible={isAddEventModalVisible}
+          onClose={() => setAddEventModalVisible(false)}
+          onSubmit={handleAddEventSubmit}
+          tabBarHeight={1}
+/>
+
+      {/* Plus sign button */}
+      <TouchableOpacity
+        style={styles.plusButton}
+        onPress={handleAddEventButtonPress}
+      >
+        <Text style={{ color: 'white', fontSize: 24 }}>+</Text>
+      </TouchableOpacity>
+
+      {/* Display additional information for the selected place */}
+      {selectedPlace && (
+        <View style={styles.selectedPlaceInfo}>
+          <Text>{selectedPlace.name}</Text>
+          <Text>{selectedPlace.vicinity}</Text>
+          {/* Add any other information you want to display */}
+        </View>
       )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  plusButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: 'blue',
+    borderRadius: 25,
+    padding: 16,
+    zIndex: 1,
+  },
+  selectedPlaceInfo: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: 'white',
+    zIndex: 1,
+  },
+  loadingIndicator: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    zIndex: 1,
+  },
+});
 
 export default DiscoveryScreen;
