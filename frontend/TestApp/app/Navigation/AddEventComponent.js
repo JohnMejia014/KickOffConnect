@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Modal, StyleSheet, TouchableWithoutFeedback, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { CheckBox } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome'; // You can change the icon set based on your preference
+import { Ionicons } from '@expo/vector-icons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import FontAwesomeIcons from 'react-native-vector-icons/FontAwesome';
 
 const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
   const [eventName, setEventName] = useState('');
@@ -22,8 +26,23 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
     'Hockey',
     'Cricket',
     'Rugby',
+    'Football'
     // Add more sports as needed
   ];
+  const sportIcons = {
+    Soccer: 'football',
+    Basketball: 'basketball',
+    Tennis: 'tennis-ball',
+    Volleyball: 'volleyball',
+    Swimming: 'swim',
+    Golf: 'golf',
+    Baseball: 'baseball-bat',
+    Hockey: 'hockey-puck',
+    Cricket: 'cricket',
+    Rugby: 'rugby',
+    Football: 'football'
+    // Add more sports and their corresponding icons as needed
+  };
 
   const handleAddEvent = () => {
     if (eventName.trim() !== '' && eventDescription.trim() !== '' && eventTime.trim() !== '') {
@@ -91,20 +110,49 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
               >
                 <View style={styles.pickerModalContainer}>
                   <View style={styles.pickerModalContent}>
-                    {sports.map((sport) => (
-                      <View key={sport} style={styles.checkboxContainer}>
-                        <CheckBox
-                          title={sport}
-                          checked={selectedSports.includes(sport)}
-                          onPress={() => {
-                            const updatedSports = selectedSports.includes(sport)
-                              ? selectedSports.filter((selectedSport) => selectedSport !== sport)
-                              : [...selectedSports, sport];
-                            setSelectedSports(updatedSports);
-                          }}
-                        />
-                      </View>
-                    ))}
+                  {sports.map((sport) => (
+                    <TouchableOpacity
+                      key={sport}
+                      style={styles.checkboxContainer}
+                      onPress={() => {
+                        const updatedSports = selectedSports.includes(sport)
+                          ? selectedSports.filter((selectedSport) => selectedSport !== sport)
+                          : [...selectedSports, sport];
+                        setSelectedSports(updatedSports);
+                      }}
+                    >
+                      <CheckBox
+                        checked={selectedSports.includes(sport)}
+                        containerStyle={{ marginRight: 10, padding: 0 }}
+                        onPress={() => {
+                          const updatedSports = selectedSports.includes(sport)
+                            ? selectedSports.filter((selectedSport) => selectedSport !== sport)
+                            : [...selectedSports, sport];
+                          setSelectedSports(updatedSports);
+                        }}
+                      />
+                      <Text style={{ marginLeft: 10 }}>{sport}</Text>
+                      {sportIcons[sport] && (
+                        <>
+                          {(sport === 'Soccer') ? (
+                            <Ionicons
+                              name={sportIcons[sport]}
+                              size={20}
+                              color="black"
+                              style={{ marginLeft: 10 }}
+                            />
+                          ) : (
+                            <MaterialCommunityIcons
+                              name={sportIcons[sport]}
+                              size={20}
+                              color="black"
+                              style={{ marginLeft: 10 }}
+                            />
+                          )}
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  ))}
                     <Button title="Done" onPress={() => setShowPickerModal(false)} />
                   </View>
                 </View>
