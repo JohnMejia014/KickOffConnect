@@ -3,9 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import AddingEventComponent from './AddingEventComponent';
 import AddEventComponent from './AddEventComponent';
+import CreateEvent from './CreateEvent';
+
 import { ActivityIndicator } from 'react-native';
 import PopUpForPlace from './PopUpForPlace';
+import { useNavigation } from '@react-navigation/native';
 
 const DiscoveryScreen = () => {
   const [location, setLocation] = useState(null);
@@ -16,7 +20,7 @@ const DiscoveryScreen = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isAddEventModalVisible, setAddEventModalVisible] = useState(false);
   const [isMapLoading, setMapLoading] = useState(true);
-
+ 
   const handleMarkerPress = (place) => {
     setSelectedPlace(place);
     console.log('Number of ratings:', place?.userRatingsTotal);
@@ -95,14 +99,18 @@ const DiscoveryScreen = () => {
       }
     })();
   }, [latitude, longitude]);
-
+  
   const handleAddEventButtonPress = () => {
-    setAddEventModalVisible(true);
+    // Toggle the visibility of CreateEvent
+    setAddEventModalVisible(!isAddEventModalVisible);
   };
 
   const handleAddEventSubmit = (eventData) => {
     console.log('Submitted Event:', eventData);
     setAddEventModalVisible(false);
+    onClose(); // Add this line to close the modal
+    // If needed, you can navigate to the EventDetailsScreen here
+    // setShowEventDetails(true);
   };
 
   return (
@@ -146,12 +154,14 @@ const DiscoveryScreen = () => {
             </MapView>
           )}
 
-          <AddEventComponent
-            isVisible={isAddEventModalVisible}
-            onClose={() => setAddEventModalVisible(false)}
-            onSubmit={handleAddEventSubmit}
-            tabBarHeight={1}
-          />
+            {isAddEventModalVisible && (
+            <CreateEvent
+              isVisible={isAddEventModalVisible}
+              onClose={() => setAddEventModalVisible(false)}
+              onSubmit={handleAddEventSubmit}
+              tabBarHeight={1}
+            />
+          )}
 
           <TouchableOpacity
             style={styles.plusButton}
