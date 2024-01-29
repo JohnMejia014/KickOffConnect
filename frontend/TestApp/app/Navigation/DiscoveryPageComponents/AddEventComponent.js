@@ -9,51 +9,68 @@ import FontAwesomeIcons from 'react-native-vector-icons/FontAwesome';
 import { Calendar } from 'react-native-calendars';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { FontAwesome } from 'react-native-vector-icons';
+import ErrorMessageModal from './ErrorMessageModal';
 
-const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
+const AddEventComponent = ({ isVisible, onClose, onSubmit, initialEventData, onBack}) => {
   const [eventName, setEventName] = useState('');
   const [eventDescription, setEventDescription] = useState('');
   const [selectedSports, setSelectedSports] = useState([]);
   const [showPickerModal, setShowPickerModal] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
-  const [shouldShowShareEventComponent, setShouldShowShareEventComponent] = useState(false);
   const [timeRange, setTimeRange] = useState({ start: '', end: '' });
   const [isStartTimePickerVisible, setStartTimePickerVisible] = useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisible] = useState(false);
   const defaultEndTime = new Date();
     defaultEndTime.setHours(16, 30);
+  const [errorMessage, setErrorMessage] = useState(null);
+
+
+    useEffect(() => {
+      console.log('Initial Data: ' + initialEventData);
+      // Check if initialEventData is provided and update the state
+      if (initialEventData) {
+        setEventName(initialEventData.eventName || '');
+        setEventDescription(initialEventData.eventDescription || '');
+        setSelectedSports(initialEventData.sports || []);
+        setSelectedDate(initialEventData.date || '');
+        setTimeRange({
+          start: initialEventData.timeRange ? initialEventData.timeRange.start : '',
+          end: initialEventData.timeRange ? initialEventData.timeRange.end : '',
+        });
+      }
+    }, [initialEventData]);
 
     const handleAddEvent = () => {
+      // Clear any existing error message
+      setErrorMessage(null);
+    
       // Validate event name
       if (!eventName.trim()) {
-        console.log('Please enter a valid event name.');
+        setErrorMessage('Please enter a valid event name.');
         return;
       }
     
       // Validate selected sports
       if (selectedSports.length === 0) {
-        console.log('Please select at least one sport.');
+        setErrorMessage('Please select at least one sport.');
         return;
       }
     
       // Validate selected date
       if (!selectedDate) {
-        console.log('Please select a date.');
+        setErrorMessage('Please select a date.');
         return;
       }
     
-      // Validate start and end times
-      if (timeRange.start === '' || timeRange.end === '') {
-        console.log('Please select both start and end times.');
+      // Check for empty start or end times
+      if (!timeRange.start.trim() || !timeRange.end.trim()) {
+        setErrorMessage('Start time or End time cannot be empty.');
         return;
       }
     
-      const startTime = new Date(`2023-01-01 ${timeRange.start}`);
-      const endTime = new Date(`2023-01-01 ${timeRange.end}`);
-    
-      if (startTime >= endTime) {
-        console.log('End time must be after the start time.');
+      // Validate time range
+      if (!isValidTimeRange()) {
+        setErrorMessage('End time must be greater than Start time.');
         return;
       }
     
@@ -66,6 +83,26 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
         date: selectedDate,
         timeRange: { start: timeRange.start, end: timeRange.end },
       });
+    };
+    
+    
+    const isValidTimeRange = () => {
+      try {
+        if (!timeRange.start || !timeRange.end) {
+          throw new Error('Start time or end time is missing.');
+        }
+    
+        // Compare time strings directly
+        return timeRange.start < timeRange.end;
+      } catch (error) {
+        console.error('Error in isValidTimeRange:', error.message);
+        return false;
+      }
+    };
+    
+  const handleBackToChooseLocation = () => {
+      // Notify the parent component (CreateEvent) to go back to ChooseLocation
+      onBack();
     };
     
   const showStartTimePicker = () => {
@@ -86,9 +123,9 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
     setTimeRange((prev) => ({ ...prev, start: formattedStartTime }));
     hideStartTimePicker();
   };
-  const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
-  
+  const currentDates = new Date();
+    currentDates.setHours(0, 0, 0, 0);
+  const currentDate = currentDates.toISOString().split('T')[0];
   const handleEndTimeConfirm = (time) => {
     // Format the selected end time
     const formattedEndTime = time.toLocaleTimeString(undefined, {
@@ -173,7 +210,7 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
             >
             <View style={styles.modalContent}>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <FontAwesome name="times" size={24} color="black" />
+              <FontAwesome name="times" size={20} color="black" />
             </TouchableOpacity>
               <Text style={styles.modalHeaderText}>Add Event</Text>
               <TextInput
@@ -268,13 +305,17 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
                   [selectedDate]: { selected: true, selectedColor: 'blue' },
                 }}
                 enableSwipeMonths={true}
+                style={styles.calendar} // Add this line
               />
                 <TouchableOpacity style={styles.inputField} onPress={showStartTimePicker}>
                   <Text>{timeRange.start !== '' ? `Start Time: ${(timeRange.start)}` : 'Select Start Time'}</Text>
+                  <Text style={styles.dropdownArrow}>▼</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.inputField} onPress={showEndTimePicker}>
                   <Text>{timeRange.end !== '' ? `End Time: ${(timeRange.end)}` : 'Select End Time'}</Text>
+                  <Text style={styles.dropdownArrow}>▼</Text>
                 </TouchableOpacity>
+
 
                <DateTimePickerModal
                     isVisible={isStartTimePickerVisible}
@@ -293,6 +334,8 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
                     onCancel={hideEndTimePicker}
                   />
               <Button style={styles.ContinueButton} title="Continue" onPress={handleAddEvent} />
+              <Button style={styles.ContinueButton} title="Back" onPress={handleBackToChooseLocation} />
+              <ErrorMessageModal message={errorMessage} onClose={() => setErrorMessage(null)} />
             </View>
           </View>
         </View>
@@ -304,7 +347,7 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit }) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     padding: 30, // Add padding to avoid content at the edges
     marginTop: 50,
@@ -312,14 +355,17 @@ const styles = StyleSheet.create({
   modalContainer: {
     backgroundColor: 'white',
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: 20,
     overflow: 'hidden', // Ensure borderRadius is respected
-    height: '95%', // Adjust the height as needed
+    height: '96%', // Adjust the height as needed
   },
   modalContent: {
+    flex: 1,
+    flexDirection: 'column',
     padding: 20,
     width: '100%', // Use 100% width
   },
+  
   pickerModalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -373,9 +419,23 @@ const styles = StyleSheet.create({
   closeButton: {
     position: 'absolute',
     top: 10,
-    right: 10,
+    right: 15,
     zIndex: 1,
   },
+  calendar: {
+    borderRadius: 10, // Add this line
+    marginBottom: 15,
+    borderWidth: 2.5, // Adjust the borderWidth to make the border bold
+    borderColor: '#333', // You can also specify the borderColor
+  },
+  dropdownArrow: {
+    position: 'absolute',
+    right: 10,
+    top: '50%',
+    transform: [{ translateY: 0 }], // Adjust translateY to center the arrow vertically
+    fontSize: 16,
+  },
+  
 });
 
 export default AddEventComponent;

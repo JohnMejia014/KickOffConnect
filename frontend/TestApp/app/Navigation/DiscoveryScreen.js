@@ -3,12 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import AddingEventComponent from './AddingEventComponent';
-import AddEventComponent from './AddEventComponent';
-import CreateEvent from './CreateEvent';
+import AddEventComponent from './DiscoveryPageComponents/AddEventComponent';
+import CreateEvent from './DiscoveryPageComponents/CreateEvent';
 
 import { ActivityIndicator } from 'react-native';
-import PopUpForPlace from './PopUpForPlace';
+import PopUpForPlace from './DiscoveryPageComponents/PopUpForPlace';
 import { useNavigation } from '@react-navigation/native';
 
 const DiscoveryScreen = () => {
@@ -20,7 +19,12 @@ const DiscoveryScreen = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isAddEventModalVisible, setAddEventModalVisible] = useState(false);
   const [isMapLoading, setMapLoading] = useState(true);
- 
+  const [createEventVisible, setCreateEventVisible] = useState(false);
+  const [tempSelectedPlaceLocation, setTempSelectedPlaceLocation] = useState(null);
+
+  const toggleCreateEventVisibility = () => {
+    setCreateEventVisible(!createEventVisible);
+  };
   const handleMarkerPress = (place) => {
     setSelectedPlace(place);
     console.log('Number of ratings:', place?.userRatingsTotal);
@@ -30,9 +34,6 @@ const DiscoveryScreen = () => {
     setSelectedPlace(null);
   };
 
-  const handleAddEvent = (address) => {
-    console.log('Create Event at:', address);
-  };
 
   const handleAddRating = () => {
     console.log('Add Rating');
@@ -102,7 +103,20 @@ const DiscoveryScreen = () => {
   
   const handleAddEventButtonPress = () => {
     // Toggle the visibility of CreateEvent
+    setTempSelectedPlaceLocation(null);
     setAddEventModalVisible(!isAddEventModalVisible);
+    console.log("Creating New Event");
+  };
+
+  const handleAddEventPopUpPress = () => {
+    // Set temporary location before toggling the visibility of CreateEvent
+    setTempSelectedPlaceLocation({
+      latitude: selectedPlace.geometry.location.lat,
+      longitude: selectedPlace.geometry.location.lng,
+    });
+    handlePlacePopupClose();
+    setAddEventModalVisible(!isAddEventModalVisible);
+    console.log("Creating New Event");
   };
 
   const handleAddEventSubmit = (eventData) => {
@@ -153,16 +167,27 @@ const DiscoveryScreen = () => {
               ))}
             </MapView>
           )}
-
-            {isAddEventModalVisible && (
+  
+          {isAddEventModalVisible && (
             <CreateEvent
               isVisible={isAddEventModalVisible}
               onClose={() => setAddEventModalVisible(false)}
               onSubmit={handleAddEventSubmit}
               tabBarHeight={1}
+              longitude={
+                isAddEventModalVisible && tempSelectedPlaceLocation
+                  ? tempSelectedPlaceLocation.longitude
+                  : location.coords.longitude
+              }
+              latitude={
+                isAddEventModalVisible && tempSelectedPlaceLocation
+                  ? tempSelectedPlaceLocation.latitude
+                  : location.coords.latitude
+              }
             />
           )}
 
+  
           <TouchableOpacity
             style={styles.plusButton}
             onPress={handleAddEventButtonPress}
@@ -171,16 +196,16 @@ const DiscoveryScreen = () => {
           </TouchableOpacity>
         </>
       )}
-
+  
       <PopUpForPlace
         placeInfo={selectedPlace}
         onClose={handlePlacePopupClose}
-        onAddEvent={(address) => handleAddEvent(address)}
+        onAddEvent={handleAddEventPopUpPress}
         onAddRating={handleAddRating}
       />
     </View>
   );
-};
+          };  
 
 const styles = StyleSheet.create({
   plusButton: {

@@ -11,7 +11,7 @@ export default function Page() {
   return (
 
       <View style={styles.main}>
-        <Text style={styles.title}>KickOffConnect</Text>
+        <Text style={styles.title}>KickOff</Text>
         <Link style={styles.container} href={"/Navigation/Navigation"}>Enter the app</Link>
       </View>
 

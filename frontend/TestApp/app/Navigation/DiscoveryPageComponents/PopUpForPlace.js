@@ -7,12 +7,14 @@ import StarRating, { StarRatingDisplay } from 'react-native-star-rating-widget';
 import { Rating } from 'react-native-ratings';
 
 const PopUpForPlace = ({ placeInfo, onClose, onAddEvent, onAddRating }) => {
+  const [createEventVisible, setCreateEventVisible] = useState(false);
+
   return (
     <Modal transparent={true} animationType="slide" visible={placeInfo !== null}>
       <View style={styles.popupContainer}>
         <View style={styles.popupContent}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text>X</Text>
+            <FontAwesome name="times" size={20} color="black" />
           </TouchableOpacity>
           <Text style={styles.placeName}>{placeInfo?.name}</Text>
 
@@ -126,6 +128,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 15,
+    zIndex: 1,
   },
 });
 
