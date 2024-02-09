@@ -24,7 +24,7 @@ def retrieve_location():
     longitude = data.get('longitude')
 
     if not userId or not latitude or not longitude:
-        return jsonify({'error': 'Missing userId, latitude, or longitude'}), 400
+        return jsonify({'error': 'Missing username, latitude, or longitude'}), 400
 
     userData = db[userId]
     user = userData.find_one({'userId': userId})
@@ -42,70 +42,70 @@ def retrieve_location():
 
 @app.route('/signup', methods=['POST'])
 def signup():
-    userId = request.json['userId']
-    password = request.json['password']
-    email = request.json['email']
+    username = request.json.get('username')
+    password = request.json.get('password')
+    email = request.json.get('email')
 
-    userData = db[userId]
-    userEmails = db['Emails']
+    # Check if userId, password, and email are present in the request
+    if not username or not password or not email:
+        return jsonify({'error': 'UserId, password, or email is missing'})
 
+    userData = db.get_collection('Users')
+    
+    # Check if email already exists
+    if userData.find_one({'email': email}):
+        return jsonify({'error': 'Account with this Email already exists'})
 
-    if userData.find_one({'userId': userId}):
-        return jsonify({'error': 'Username already exists'})
+    # Check if username already associated with another account
+    if userData.find_one({'userID': username}):
+        return jsonify({'error': 'Username already associated with another account'})
 
-    if userEmails.find_one({'userEmails': email}):
-        return jsonify({'email': 'Email already associated with another account'})
-
-    userEmails.update_one( {'ref': 40}, {'$push' : {'userEmails': email}}, upsert=True)
-
+    # Update Users collection
     post = {
-        "userId": userId,
+        "username": username,
         "password": password,
         "email": email,
     }
 
     result = userData.insert_one(post)
+
     if result.inserted_id:
-        return jsonify({'success': True,
-                        'userId': userId})
+        return jsonify({'success': True, 'username': username})
     else:
-        return {'success': False}
+        return jsonify({'success': False})
+
 
 
 @app.route('/login', methods=['POST'])
 def login():
-    userId = request.json['userId']
-    password = request.json['password']
-    userData = db[userId]
+    email = request.json.get('email')  # Use .get() to avoid KeyError if 'email' is not in the request.json
+    password = request.json.get('password')
+    
+    # Check if email and password are present in the request
+    if not email or not password:
+        return jsonify({'error': 'Email or Password is missing'})
 
-    # find user in the database
+    userData = db[email]
 
-    user = userData.find({'userId': userId})
+    # Find user in the database by email
+    user = userData.find_one({'email': email})
 
-    # check if user exists
+    # Check if user exists
     if not user:
-        return jsonify({'error': 'User not found'})
+        return jsonify({'error': 'Email or Password is incorrect'})
 
-    dbpass = None
-    for document in user:
-        dbpass = document["password"]
-
-    # check if password is correct
+    # Check if password is correct
+    dbpass = user.get("password")  # Use .get() to avoid KeyError if 'password' is not in the user document
     if not password == dbpass:
         return jsonify({'error': 'Incorrect password'})
 
-    response = {'success': True,
-                'userId': userId
-                }
+    response = {'success': True, 'email': email}
     return jsonify(response)
+
 
 @app.route('/addEvent', methods=['POST'])
 def addEvent():
-    eventName = request.json['eventName']
-    eventSport = request.json['eventSport']
-    eventDescription = request.json['eventDescription']
-    userHostingEvent = request.json['userName']
-    eventVisibility = request.json['eventVisibility']
+    
     userData = db[userId]
 
     # find user in the database

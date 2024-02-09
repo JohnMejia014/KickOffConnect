@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Button, Modal, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, Button, Modal, TouchableOpacity, Image, StyleSheet, useState } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Svg, { Path } from 'react-native-svg';
