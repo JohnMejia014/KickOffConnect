@@ -35,7 +35,7 @@ export default function Page() {
     if (mode === 'signup') {
       requestData.email = email;
     }
-
+    console.log(username, email, password);
     const endpoint = mode === 'signup' ? 'signup' : 'login';
 
     axios
