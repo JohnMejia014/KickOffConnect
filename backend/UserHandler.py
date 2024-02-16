@@ -26,36 +26,38 @@ class UserHandler:
         self.__users = self.__mongo.getUsers()
 
     def signupUser(self, criteria: dict):
-        userAdded = False
         _err = "User already exists with that username or email"
-        # Check if a user already exists with the provided username or email
-        result = None
-        if not self.findUser({"username": criteria['username']}, {}) or not self.findUser({'email': criteria['email']}, {}):
+        usercheck = self.findUser({"username": criteria['username']}, {})
+        emailcheck = self.findUser({'email': criteria['email']}, {})
+
+        if usercheck[1] is False and emailcheck[1] is False:
             # Hash the password before storing it
             password = criteria['password'].encode('utf-8')
             hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
-            userAdded = True
-            _err = None
+
             userDocument = {
                 "username": criteria["username"],
                 "password": hashed_password,
                 "email": criteria['email'],
-                "friends": [],  # Initialize with an empty list for friends
-                "posts": {},  # Initialize with an empty dictionary for posts
-                "eventsJoined": [],  # Initialize with an empty list for events joined
-                "privacy": "public",  # Use provided privacy or set a default value
-                "totalRatings": 0,  # Initialize with a default rating
-                "totalRatingStars": 0  # Initialize with a default rating
-
+                "friends": [],
+                "posts": {},
+                "eventsJoined": [],
+                "privacy": "public",
+                "totalRatings": 0,
+                "totalRatingStars": 0
             }
+
+            # add user to the database
             result = self.__users.insert_one(userDocument)
-        if userAdded:
+
             # Retrieve the user information after insertion
-            user_info = userHandler.findUser({"username": username}, {})[0]
-            return jsonify({'message': 'User successfully created', 'userInfo': user_info})
+            user_info = self.findUser({"username": criteria["username"]}, {})[0]
+            print(user_info)
+            # Return a tuple with userAdded set to True and user_info
+            return True, user_info, None
 
-
-        return userAdded, None, _err
+        # Return a tuple with userAdded set to False and _err
+        return False, None, _err
 
 
 

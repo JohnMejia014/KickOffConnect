@@ -8,9 +8,8 @@ import CreateEvent from './DiscoveryPageComponents/CreateEvent';
 
 import { ActivityIndicator } from 'react-native';
 import PopUpForPlace from './DiscoveryPageComponents/PopUpForPlace';
-import { useNavigation } from '@react-navigation/native';
 
-const DiscoveryScreen = () => {
+const DiscoveryScreen = (userInfo) => {
   const [location, setLocation] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [latitude, setLatitude] = useState(null);
@@ -67,7 +66,7 @@ const DiscoveryScreen = () => {
       try {
         const response = await fetch(
           `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
-          `location=${latitude},${longitude}&radius=10000&type=park|gym&key=AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY`
+          `location=${latitude},${longitude}&radius=10000&type=park|gym&key=AIzaSyDDVvsCzt1dbSWIIC5wKRji6vW87bGUEcg`
         );
   
         if (!response.ok) {
@@ -78,7 +77,7 @@ const DiscoveryScreen = () => {
         console.log(data);
         const placesWithPhotos = await Promise.all(data.results.map(async (place) => {
           if (place.photos && place.photos.length > 0) {
-            const photoUrls = place.photos.map(photo => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photo.photo_reference}&key=AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY`);
+            const photoUrls = place.photos.map(photo => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photo.photo_reference}&key=AIzaSyDDVvsCzt1dbSWIIC5wKRji6vW87bGUEcg`);
             return {
               ...place,
               photos: photoUrls,
@@ -143,7 +142,7 @@ const DiscoveryScreen = () => {
                 longitudeDelta: 0.01,
               }}
               provider={MapView.PROVIDER_DEFAULT}
-              apiKey="AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY"
+              apiKey="AIzaSyDDVvsCzt1dbSWIIC5wKRji6vW87bGUEcg"
             >
               <Marker
                 coordinate={{

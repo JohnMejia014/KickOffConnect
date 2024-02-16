@@ -7,7 +7,6 @@ import StarRating, { StarRatingDisplay } from 'react-native-star-rating-widget';
 import { Rating } from 'react-native-ratings';
 
 const PopUpForPlace = ({ placeInfo, onClose, onAddEvent, onAddRating }) => {
-  const [createEventVisible, setCreateEventVisible] = useState(false);
 
   return (
     <Modal transparent={true} animationType="slide" visible={placeInfo !== null}>

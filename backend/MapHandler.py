@@ -43,18 +43,18 @@ class MapHandler:
         eventAdded = False
         _err = "Event was not created"
         eventDocument = {
-            "eventName": criteria["projectName"],
-            "eventDescription": criteria["projectDescription"],
+            "eventName": criteria["eventName"],
+            "eventDescription": criteria["eventDescription"],
             "eventTime" : criteria['eventTime'],
             "eventDate" : criteria["eventDate"],
             "eventAddress" : criteria["eventAddress"],
             "eventLat": criteria["eventLat"],
             "eventLong": criteria["eventLong"],
             "eventSport" : criteria['eventSport'],
-            "eventHostUsername" : criteria["eventHostUsername"],
-            "eventVisibility" : criteria["eventAddress"],
+            "eventHost" : criteria["eventHost"],
+            "eventVisibility" : criteria["eventVisibility"],
             "usersInvited": criteria["usersInvited"],
-            "usersJoined": criteria["usersJoined"]
+            "usersJoined": ""
             }
         self.__Events.insert_one(eventDocument)
         eventAdded = True

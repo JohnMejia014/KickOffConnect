@@ -58,13 +58,13 @@ def signup():
     password = data.get('password')
     print(data)
     if username and password and email:
-        print("here")
         # Call the signup function from the Database class
         userSignup, user_info, _err = userHandler.signupUser({"username":username, "email":email, "password":password})
-        print(userSignup, user_info, _err)
         if userSignup == False:
             return jsonify({'message': _err})
         else:
+            user_info['_id'] = str(user_info['_id'])
+            user_info.pop('password', None)
             return jsonify({'message': 'User successfully created', 'userInfo': user_info})
     else:
         return jsonify({'message': 'Invalid request'})
@@ -87,8 +87,28 @@ def login():
     
 @app.route('/addEvent', methods=['POST'])
 def addEvent():
-    return jsonify("response")
-
+    data = request.get_json()
+    username = data.get('username')
+    eventName = data.get('eventName')
+    eventDescription = data.get('eventDescription')
+    eventAddress = data.get('eventAddress')
+    eventLat = data.get('eventLat')
+    eventLong = data.get('eventLong')
+    eventTime = data.get('eventTime')
+    eventDate = data.get('eventDate')
+    eventSport = data.get('eventSport')
+    eventHost = data.get('eventHost')
+    eventVisibility = data.get('eventVisibility')
+    usersInvited = data.get('usersInvited')
+    
+    if username and eventAddress and eventName and eventSport:
+        addedEvent, _err = mapHandler.createEvent({"username": username, "eventName": eventName,"eventDescription": eventDescription, "eventAddress": eventAddress, "eventLat": eventLat, "eventLong": eventLong, "eventTime": eventTime, "eventDate": eventDate, "eventSport": eventSport, "eventHost": eventHost, "eventVisibility": eventVisibility, "usersInvited": usersInvited })
+        if addedEvent:
+            return jsonify({'message': 'Event successfully created'})
+        else:
+            return jsonify({'message': _err})
+    else:
+        return jsonify({'message': 'Invalid request'})
 
 
 # Running app

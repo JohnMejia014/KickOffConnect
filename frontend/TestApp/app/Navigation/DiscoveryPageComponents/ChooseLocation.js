@@ -5,7 +5,7 @@ import Geocoder from 'react-native-geocoding';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { FontAwesome } from 'react-native-vector-icons';
 
-Geocoder.init('AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY');
+Geocoder.init('AIzaSyDDVvsCzt1dbSWIIC5wKRji6vW87bGUEcg');
 
 const ChooseLocation = ({ onCloseMod, isVisible, onClose, onSelectLocation, longitude, latitude, eventData, setCurrentStep }) => {
   const [selectedLatitude, setSelectedLatitude] = useState(latitude);
@@ -96,7 +96,7 @@ const ChooseLocation = ({ onCloseMod, isVisible, onClose, onSelectLocation, long
                 setSelectedAddress(data.description);
               }}
               query={{
-                key: 'AIzaSyCFFCJXpMpMapumtoVf5Wnzpp1FynKj3iY',
+                key: 'AIzaSyDDVvsCzt1dbSWIIC5wKRji6vW87bGUEcg',
                 language: 'en',
               }}
               styles={{

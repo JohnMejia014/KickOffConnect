@@ -1,183 +1,24 @@
-import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, TextInput, View, Text, TouchableOpacity } from 'react-native';
-import Button from './components/Button';
-import axios from 'axios';
-import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from "@react-navigation/native-stack"
+import { LoginScreen } from "./Navigation/LoginScreen";
+import React from 'react';
+const Stack = createNativeStackNavigator();
 
 export default function Page() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
-  const [mode, setMode] = useState('signup'); // 'signup' or 'login'
-  const [errorMessage, setErrorMessage] = useState('');
-  const [continuePressed, setContinuePressed] = useState(false);
-
-  const handleButtonPress = (selectedMode) => {
-    setMode(selectedMode);
-    setErrorMessage('');
-    setContinuePressed(false); // Reset continue button state
-  };
-
-  const handleContinuePress = () => {
-    setContinuePressed(true);
-    // Perform any action you want on Continue button press
-    // For now, let's call handleSubmit
-    handleSubmit();
-  };
-
-  const handleSubmit = () => {
-    const requestData = {
-      username: username,
-      password: password,
-    };
-
-    if (mode === 'signup') {
-      requestData.email = email;
-    }
-    console.log(username, email, password);
-    const endpoint = mode === 'signup' ? 'signup' : 'login';
-
-    axios
-      .post(`http://192.168.1.119:5000/${endpoint}`, requestData)
-      .then((response) => {
-        console.log(response.data);
-        if (response.data.success === true) {
-          router.push({
-            pathname: '/Navigation/Navigation',
-            params: { username: username },
-          });
-        } else {
-          setErrorMessage(response.data.error || 'Login failed');
-          console.log(response.data);
-        }
-      })
-      .catch((error) => {
-        setErrorMessage('An error occurred while communicating with the server');
-        console.error(error);
-      });
-  };
-
+  
   return (
-    <LinearGradient
-      colors={['#0d47a1', '#1565c0']}
-      style={styles.container}
-    >
-      <SafeAreaView>
-        <View style={styles.title}>
-          <Text style={styles.titleText}>KickOff Connect</Text>
-        </View>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, mode === 'signup' ? styles.selectedButton : null]}
-            onPress={() => handleButtonPress('signup')}
-          >
-            <Text style={styles.buttonText}>Sign Up</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, mode === 'login' ? styles.selectedButton : null]}
-            onPress={() => handleButtonPress('login')}
-          >
-            <Text style={styles.buttonText}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
-
-        {mode === 'signup' && (
-          <TextInput
-            id="username"
-            onChangeText={setUsername}
-            placeholder="Username"
-            value={username}
-            style={[styles.input, { color: '#ffffff', backgroundColor: 'transparent' }]}
-            autoCapitalize="none"
-          />
-        )}
-
-        <TextInput
-          id="email"
-          onChangeText={setEmail}
-          placeholder="Email"
-          value={email}
-          style={[styles.input, { color: '#ffffff', backgroundColor: 'transparent' }]}
-          keyboardType="email-address"
-          autoCapitalize="none"
+  <NavigationContainer independent={true}>
+      <Stack.Navigator
+        initialRouteName='LoginScreen'
+      >
+        <Stack.Screen
+          name="LoginScreen"
+          component={LoginScreen}
+          options={{
+            headerShown: false
+          }}
         />
-
-        <TextInput
-          id="password"
-          onChangeText={setPassword}
-          value={password}
-          placeholder="Password"
-          secureTextEntry
-          style={[styles.input, { color: '#0d47a1', backgroundColor: 'transparent' }]}
-        />
-
-        {errorMessage ? (
-          <Text style={styles.errorMessage}>{errorMessage}</Text>
-        ) : null}
-
-        <TouchableOpacity
-          style={[styles.button, continuePressed ? styles.selectedButton : null]}
-          onPress={handleContinuePress}
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    </LinearGradient>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  title: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 100,
-  },
-  titleText: {
-    fontSize: 36, // Adjust the font size as needed
-    color: '#fff',
-    fontWeight: 'bold', // Add fontWeight if needed
-    textShadowColor: 'rgba(0, 0, 0, 0.75)', // Shadow color
-    textShadowOffset: { width: 2, height: 2 }, // Shadow offset
-    textShadowRadius: 5, // Shadow radius
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    backgroundColor: 'transparent',
-    color: '#fff',
-  },
-  errorMessage: {
-    color: 'yellow',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#1565c0',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  selectedButton: {
-    backgroundColor: '#0d47a1',
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 16,
-  },
-});

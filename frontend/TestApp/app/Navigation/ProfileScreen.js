@@ -2,21 +2,36 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const ProfileScreen = () => (
-  <View style={styles.container}>
-    <View style={styles.header}>
-      <Text style={styles.username}>Your Username</Text>
+const ProfileScreen = ({ route }) => {
+  // Check if route.params and route.params.userInfo are available
+  if (!route.params || !route.params.userInfo) {
+    // Handle the case where userInfo is not available
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>User information not available</Text>
+      </View>
+    );
+  }
+
+  // Destructure userInfo from route.params
+  const { userInfo } = route.params;
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.username}>{userInfo.username}</Text>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Friends</Text>
+        {/* Add content for friends section here */}
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Events</Text>
+        {/* Add content for events section here */}
+      </View>
     </View>
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Friends</Text>
-      {/* Add content for friends section here */}
-    </View>
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Events</Text>
-      {/* Add content for events section here */}
-    </View>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -24,6 +39,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f0f0f0', // Set background color to a sports-themed color
+  },
+  errorText: {
+    fontSize: 18,
+    color: 'red',
   },
   header: {
     marginBottom: 20,
