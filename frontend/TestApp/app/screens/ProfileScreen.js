@@ -3,8 +3,22 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 const ProfileScreen = ({ route }) => {
-  // Check if route.params and route.params.userInfo are available
-  if (!route.params || !route.params.userInfo) {
+    
+  // Check if route and route.params are available
+  if (!route || !route.params) {
+    // Handle the case where route or route.params is not available
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Invalid navigation route</Text>
+      </View>
+    );
+  }
+
+  // Destructure userInfo from route.params
+  const { userInfo } = route.params;
+
+  // Check if userInfo is available
+  if (!userInfo) {
     // Handle the case where userInfo is not available
     return (
       <View style={styles.container}>
@@ -12,9 +26,6 @@ const ProfileScreen = ({ route }) => {
       </View>
     );
   }
-
-  // Destructure userInfo from route.params
-  const { userInfo } = route.params;
 
   return (
     <View style={styles.container}>

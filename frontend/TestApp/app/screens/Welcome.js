@@ -1,7 +1,8 @@
+// ./screens/Welcome.js
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const Welcome = () => {
+const Welcome = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome</Text>
@@ -22,4 +23,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Welcome;
+export default Welcome;  // Correct export statement

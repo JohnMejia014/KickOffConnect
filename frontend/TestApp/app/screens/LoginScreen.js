@@ -4,14 +4,13 @@ import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
-const LoginScreen = () => {
+const LoginScreen = ({navigation}) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [mode, setMode] = useState('signup'); // 'signup' or 'login'
   const [errorMessage, setErrorMessage] = useState('');
   const [continuePressed, setContinuePressed] = useState(false);
-  const navigation = useNavigation();
 
   const handleButtonPress = (selectedMode) => {
     setMode(selectedMode);
@@ -43,7 +42,7 @@ const LoginScreen = () => {
       .then((response) => {
         console.log(response.data.userInfo);
         if (response.data.message === 'User successfully created') {
-            navigation.navigate('MainApp', { userInfo: response.data.userInfo });
+            navigation.navigate('AppScreen', { userInfo: response.data.userInfo });
         } else {
           setErrorMessage(response.data.error || 'Login failed');
           console.log(response.data);
