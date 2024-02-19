@@ -38,7 +38,7 @@ const LoginScreen = ({navigation}) => {
     const endpoint = mode === 'signup' ? 'signup' : 'login';
 
     axios
-      .post(`http://192.168.1.119:5000/${endpoint}`, requestData)
+      .post(`http://10.147.23.169:5000/${endpoint}`, requestData)
       .then((response) => {
         console.log(response.data.userInfo);
         if (response.data.message === 'User successfully created') {
