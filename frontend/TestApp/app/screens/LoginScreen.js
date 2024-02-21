@@ -179,3 +179,52 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+
+const events = [
+    {
+      id: 1,
+      eventName: 'Sample Event',
+    eventDescription: 'This is a sample event description.',
+    eventAddress: '123 Sample St, Sample City',
+    eventLat: 37.7749,
+    eventLong: -122.4194,
+    eventTime: '18:00',
+    eventDate: '2024-02-19',
+    eventSport: 'Soccer',
+    eventHost: 'John Doe',
+    eventVisibility: 'Public',
+    usersInvited: 50,
+    usersJoined: 20,
+    },
+    {
+      id: 2,
+      eventName: 'Sample Event',
+      eventDescription: 'This is a sample event description.',
+      eventAddress: '123 Sample St, Sample City',
+      eventLat: 37.7749,
+      eventLong: -122.4194,
+      eventTime: '18:00',
+      eventDate: '2024-02-19',
+      eventSport: 'Volleyball',
+      eventHost: 'John Doe',
+      eventVisibility: 'Public',
+      usersInvited: 50,
+      usersJoined: 12,
+    },
+    {
+      id: 3,
+      eventName: 'Sample Event',
+    eventDescription: 'This is a sample event description.',
+    eventAddress: '123 Sample St, Sample City',
+    eventLat: 37.7749,
+    eventLong: -122.4194,
+    eventTime: '18:00',
+    eventDate: '2024-02-19',
+    eventSport: 'Swimming',
+    eventHost: 'John Doe',
+    eventVisibility: 'Public',
+    usersInvited: 50,
+    usersJoined: 14,
+    },
+    // Add more events as needed
+  ];  
