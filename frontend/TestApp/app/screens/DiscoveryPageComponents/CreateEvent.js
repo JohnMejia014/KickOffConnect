@@ -5,27 +5,32 @@ import ChooseLocation from './ChooseLocation';
 import AddEventComponent from './AddEventComponent';
 import ShareEventComponent from './ShareEventComponent';
 
-const CreateEvent = ({ isVisible, onClose, onSubmit, tabBarHeight, initialEventData, longitude, latitude }) => {
+const CreateEvent = ({ userInfo, isVisible, onClose, onSubmit, tabBarHeight, initialEventData, longitude, latitude }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [eventData, setEventData] = useState({
-    coordinates: null,
-    latitude: latitude,
-    longitude: longitude,
-    address: '',
+  console.log("userInfo: " + userInfo);
+    const [eventData, setEventData] = useState({
+    eventCoordinates: null,
+    eventLat: latitude,
+    eventLong: longitude,
+    eventAddress: '',
     eventName: '',
     eventDescription: '',
-    sports: [],
-    date: '',
-    timeRange: { start: '', end: '' },
+    eventTime: {start: '', end: ''},  // example
+    eventDate: '',  // example
+    eventSports: [],  // example
+    eventHost: '',  // example
+    eventVisibility: '',  // example
+    usersInvited: [],  // example
+    usersJoined: '',  // example
   });
 
   const handleLocationSelection = (selectedCoordinates) => {
     setEventData((prevEventData) => ({
       ...prevEventData,
-      coordinates: selectedCoordinates,
-      latitude: selectedCoordinates.latitude,
-      longitude: selectedCoordinates.longitude,
-      address: selectedCoordinates.address,
+      eventCoordinates: selectedCoordinates,
+      eventLat: selectedCoordinates.eventLat,
+      eventLong: selectedCoordinates.eventLong,
+      eventAddress: selectedCoordinates.eventAddress,
     }));
 
     setCurrentStep((prevStep) => prevStep + 1);
@@ -36,9 +41,9 @@ const CreateEvent = ({ isVisible, onClose, onSubmit, tabBarHeight, initialEventD
       ...prevEventData,
       eventName: eventDetails.eventName,
       eventDescription: eventDetails.eventDescription,
-      sports: eventDetails.sports,
-      date: eventDetails.date,
-      timeRange: { ...eventDetails.timeRange },
+      eventSports: eventDetails.eventSports,
+      eventDate: eventDetails.eventDate,
+      eventTime: { ...eventDetails.eventTime },
     }));
 
     setCurrentStep((prevStep) => prevStep + 1);
@@ -48,6 +53,10 @@ const CreateEvent = ({ isVisible, onClose, onSubmit, tabBarHeight, initialEventD
     setCurrentStep((prevStep) => Math.max(prevStep - 1, 1));
   };
 
+  const handleShareEvent = () => {
+    ;
+  };
+
   return (
     <View>
       {currentStep === 1 && (
@@ -55,8 +64,8 @@ const CreateEvent = ({ isVisible, onClose, onSubmit, tabBarHeight, initialEventD
           isVisible={isVisible}
           onClose={handleBackToEventForm}
           onSelectLocation={handleLocationSelection}
-          longitude={eventData.longitude}
-          latitude={eventData.latitude}
+          longitude={eventData.eventLong}
+          latitude={eventData.eventLat}
           eventData={eventData}
           setCurrentStep={setCurrentStep}
           onCloseMod={onClose}
@@ -74,9 +83,12 @@ const CreateEvent = ({ isVisible, onClose, onSubmit, tabBarHeight, initialEventD
 
       {currentStep === 3 && (
         <ShareEventComponent
+          userInfo={userInfo}
           eventData={eventData}
           onBack={handleBackToEventForm}
           initialEventData={eventData}
+          shareEvent={handleShareEvent}
+          onSubmit={onSubmit}
         />
       )}
     </View>

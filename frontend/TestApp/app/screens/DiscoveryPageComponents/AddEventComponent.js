@@ -31,11 +31,11 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit, initialEventData, onB
       if (initialEventData) {
         setEventName(initialEventData.eventName || '');
         setEventDescription(initialEventData.eventDescription || '');
-        setSelectedSports(initialEventData.sports || []);
-        setSelectedDate(initialEventData.date || '');
+        setSelectedSports(initialEventData.eventSports || []);
+        setSelectedDate(initialEventData.eventDate || '');
         setTimeRange({
-          start: initialEventData.timeRange ? initialEventData.timeRange.start : '',
-          end: initialEventData.timeRange ? initialEventData.timeRange.end : '',
+          start: initialEventData.eventTime ? initialEventData.eventTime.start : '',
+          end: initialEventData.eventTime ? initialEventData.eventTime.end : '',
         });
       }
     }, [initialEventData]);
@@ -79,9 +79,9 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit, initialEventData, onB
       onSubmit({
         eventName: eventName,
         eventDescription: eventDescription,
-        sports: selectedSports,
-        date: selectedDate,
-        timeRange: { start: timeRange.start, end: timeRange.end },
+        eventSports: selectedSports,
+        eventDate: selectedDate,
+        eventTime: { start: timeRange.start, end: timeRange.end },
       });
     };
     

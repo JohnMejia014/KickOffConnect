@@ -22,8 +22,12 @@ function AppScreen() {
     initialRouteName = "Feed"
     screenOptions={{headerShown: false}}
     >
-      <Tab.Screen name="Feed" component={FeedScreen} />
-      <Tab.Screen name="Discovery" component={DiscoveryScreen} />
+      <Tab.Screen name="Feed">
+      {() => <FeedScreen route={{ params: { userInfo } }} />}
+        </Tab.Screen> 
+      <Tab.Screen name="Discovery">
+        {() => <DiscoveryScreen route={{ params: { userInfo } }} />}
+        </Tab.Screen>
       <Tab.Screen name="Profile">
         {() => <ProfileScreen route={{ params: { userInfo } }} />}
       </Tab.Screen>

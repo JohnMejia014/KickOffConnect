@@ -10,7 +10,7 @@ Geocoder.init('AIzaSyDDVvsCzt1dbSWIIC5wKRji6vW87bGUEcg');
 const ChooseLocation = ({ onCloseMod, isVisible, onClose, onSelectLocation, longitude, latitude, eventData, setCurrentStep }) => {
   const [selectedLatitude, setSelectedLatitude] = useState(latitude);
   const [selectedLongitude, setSelectedLongitude] = useState(longitude);
-  const [selectedAddress, setSelectedAddress] = useState(eventData?.address || ''); // Set initial value
+  const [selectedAddress, setSelectedAddress] = useState(eventData?.eventAddress || ''); // Set initial value
 
   const getAddressFromCoordinates = async (lat, lng) => {
     try {
@@ -30,7 +30,7 @@ const ChooseLocation = ({ onCloseMod, isVisible, onClose, onSelectLocation, long
     console.log('Initial Data:', eventData);
     // Check if initialEventData is provided and update the state
     if (eventData) {
-      setSelectedAddress(eventData.address);
+      setSelectedAddress(eventData.eventAddress);
     }
 
     // Fetch the address from coordinates and log it
@@ -63,9 +63,9 @@ const ChooseLocation = ({ onCloseMod, isVisible, onClose, onSelectLocation, long
 
   const handleSaveLocation = () => {
     onSelectLocation({
-      latitude: selectedLatitude,
-      longitude: selectedLongitude,
-      address: selectedAddress,
+      eventLat: selectedLatitude,
+      eventLong: selectedLongitude,
+      eventAddress: selectedAddress,
     });
     onClose(); // Close the modal
     // Move to the next step (2 in this case)

@@ -118,13 +118,36 @@ const DiscoveryScreen = (userInfo) => {
     console.log("Creating New Event");
   };
 
-  const handleAddEventSubmit = (eventData) => {
-    console.log('Submitted Event:', eventData);
-    setAddEventModalVisible(false);
-    onClose(); // Add this line to close the modal
-    // If needed, you can navigate to the EventDetailsScreen here
-    // setShowEventDetails(true);
+  const handleAddEventSubmit = async (eventData) => {
+    console.log(eventData);
+    try {
+      // Assuming your backend endpoint for creating an event is '/api/createEvent'
+      const response = await fetch('http://192.168.1.119:5000/addEvent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // You might need to include additional headers, such as authentication headers
+        },
+        body: JSON.stringify(eventData),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to submit event to the backend');
+      }
+  
+      // Handle the response from the backend if needed
+      const responseData = await response.json();
+      console.log('Backend Response:', responseData);
+  
+      // Close the modal or navigate to the EventDetailsScreen
+      setAddEventModalVisible(false);
+      // setShowEventDetails(true);
+    } catch (error) {
+      console.error('Error submitting event to the backend:', error);
+      // Handle the error, e.g., show an error message to the user
+    }
   };
+  
 
   return (
     <View style={{ flex: 1 }}>
@@ -169,6 +192,7 @@ const DiscoveryScreen = (userInfo) => {
   
           {isAddEventModalVisible && (
             <CreateEvent
+              userInfo={userInfo}
               isVisible={isAddEventModalVisible}
               onClose={() => setAddEventModalVisible(false)}
               onSubmit={handleAddEventSubmit}

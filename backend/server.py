@@ -92,7 +92,6 @@ def login():
 @app.route('/addEvent', methods=['POST'])
 def addEvent():
     data = request.get_json()
-    username = data.get('username')
     eventName = data.get('eventName')
     eventDescription = data.get('eventDescription')
     eventAddress = data.get('eventAddress')
@@ -100,13 +99,14 @@ def addEvent():
     eventLong = data.get('eventLong')
     eventTime = data.get('eventTime')
     eventDate = data.get('eventDate')
-    eventSport = data.get('eventSport')
+    eventSports = data.get('eventSports')
     eventHost = data.get('eventHost')
     eventVisibility = data.get('eventVisibility')
     usersInvited = data.get('usersInvited')
+    usersJoined = data.get('usersJoined')
     
-    if username and eventAddress and eventName and eventSport:
-        addedEvent, _err = mapHandler.createEvent({"username": username, "eventName": eventName,"eventDescription": eventDescription, "eventAddress": eventAddress, "eventLat": eventLat, "eventLong": eventLong, "eventTime": eventTime, "eventDate": eventDate, "eventSport": eventSport, "eventHost": eventHost, "eventVisibility": eventVisibility, "usersInvited": usersInvited })
+    if  eventAddress and eventName and eventSports:
+        addedEvent, _err = mapHandler.createEvent({"eventName": eventName,"eventDescription": eventDescription, "eventAddress": eventAddress, "eventLat": eventLat, "eventLong": eventLong, "eventTime": eventTime, "eventDate": eventDate, "eventSports": eventSports, "eventHost": eventHost, "eventVisibility": eventVisibility, "usersInvited": usersInvited, "usersJoined": usersJoined })
         if addedEvent:
             return jsonify({'message': 'Event successfully created'})
         else:
