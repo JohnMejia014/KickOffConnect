@@ -1,5 +1,8 @@
 import sys
 import os
+import boto3
+from boto3.dynamodb.conditions import Key, Attr
+
 
 from flask import jsonify
 
@@ -25,36 +28,45 @@ class UserHandler:
 
         self.__users = self.__mongo.getUsers()
 
+        #Initialize the DynamoDB client
+        self.__dynamoDB_client = boto3.client('dynamodb', region_name= 'us-east-2')
+        self.__dynamodb = boto3.resource('dynamodb')
+        self.__table = self.__dynamodb.Table('Users')
+
     def signupUser(self, criteria: dict):
         _err = "User already exists with that username or email"
-        usercheck = self.findUser({"username": criteria['username']}, {})
-        emailcheck = self.findUser({'email': criteria['email']}, {})
+        usercheck = self.findUser(criteria['username'])
+        emailcheck = self.findemail(criteria['email'])
 
         if usercheck[1] is False and emailcheck[1] is False:
             # Hash the password before storing it
-            password = criteria['password'].encode('utf-8')
-            hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
+            password = criteria['password']
+            #hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
 
             userDocument = {
-                "username": criteria["username"],
-                "password": hashed_password,
-                "email": criteria['email'],
-                "friends": [],
-                "posts": {},
-                "eventsJoined": [],
-                "privacy": "public",
-                "totalRatings": 0,
-                "totalRatingStars": 0
+                "userID": {'S':criteria["username"]},
+                "password": {'S':password},
+                "email": {'S':criteria['email']},
+                "friends": {'L':[]},
+                #might have to use another database for posts
+                #"posts": {},
+                "eventsJoined": {'L':[]},
+                "privacy": {'S':"public"},
+                "totalRatings": {'N':'0'},
+                "totalRatingStars": {'N':'0'}
             }
 
             # add user to the database
-            result = self.__users.insert_one(userDocument)
+            result = self.__dynamoDB_client.put_item(TableName = 'Users', Item = userDocument)
 
             # Retrieve the user information after insertion
-            user_info = self.findUser({"username": criteria["username"]}, {})[0]
-            print(user_info)
+            #user_info = self.findUser({"username": criteria["username"]}, {})[0]
+            response = self.__table.query(
+                KeyConditionExpression=Key('userID').eq(criteria['username'])
+            )
+            print(response)
             # Return a tuple with userAdded set to True and user_info
-            return True, user_info, None
+            return True, response, None
 
         # Return a tuple with userAdded set to False and _err
         return False, None, _err
@@ -88,10 +100,23 @@ class UserHandler:
         return validLogin, user_info, _err
 
 
-    def findUser(self, criteria : dict, fieldToReturn : dict):
+    def findUser(self, criteria : dict):
         doesUserExist = False
-        value = self.__users.find_one(criteria,fieldToReturn)
-        if(value != None):
+        value = self.__table.query(
+            KeyConditionExpression=Key('userID').eq(criteria)
+        )
+        count = value.get('Count')
+        if(count > 0):
+            doesUserExist = True
+        return value, doesUserExist
+
+    def findemail(self, criteria : dict):
+        doesUserExist = False
+        value = self.__table.scan(
+            FilterExpression=Attr('email').eq(criteria)
+        )
+        count = value.get('Count')
+        if (count > 0):
             doesUserExist = True
         return value, doesUserExist
 
@@ -104,8 +129,6 @@ class UserHandler:
             return returnVal, doesUserExist
         else:
             return None, False
-
-
     
     def resetUserCollection(self):
         if(self.__debugMode == True):

@@ -156,7 +156,6 @@ const styles = StyleSheet.create({
   section: {
     marginVertical: 10,
     width: '80%',
-    backgroundColor: '#fff',
     padding: 15,
     borderRadius: 10,
     elevation: 3,
@@ -166,6 +165,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#333',
+    paddingHorizontal: 10, // Adjust padding as needed
+    borderRadius: 5, // Adjust border radius as needed
+    backgroundColor: '#1565c0',
+    padding: 5,
+    borderRadius: 50,
   },
   bioInput: {
     marginTop: 10,
@@ -180,10 +184,10 @@ const styles = StyleSheet.create({
   editButton: {
     position: 'absolute',
     bottom: 10,
-    right: 10,
     backgroundColor: '#1565c0',
     padding: 10,
     borderRadius: 5,
+    justifyContent: 'center'
   },
   editButtonText: {
     color: '#fff',

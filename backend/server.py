@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, jsonify, redirect
 from pymongo import MongoClient
 from flask_cors import CORS
 import os, sys
+import boto3
+from boto3.dynamodb.conditions import Key, Attr
 
 # Set the working directory to the root of the project
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -63,11 +65,10 @@ def signup():
         if userSignup == False:
             return jsonify({'message': _err})
         else:
-            user_info['_id'] = str(user_info['_id'])
-            user_info.pop('password', None)
+        
             return jsonify({'message': 'User successfully created', 'userInfo': user_info})
     else:
-        return jsonify({'message': 'Invalid request'})
+        return jsonify({'message': 'Invalid request' })
 
 
 @app.route('/login', methods=['POST'])
@@ -113,4 +114,4 @@ def addEvent():
 
 # Running app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False, port=5000)  
+    app.run(host='0.0.0.0', debug=False, port=5000)
