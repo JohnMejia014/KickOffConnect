@@ -76,29 +76,42 @@ class UserHandler:
     def dropUser(self, userID : str):
         self.__users.delete_one( {"userID" : userID})
 
+
+
     def loginUser(self, login: dict):
-        attemptedLogin = login['password'].encode('utf-8')
         validLogin: bool = False
         user_info: dict = {}  # Dictionary to store user information
-        _err = "Incorrect username or password"
-       # Check if the login information contains "userNameEmail"
+        _err = "Incorrect username, email, or password"
+
+        # Check if the login information contains "userNameEmail"
         if "username" in login:
             username = login["username"]
-            loginDicts = [{'username': username}, {'email': username}]
+            loginKeyConditions = [
+                Key('userID').eq(username),  # Check by username
+                Key('email').eq(username)     # Check by email
+            ]
         else:
             return validLogin, user_info, _err  # "userNameEmail" not provided
 
         # Try both options for login
-        for loginDict in loginDicts:
-            retrievedDict, exists = self.findUser(loginDict, {'_id': 0})  # Exclude _id from projection
-            if exists:
-                retrievedPass = retrievedDict.get('password')
-                if retrievedPass and bcrypt.checkpw(attemptedLogin, retrievedPass):
+        for loginKeyCondition in loginKeyConditions:
+        # Query DynamoDB to find the user by username or email
+            response = self.__table.query(
+                KeyConditionExpression=loginKeyCondition
+            )
+
+            if response.get('Items'):
+                # User with the provided username or email exists
+                retrievedDict = response['Items'][0]
+                storedPassword = retrievedDict.get('password', '')  # Assuming 'password' is a string in DynamoDB
+
+                # Check if the password is valid
+                if storedPassword == login['password']:
                     validLogin = True
                     user_info = retrievedDict  # Assign user information to the user_info dictionary
                     break  # Break out of the loop if login is valid
-        return validLogin, user_info, _err
 
+        return validLogin, user_info, _err
 
     def findUser(self, criteria : dict):
         doesUserExist = False

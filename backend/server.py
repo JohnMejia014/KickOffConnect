@@ -59,7 +59,7 @@ def signup():
     email = data.get('email')
     password = data.get('password')
     print(data)
-    if username and password and email:
+    if 1:
         # Call the signup function from the Database class
         userSignup, user_info, _err = userHandler.signupUser({"username":username, "email":email, "password":password})
         if userSignup == False:
@@ -73,10 +73,13 @@ def signup():
 
 @app.route('/login', methods=['POST'])
 def login():
+    #username will be used as input to login, can be username or email
     data = request.get_json()
-    username = data.get('username')
+    username = data.get('email')
     password = data.get('password')
-    
+    print(data)
+    print(username)
+    print(password)
     if username and password:
         validLogin, user_info, _err = userHandler.loginUser({"username": username, "password": password})
         if validLogin:

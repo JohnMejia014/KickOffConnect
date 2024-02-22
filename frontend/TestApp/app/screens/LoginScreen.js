@@ -29,18 +29,19 @@ const LoginScreen = ({navigation}) => {
     const requestData = {
       username: username,
       password: password,
+      email: email,
     };
 
     if (mode === 'signup') {
       requestData.email = email;
     }
-
+    console.log(requestData);
     const endpoint = mode === 'signup' ? 'signup' : 'login';
     axios
       .post(`http://192.168.1.119:5000/${endpoint}`, requestData)
       .then((response) => {
         console.log(response.data.userInfo);
-        if (response.data.message === 'User successfully created') {
+        if (response.data.message === 'User successfully created' || response.data.message === "Login successful") {
             navigation.navigate('AppScreen', { userInfo: response.data.userInfo });
         } else {
           setErrorMessage(response.data.message || 'Login failed');
