@@ -92,6 +92,7 @@ def login():
 @app.route('/addEvent', methods=['POST'])
 def addEvent():
     data = request.get_json()
+    eventID = data.get("eventID")
     eventName = data.get('eventName')
     eventDescription = data.get('eventDescription')
     eventAddress = data.get('eventAddress')
@@ -106,14 +107,74 @@ def addEvent():
     usersJoined = data.get('usersJoined')
     
     if  eventAddress and eventName and eventSports:
-        addedEvent, _err = mapHandler.createEvent({"eventName": eventName,"eventDescription": eventDescription, "eventAddress": eventAddress, "eventLat": eventLat, "eventLong": eventLong, "eventTime": eventTime, "eventDate": eventDate, "eventSports": eventSports, "eventHost": eventHost, "eventVisibility": eventVisibility, "usersInvited": usersInvited, "usersJoined": usersJoined })
+        addedEvent, _err = mapHandler.createEvent({"eventID": eventID, "eventName": eventName,"eventDescription": eventDescription, "eventAddress": eventAddress, "eventLat": eventLat, "eventLong": eventLong, "eventTime": eventTime, "eventDate": eventDate, "eventSports": eventSports, "eventHost": eventHost, "eventVisibility": eventVisibility, "usersInvited": usersInvited, "usersJoined": usersJoined })
         if addedEvent:
             return jsonify({'message': 'Event successfully created'})
         else:
             return jsonify({'message': _err})
     else:
         return jsonify({'message': 'Invalid request'})
+    
 
+@app.route('/joinEvent', methods=['POST'])
+def joinEvent():
+    data = request.get_json()
+    userID = data.get('userID')
+    eventID = data.get('eventID')
+
+    if userID and eventID:
+        success, updated_event, error = mapHandler.joinEvent(userID, eventID)
+        if success:
+            print("Returning User joined the event successfully to front end")
+            return jsonify({'message': 'User joined the event successfully', 'event': updated_event, 'success':success}), 200
+        else:
+            return jsonify({'error': error}), 400
+    else:
+        return jsonify({'error': 'Invalid request'}), 400
+
+# New route for leaving an event
+@app.route('/leaveEvent', methods=['POST'])
+def leave_event():
+    data = request.get_json()
+    userID = data.get('userID')
+    eventID = data.get('eventID')
+
+    if userID and eventID:
+        success, updated_event, error = mapHandler.leaveEvent(userID, eventID)
+
+        if success:
+            return jsonify({'message': 'User left the event successfully', 'event': updated_event, 'success':success}), 200
+        else:
+            return jsonify({'error': error}), 400
+    else:
+        return jsonify({'error': 'Invalid request'}), 400
+
+@app.route('/getEvents', methods=['POST'])
+def getEvents():
+    data = request.get_json()
+    user_lat = data.get('latitude')
+    user_long = data.get('longitude')
+    filters = data.get('filters')
+    print(filters)
+    radius = 1000  # You might want to include a radius in the request data
+    print(data)
+    if user_lat and user_long and radius:
+        # Convert latitude, longitude, and radius to float
+        user_lat = float(user_lat)
+        user_long = float(user_long)
+        radius = float(radius)
+        print("getEvents called")
+
+        # Retrieve events within the specified radius
+        events, error = mapHandler.get_events_within_radius(user_lat, user_long, radius, filters)
+
+        if error:
+            return jsonify({'error': error}), 500
+        else:
+            return jsonify({'events': events})  # Assuming events is a dictionary
+
+    return jsonify({'error': 'Invalid request'}), 400
+   
 
 # Running app
 if __name__ == '__main__':

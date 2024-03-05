@@ -53,7 +53,8 @@ class UserHandler:
                 "eventsJoined": {'L':[]},
                 "privacy": {'S':"public"},
                 "totalRatings": {'N':'0'},
-                "totalRatingStars": {'N':'0'}
+                "totalRatingStars": {'N':'0'},
+                "eventsHosted": {'L':[]}
             }
 
             # add user to the database

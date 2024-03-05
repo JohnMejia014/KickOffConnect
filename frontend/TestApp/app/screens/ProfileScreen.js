@@ -41,6 +41,9 @@ const ProfileScreen = ({ route }) => {
         </LinearGradient>
       );
     }
+    const [postsCount, setPostsCount] = useState(0);
+    const [friendsCount, setFriendsCount] = useState(userInfo.friendsCount || 0);
+  
   
     const [bio, setBio] = useState(userInfo.bio || '');
     const [isEditingBio, setIsEditingBio] = useState(false);
@@ -49,10 +52,7 @@ const ProfileScreen = ({ route }) => {
       setIsEditingBio(!isEditingBio);
     };
     return (
-        <LinearGradient
-          colors={['#0d47a1', '#1565c0']}
-          style={styles.container}
-        >
+        <LinearGradient colors={['#0d47a1', '#1565c0']} style={styles.container}>
           <SafeAreaView style={styles.container}>
             <View style={styles.container}>
               {/* Profile Picture */}
@@ -63,7 +63,22 @@ const ProfileScreen = ({ route }) => {
     
               {/* User Information */}
               <View style={styles.header}>
-                <Text style={styles.username}>{userInfo.username}</Text>
+                <Text style={styles.username}>{userInfo.userID}</Text>
+    
+                {/* Number of Posts and Friends in the same horizontal line */}
+                <View style={styles.userStatsContainer}>
+                  {/* Number of Posts */}
+                  <View style={styles.userStats}>
+                    <Text style={styles.statsLabel}>Posts </Text>
+                    <Text style={styles.statsValue}>{postsCount}</Text>
+                  </View>
+    
+                  {/* Number of Friends */}
+                  <View style={styles.userStats}>
+                    <Text style={styles.statsLabel}>Friends </Text>
+                    <Text style={styles.statsValue}>{friendsCount}</Text>
+                  </View>
+                </View>
               </View>
     
               {/* Bio Text or Input */}
@@ -152,6 +167,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+    textAlign: 'center',
   },
   section: {
     marginVertical: 10,
@@ -203,6 +219,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',  // Use backgroundColor instead of borderBottomColor
     marginVertical: 10,   // Adjust this value as needed
   },
-});
+  userStatsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+  },
+  userStats: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: 10,
+        marginHorizontal: 10,
+      },
+      statsLabel: {
+        fontSize: 16,
+        color: '#333',
+      },
+      statsValue: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+      },
+    });
 
 export default ProfileScreen;

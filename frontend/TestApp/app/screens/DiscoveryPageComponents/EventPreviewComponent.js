@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Ionicons } from '@expo/vector-icons';
-const EventPreviewComponent = ({ eventInfo, onPress }) => {
+const EventPreviewComponent = ({ eventInfo, onPress, userInfo }) => {
   const sportIcons = {
     Soccer: 'football',
     Basketball: 'basketball',
@@ -18,9 +18,9 @@ const EventPreviewComponent = ({ eventInfo, onPress }) => {
     // Add more sports and their corresponding icons as needed
   };
 
-  const renderIcon = (sport) => {
-    return (
-      <>
+  const renderIcons = (sports) => {
+    return sports.map((sport, index) => (
+      <View key={index} style={styles.iconContainer}>
         {sportIcons[sport] && (
           <>
             {(sport === 'Soccer') ? (
@@ -38,27 +38,33 @@ const EventPreviewComponent = ({ eventInfo, onPress }) => {
             )}
           </>
         )}
-      </>
-    );
+      </View>
+    ));
   };
 
+  const formatTime = (isoString) => {
+    const date = new Date(isoString);
+    return `${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`;
+  };
   return (
     <TouchableOpacity style={styles.eventPreview} onPress={onPress}>
       {/* Sport Icon */}
       <View style={styles.iconContainer}>
-      {renderIcon(eventInfo?.eventSport)}
+        {renderIcons(eventInfo?.eventSports)}
       </View>
 
       {/* Event Time and Date */}
       <View style={styles.infoContainer}>
-        <Text>{`Time: ${eventInfo?.eventTime}`}</Text>
+        <Text>{`Start Time: ${eventInfo?.eventTime?.start}`}</Text>
+        <Text>{`End Time: ${eventInfo?.eventTime?.end}`}</Text>
         <Text>{`Date: ${eventInfo?.eventDate}`}</Text>
       </View>
 
       {/* Users Participating */}
       <View style={styles.usersContainer}>
-        <Text>{`Participants: ${eventInfo?.usersJoined || 0}`}</Text>
+        <Text>{`Participants: ${eventInfo.usersJoined.length}`}</Text>
       </View>
+
     </TouchableOpacity>
   );
 };

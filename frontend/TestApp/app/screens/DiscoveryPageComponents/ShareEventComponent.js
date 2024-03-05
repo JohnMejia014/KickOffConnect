@@ -19,7 +19,7 @@ const FriendsList = ({ friends, selectedFriends, onSelectFriend }) => {
   );
 };
 
-const ShareEventComponent = ({ userInfo, eventData, isVisible, onBack, onSubmit }) => {
+const ShareEventComponent = ({ userInfo, eventData, isVisible, onBack, onSubmit, onClose }) => {
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [eventVisibility, setEventVisibility] = useState('public'); // Default visibility
 
@@ -38,10 +38,11 @@ const ShareEventComponent = ({ userInfo, eventData, isVisible, onBack, onSubmit 
     eventData.eventHost = userInfo.route.params.userInfo.userID;
     eventData.eventVisibility = eventVisibility;
     eventData.usersInvited = selectedFriends;
-    eventData.usersJoined = userInfo.route.params.userInfo.userID;
-
+    eventData.usersJoined.push(userInfo.route.params.userInfo.userID);
+    console.log(eventData.usersJoined);
     // Call the onSubmit function with the updated eventData
     onSubmit(eventData);
+    onClose();
   };
 
   const handleVisibilityToggle = () => {

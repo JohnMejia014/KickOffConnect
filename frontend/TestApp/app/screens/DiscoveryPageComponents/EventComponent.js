@@ -1,22 +1,57 @@
-import React from 'react';
-import { View, Text, Modal, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Modal, TouchableOpacity, Image, StyleSheet, FlatList } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { Rating } from 'react-native-ratings';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import ErrorMessageModal from './ErrorMessageModal';
 
-const EventComponent = ({ eventInfo, onClose, onJoinLeave }) => {
-  const isUserJoined = false;
-  /* Add logic to determine if the user is joined to the event */
+const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveEvent }) => {
+   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
+   const [isUserJoined, setIsUserJoined] = useState(eventInfo?.usersJoined?.includes(userInfo.route.params.userInfo.userID));
+   /* Add logic to determine if the user is joined to the event */
   const eventName = eventInfo?.eventName || 'No Event';
   const eventSport = eventInfo?.eventSport || 'No Sport';
   const eventHost = eventInfo?.eventHost || 'Unknown Host';
   const eventDescription = eventInfo?.eventDescription || 'No Description';
   const eventAddress = eventInfo?.eventAddress || 'No Address';
-  const handleJoinLeave = () => {
-    // Handle the logic for joining or leaving the event
-    console.log("Pressed");
-    onJoinLeave(!isUserJoined); // Pass the opposite value to toggle join/leave
+  const [eventInfo, setEventInfo] = useState(initialEventInfo);
+
+ 
+  const [errorMessage, setErrorMessage] = useState(null);
+  useEffect(() => {
+    // This effect will run whenever eventInfo changes
+    setIsUserJoined(eventInfo?.usersJoined?.includes(userInfo.route.params.userInfo.userID));
+  }, [eventInfo, userInfo.route.params.userInfo.userID]);
+
+  const handleJoinLeave = async () => {
+    if (eventInfo.eventHost === userInfo.route.params.userInfo.userID) {
+      // Display a message that the host cannot leave their own event
+      setErrorMessage('You are the host. You cannot leave your own event.');
+    } else {
+      try {
+        if (isUserJoined) {
+          // User is already joined, so leave the event
+          const updatedEventInfo = await leaveEvent(eventInfo.eventID); // Pass the eventID or any unique identifier
+          setEventInfo(updatedEventInfo);          
+        } else {
+          // User is not joined, so join the event
+          const updatedEventInfo = await joinEvent(eventInfo.eventID); // Pass the eventID or any unique identifier
+          setEventInfo(updatedEventInfo);          
+        }
+        // Update isUserJoined state after successful join/leave
+        setIsUserJoined(!isUserJoined);
+      } catch (error) {
+        console.error('Error joining/leaving event:', error);
+        // Handle error, e.g., show an error message
+      }
+    }
+  };
+  
+  
+  
+  const toggleParticipantsModal = () => {
+    setShowParticipantsModal(!showParticipantsModal);
   };
   const sportIcons = {
     Soccer: 'football',
@@ -32,27 +67,31 @@ const EventComponent = ({ eventInfo, onClose, onJoinLeave }) => {
     Football: 'football'
     // Add more sports and their corresponding icons as needed
   };
-  const renderIcon = (sport) => {
+  const renderIcons = (sports) => {
     return (
-      <>
-        {sportIcons[sport] && (
-          <>
-            {(sport === 'Soccer') ? (
-              <Ionicons
-                name={sportIcons[sport]}
-                size={50}
-                color="black"
-              />
-            ) : (
-              <MaterialCommunityIcons
-                name={sportIcons[sport]}
-                size={50}
-                color="black"
-              />
+      <View style={styles.sportContainer}>
+        {sports.map((sport, index) => (
+          <View key={index} style={styles.iconContainer}>
+            {sportIcons[sport] && (
+              <>
+                {(sport === 'Soccer') ? (
+                  <Ionicons
+                    name={sportIcons[sport]}
+                    size={50}
+                    color="black"
+                  />
+                ) : (
+                  <MaterialCommunityIcons
+                    name={sportIcons[sport]}
+                    size={50}
+                    color="black"
+                  />
+                )}
+              </>
             )}
-          </>
-        )}
-      </>
+          </View>
+        ))}
+      </View>
     );
   };
   
@@ -60,58 +99,85 @@ const EventComponent = ({ eventInfo, onClose, onJoinLeave }) => {
   return (
     <Modal transparent={true} animationType="slide" visible={eventInfo !== null}>
       <View style={styles.popupContainer}>
-      <View style={styles.popupContent}>
-  <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-    <FontAwesome name="times" size={20} color="black" />
-  </TouchableOpacity>
-  <Text style={styles.eventName}>{eventInfo?.eventName}</Text>
+        <View style={styles.popupContent}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <FontAwesome name="times" size={20} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.eventName}>{eventInfo?.eventName}</Text>
+  
+          {/* Sport with Icon */}
+          <View style={styles.sportContainer}>
+            {renderIcons(eventInfo?.eventSports)}
+          </View>
+  
+          {/* Add any other event information you want to display */}
+          <Text>{`Hosted by: ${eventInfo?.eventHost}`}</Text>
+          <Text>{`Description: ${eventInfo?.eventDescription}`}</Text>
+          <Text>{`Address: ${eventInfo?.eventAddress}`}</Text>
+  
+          {/* User Profile and Users Joined Row */}
+          <View style={styles.rowContainer}>
+            {/* User Profile Section */}
+            <View style={styles.commonContainer}>
+              {/* User Profile Picture (Placeholder) */}
+              <View style={styles.profilePictureContainer}>
+                <Image
+                  source={{ uri: 'https://via.placeholder.com/50' }}
+                  style={styles.profilePicture}
+                />
+              </View>
+  
+              {/* User Name */}
+              <Text style={styles.profileName}>{eventInfo.eventHost}</Text>
+            </View>
+  
+            {/* Number of Users Joined (Touchable to display participants) */}
+            <TouchableOpacity onPress={toggleParticipantsModal}>
+              <Text style={styles.commonText}>{`${eventInfo.usersJoined.length} users joined`}</Text>
+            </TouchableOpacity>
 
-  {/* Sport with Icon */}
-  <View style={styles.sportContainer}>
-    {renderIcon(eventInfo?.eventSport)}
-    <Text style={styles.sportText}>{eventInfo?.eventSport}</Text>
-  </View>
+          </View>
+  
+          {/* Join/Leave Button */}
+          <TouchableOpacity
+            style={[styles.button, isUserJoined ? styles.leaveButton : styles.joinButton]}
+            onPress={handleJoinLeave}
+          >
+            <Ionicons name={isUserJoined ? 'md-exit' : 'md-log-in'} size={20} color="white" />
+            <Text style={styles.buttonText}>{isUserJoined ? 'Leave' : 'Join'}</Text>
+          </TouchableOpacity>
+  
+          {/* Participants Modal */}
+          <Modal transparent={true} animationType="slide" visible={showParticipantsModal}>
+            <View style={styles.popupContainer}>
+              <View style={styles.popupContent}>
+                <TouchableOpacity style={styles.closeButton} onPress={toggleParticipantsModal}>
+                  <FontAwesome name="times" size={20} color="black" />
+                </TouchableOpacity>
+                <Text style={styles.modalHeaderText}>Participants</Text>
+                {/* Display the list of participants using FlatList */}
+                <FlatList
+                  data={eventInfo?.usersJoined || []}
+                  keyExtractor={(item, index) => index.toString()}  // Ensure each item has a unique key
+                  renderItem={({ item }) => (
+                    <View style={styles.participantItem}>
+                      <Text>{item}</Text>
+                    </View>
+                  )}
+                />
+              </View>
+            </View>
+          </Modal>
+          <ErrorMessageModal
+            message={errorMessage}
+            onClose={() => setErrorMessage(null)}
+          />
 
-  {/* Add any other event information you want to display */}
-  <Text>{`Hosted by: ${eventInfo?.eventHost}`}</Text>
-  <Text>{`Description: ${eventInfo?.eventDescription}`}</Text>
-  <Text>{`Address: ${eventInfo?.eventAddress}`}</Text>
-
-  {/* User Profile and Users Joined Row */}
-  <View style={styles.rowContainer}>
-    {/* User Profile Section */}
-    <View style={styles.commonContainer}>
-      {/* User Profile Picture (Placeholder) */}
-      <View style={styles.profilePictureContainer}>
-        <Image
-          source={{uri: 'https://via.placeholder.com/50'}}
-          style={styles.profilePicture}
-        />
-      </View>
-
-      {/* User Name */}
-      <Text style={styles.profileName}>{eventInfo.eventHost}</Text>
-    </View>
-
-    {/* Number of Users Joined */}
-    <Text style={styles.commonText}>{`${eventInfo?.usersJoined || 0} users joined`}</Text>
-  </View>
-
-  {/* Join/Leave Button */}
-  <TouchableOpacity
-    style={[styles.button, isUserJoined ? styles.leaveButton : styles.joinButton]}
-    onPress={handleJoinLeave}
-  >
-    <Ionicons name={isUserJoined ? 'md-exit' : 'md-log-in'} size={20} color="white" />
-    <Text style={styles.buttonText}>{isUserJoined ? 'Leave' : 'Join'}</Text>
-  </TouchableOpacity>
-</View>
-
+        </View>
       </View>
     </Modal>
   );
-};
-
+  };  
 const styles = StyleSheet.create({
     popupContainer: {
       flex: 1,
@@ -197,6 +263,30 @@ const styles = StyleSheet.create({
       marginTop: 10,
       fontSize: 14,
       color: 'gray',
+    },
+    iconContainer: {
+      marginRight: 10, // Add any desired margin
+    },
+    sportContainer: {
+      flexDirection: 'row', // Set flexDirection to 'row'
+      alignItems: 'center',
+      marginVertical: 8,
+      justifyContent: 'center',
+    },
+    sportText: {
+      marginLeft: 0,
+      fontSize: 20, // Adjust font size as needed
+      textAlign: 'center',
+    },
+    participantItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    modalHeaderText: {
+      fontSize: 24,
+      marginBottom: 10,
+      textAlign: 'center',
     },
   });
   
