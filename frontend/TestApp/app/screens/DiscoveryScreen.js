@@ -12,6 +12,8 @@ import axios from 'axios';
 import EventFilterModal from './DiscoveryPageComponents/EventFilterModal';
 
 const DiscoveryScreen = (userInfo) => {
+const BASE_URL = 'http://192.168.1.119:5000';
+
   const [location, setLocation] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [longitude1, setLongitude1] = useState(null);
@@ -46,7 +48,7 @@ const DiscoveryScreen = (userInfo) => {
   };
   const joinEvent = async (eventID) => {
     try {
-      const response = await axios.post('http://192.168.1.119:5000/joinEvent', {
+      const response = await axios.post(`${BASE_URL}/joinEvent`, {
         eventID: eventID,
         userID: userInfo.route.params.userInfo.userID,
       });
@@ -68,7 +70,7 @@ const DiscoveryScreen = (userInfo) => {
 
   const leaveEvent = async (eventID) => {
     try {
-      const response = await axios.post('http://192.168.1.119:5000/leaveEvent', {
+      const response = await axios.post(`${BASE_URL}/leaveEvent`, {
         eventID: eventID,
         userID: userInfo.route.params.userInfo.userID,
       });
@@ -117,7 +119,7 @@ const DiscoveryScreen = (userInfo) => {
     setSelectedFilters(eventFilters);
     try {
       // Make an API call to fetch events
-      const response = await axios.post('http://192.168.1.119:5000/getEvents', {
+      const response = await axios.post(`${BASE_URL}/getEvents`, {
         latitude: latitude,
         longitude: longitude,
         filters: eventFilters,
@@ -244,7 +246,7 @@ const DiscoveryScreen = (userInfo) => {
     console.log(eventData);
     try {
       // Assuming your backend endpoint for creating an event is '/api/createEvent'
-      const response = await fetch('http://192.168.1.119:5000/addEvent', {
+      const response = await fetch(`${BASE_URL}/addEvent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -268,33 +270,47 @@ const DiscoveryScreen = (userInfo) => {
   };
   
   
-  const displayEventMarkers = () => {
-    if (eventsInArea) {
-      return Object.entries(events).map(([address]) => {
-        const latitude = parseFloat(events[address][0].eventLat);
-        const longitude = parseFloat(events[address][0].eventLong);
-        if (!isNaN(latitude) && !isNaN(longitude)) {
-          return (
-            <Marker
-              key={address}
-              coordinate={{
-                latitude: latitude,
-                longitude: longitude,
-              }}
-            //   title={eventData.eventName}
-            //   description={eventData.eventDescription}
-              pinColor="blue" // or any other color you prefer
-              onPress={() => handleEventMarkerPress(address)}
-            />
-          );
-        } else {
-          console.error('Invalid coordinates for event:', eventData);
-          return null; // Skip rendering this marker
-        }
-      });
-    }
-    return null;
+  const displayMarkers = () => {
+    const markers = places.map((place) => (
+      <Marker
+        key={`place_${place.place_id}`}
+        coordinate={{
+          latitude: place.geometry.location.lat,
+          longitude: place.geometry.location.lng,
+        }}
+        title={place.name}
+        description={place.vicinity}
+        onPress={() => handleMarkerPress(place)}
+        pinColor="red"
+      />
+    ));
+  
+    const eventMarkers = Object.entries(events).flatMap(([address, eventData]) => {
+      const latitude = parseFloat(eventData[0].eventLat);
+      const longitude = parseFloat(eventData[0].eventLong);
+  
+      if (!isNaN(latitude) && !isNaN(longitude)) {
+        // Render event marker
+        return (
+          <Marker
+            key={`event_${address}`}
+            coordinate={{
+              latitude: latitude,
+              longitude: longitude,
+            }}
+            onPress={() => handleEventMarkerPress(address)}
+            pinColor="blue"
+          />
+        );
+      } else {
+        console.error('Invalid coordinates for event:', eventData);
+        return null; // Skip rendering this marker
+      }
+    });
+  
+    return [...markers, ...eventMarkers];
   };
+  
 
   return (
     <View style={{ flex: 1 }}>
@@ -314,21 +330,9 @@ const DiscoveryScreen = (userInfo) => {
               provider={MapView.PROVIDER_DEFAULT}
               apiKey="AIzaSyDDVvsCzt1dbSWIIC5wKRji6vW87bGUEcg"
             >
-              
-              {places.map((place) => (
-                <Marker
-                  key={place.place_id}
-                  coordinate={{
-                    latitude: place.geometry.location.lat,
-                    longitude: place.geometry.location.lng,
-                  }}
-                  title={place.name}
-                  description={place.vicinity}
-                  onPress={() => handleMarkerPress(place)}
-                />
-              ))}
+            
             {/* Display markers for events */}
-            {displayEventMarkers()}
+            {displayMarkers()}
 
 
             </MapView>
