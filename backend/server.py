@@ -155,9 +155,9 @@ def getEvents():
     user_lat = data.get('latitude')
     user_long = data.get('longitude')
     filters = data.get('filters')
+    places = data.get('places')
     print(filters)
     radius = 1000  # You might want to include a radius in the request data
-    print(data)
     if user_lat and user_long and radius:
         # Convert latitude, longitude, and radius to float
         user_lat = float(user_lat)
@@ -166,8 +166,8 @@ def getEvents():
         print("getEvents called")
 
         # Retrieve events within the specified radius
-        events, error = mapHandler.get_events_within_radius(user_lat, user_long, radius, filters)
-
+        events, error = mapHandler.get_events_within_radius(user_lat, user_long, radius, filters, places)
+        print("Events: ", events)
         if error:
             return jsonify({'error': error}), 500
         else:

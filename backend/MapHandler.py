@@ -9,6 +9,7 @@ import UserHandler
 import MapHandler 
 from datetime import datetime
 from functools import reduce
+from math import radians, sin, cos, sqrt, atan2
 
 userHandler = UserHandler.UserHandler()
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -33,11 +34,12 @@ class MapHandler:
         self.__tableUsers = self.__dynamodb.Table('Users')
     
     
-    def get_events_within_radius(self, user_lat, user_long, radius_meters, filters):
+    def get_events_within_radius(self, user_lat, user_long, radius_meters, filters, places):
         _err = None
-        print("filters: ", filters)
-        events_within_radius = {}  # Change to a dictionary
-        print("Getting Event within Radius")
+        events_within_radius = {}  # Dictionary to hold events and places by address
+        events_without_places = {}  # Dictionary to hold events without associated places
+
+
         try:
             user_lat_decimal = Decimal(str(user_lat))
             user_long_decimal = Decimal(str(user_long))
@@ -56,48 +58,99 @@ class MapHandler:
 
             # Check if sports are selected in filters
             if filters and 'selectedSports' in filters and filters['selectedSports']:
-                print("Checking Sports Filter")
                 selected_sports_conditions = []
                 for sport in filters['selectedSports']:
                     selected_sports_conditions.append(Attr("eventSports").contains(sport))
                 # Combine conditions using OR operator
                 filter_expression &= reduce(lambda x, y: x | y, selected_sports_conditions)
-                 # Check date range in filters
+
+            # Check date range in filters
             if filters and 'selectedStartDate' in filters and 'selectedEndDate' in filters:
-                print('Checking Date filters')
                 start_date = filters['selectedStartDate']
                 end_date = filters['selectedEndDate']
                 filter_expression &= Attr("eventDate").between(start_date, end_date)
 
-            # # Check visibility in filters
-            # if filters and 'selectedVisibility' in filters:
-            #     visibility = filters['selectedVisibility']
-            #     if visibility == 'public':
-            #         # Only public events
-            #         filter_expression &= Attr("eventVisibility").eq('public')
-            #     elif visibility == 'private':
-            #         # Only private events where the user is invited
-            #         filter_expression &= Attr("eventVisibility").eq('private') & Attr("usersInvited").contains("username")
-            #     elif visibility == 'both':
-            #         # Both public and private events
-            #         filter_expression &= (Attr("eventVisibility").eq('public') | (Attr("eventVisibility").eq('private') & Attr("usersInvited").contains("username")))
-
             # Use the DynamoDB Table resource with the constructed filter expression
             events = self.__table.scan(FilterExpression=filter_expression)['Items']
-        
-            # Group events by address
+
+            # Group places by address
+            for place in places:
+                place_address = place['vicinity']
+                if place_address not in events_within_radius:
+                    events_within_radius[place_address] = {'events': [], 'places': [place]}
+                else:
+                    events_within_radius[place_address]['places'].append(place)
+
+            # Iterate through events and check if they belong to a place
+            # Iterate through events and check if they belong to a place
             for event in events:
                 event_address = event['eventAddress']
-                if event_address not in events_within_radius:
-                    events_within_radius[event_address] = []
-                events_within_radius[event_address].append(event)
-            print("Finish grouping events by addresses")
+                event_lat_decimal = Decimal(str(event['eventLat']))
+                event_long_decimal = Decimal(str(event['eventLong']))
+
+                # Check if event is close to any place
+                event_added_to_place = False
+                for place_address, place_data in events_within_radius.items():
+                    if place_data['places']:
+                        place_lat_decimal = Decimal(str(place_data['places'][0]['geometry']['location']['lat']))
+                        place_long_decimal = Decimal(str(place_data['places'][0]['geometry']['location']['lng']))
+                        distance_to_place = self.calculate_distance(
+                            event_lat_decimal, event_long_decimal, place_lat_decimal, place_long_decimal
+                        )
+                        if distance_to_place <= 50:
+                            place_data['events'].append(event)
+                            event_added_to_place = True
+                            break
+
+                if not event_added_to_place:
+                    # Event does not belong to any nearby place, check if it's close to other events in the dictionary
+                    event_added_to_event = False
+                    for address, data in events_without_places.items():
+                        for existing_event in data['events']:
+                            existing_event_lat_decimal = Decimal(str(existing_event['eventLat']))
+                            existing_event_long_decimal = Decimal(str(existing_event['eventLong']))
+                            distance_to_existing_event = self.calculate_distance(
+                                event_lat_decimal, event_long_decimal,
+                                existing_event_lat_decimal, existing_event_long_decimal
+                            )
+                            if distance_to_existing_event <= 50:
+                                data['events'].append(event)
+                                event_added_to_event = True
+                                break
+                        if event_added_to_event:
+                            break
+
+                    if not event_added_to_event:
+                        # Event is not close to any nearby events or places, add it to events_without_places
+                        events_without_places[event_address] = {'events': [event], 'places': []}
+
+            events_within_radius.update(events_without_places)
 
         except Exception as e:
-            print(f"Error fetching events within radius: {e}")
             _err = str(e)
+        print("Error: ",_err)    
 
         return events_within_radius, _err
+
+
+    def calculate_distance(self, lat1, lon1, lat2, lon2):
+        # Convert latitude and longitude from degrees to radians
+        lat1_rad, lon1_rad = radians(lat1), radians(lon1)
+        lat2_rad, lon2_rad = radians(lat2), radians(lon2)
+
+        # Haversine formula
+        dlat = lat2_rad - lat1_rad
+        dlon = lon2_rad - lon1_rad
+        a = sin(dlat / 2) ** 2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2) ** 2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        # Radius of the Earth in meters (approximately)
+        earth_radius = 6371000
+
+        # Calculate the distance
+        distance = earth_radius * c
+        return distance
+
     
 
 

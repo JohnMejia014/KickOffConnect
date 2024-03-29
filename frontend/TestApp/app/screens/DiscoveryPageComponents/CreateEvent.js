@@ -6,15 +6,13 @@ import AddEventComponent from './AddEventComponent';
 import ShareEventComponent from './ShareEventComponent';
 import { v4 as uuidv4 } from 'react-native-uuid';  // Import uuid from react-native-uuid
 
-const CreateEvent = ({ userInfo, isVisible, onClose, onSubmit, tabBarHeight, initialEventData, longitude, latitude }) => {
+const CreateEvent = ({ userInfo, isVisible, onClose, onSubmit, initialEventData, longitude, latitude }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const generateUniqueID = () => {
     const timestamp = new Date().getTime();  // Get the current timestamp
     const randomNumber = Math.floor(Math.random() * 1000000);  // Generate a random number
     return `${timestamp}-${randomNumber}`;
   };
-  console.log("userInfo: ");
-  console.log(userInfo);
     const [eventData, setEventData] = useState({
     eventID: generateUniqueID(),
     eventCoordinates: null,
@@ -64,7 +62,9 @@ const CreateEvent = ({ userInfo, isVisible, onClose, onSubmit, tabBarHeight, ini
   const handleShareEvent = () => {
     ;
   };
-
+  console.log("inside create event", "Visibility: ", isVisible);
+  console.log("current step: ", currentStep);
+  console.log("latitude: ",latitude);
   return (
     <View>
       {currentStep === 1 && (

@@ -1,77 +1,181 @@
-import React from 'react';
-import { View, Text, Button, Modal, TouchableOpacity, Image, StyleSheet, useState } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import { View, ScrollView, Modal, TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Svg, { Path } from 'react-native-svg';
-import StarRating, { StarRatingDisplay } from 'react-native-star-rating-widget';
 import { Rating } from 'react-native-ratings';
+import EventPreviewComponent from './EventPreviewComponent';
+import EventComponent from './EventComponent';
+import CreateEvent from './CreateEvent';
+const PopUpForPlace = ({ placeInfo, onClose, onAddRating, userInfo, joinEvent, leaveEvent, submitEvent }) => {
+  const place = placeInfo.places[0]
+  const [currentPage, setCurrentPage] = useState(1); // State to track the current page index
+  const events = placeInfo.events
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const latitude = place.geometry.location.lat || 0;
+  const longitude = place.geometry.location.lng || 0;
+ 
+  const onAddEvent = () => {
+    setShowCreateEvent(true);
+  };
+  const onSubmitEvent = (eventData) => {
+    handleCloseModal();
+    onClose();
+    submitEvent(eventData);
+  };
+  const handleCloseModal = () => {
+    setShowCreateEvent(false); // Reset state to hide the CreateEvent component
+    setSelectedEvent(null); // Reset selected event
+  };
+  const toggleModal = () => {
+    onClose();  // Close the modal when needed
+    setSelectedEvent(null);  // Reset selected event when modal is closed
+  };
+  const handleCloseEvent = () =>{
+    setSelectedEvent(null);
 
-const PopUpForPlace = ({ placeInfo, onClose, onAddEvent, onAddRating }) => {
+}
+  const goToNextPage = () => {
+    setCurrentPage(2); // Navigate to the second page
+  };
 
+  const goToPreviousPage = () => {
+    setCurrentPage(1); // Navigate back to the first page
+  };
+  const handleEventSelection = (event) => {
+    setSelectedEvent(event);
+  };
   return (
-    <Modal transparent={true} animationType="slide" visible={placeInfo !== null}>
-      <View style={styles.popupContainer}>
-        <View style={styles.popupContent}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <FontAwesome name="times" size={20} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.placeName}>{placeInfo?.name}</Text>
+    <Modal transparent={true} animationType="slide" visible={place !== null}>
+    <View style={styles.popupContainer}>
+      <View style={styles.popupContent}>
+      {currentPage === 1 ? (
+        <>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <FontAwesome name="times" size={20} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.placeName}>{place?.name}</Text>
 
-          {placeInfo?.photos && placeInfo?.photos.length > 0 && (
-            <Image
-              source={{ uri: placeInfo.photos[0] }}
-              style={styles.placePhoto}
-              resizeMode="cover"
-              onError={(error) => console.error('Image load error:', error)}
-            />
-          )}
+        {place?.photos && place?.photos.length > 0 && (
+          <Image
+            source={{ uri: place.photos[0] }}
+            style={styles.placePhoto}
+            resizeMode="cover"
+            onError={(error) => console.error('Image load error:', error)}
+          />
+        )}
 
-          <Text style ={styles.addressName}>{placeInfo?.vicinity}</Text>
-          <View style={styles.ratingContainer}>
-            <Rating
-              type='star'
-              ratingCount={5}
-              imageSize={20}
-              startingValue={placeInfo?.rating || 0}
-              readonly={true}
-              showRating={false}
-            />
-            <Text style={styles.ratingText}>
-              {placeInfo?.rating !== null && placeInfo?.rating !== undefined
-                ? `(${placeInfo?.user_ratings_total} ratings)`
-                : 'No ratings'}
-            </Text>
-          </View>
-          {/* Create Event Button */}
-          <TouchableOpacity
-            style={[styles.button, styles.createEventButton]}
-            onPress={() => onAddEvent(placeInfo?.formatted_address)}
-          >
-            <Ionicons name="md-add-circle" size={20} color="white" />
-            <Text style={styles.buttonText}>Create Event</Text>
-          </TouchableOpacity>
-
-          {/* Add Rating Button */}
-          <TouchableOpacity
-            style={[styles.button, styles.addRatingButton]}
-            onPress={onAddRating}
-          >
-            <Ionicons name="md-star" size={20} color="white" />
-            <Text style={styles.buttonText}>Add Rating</Text>
-          </TouchableOpacity>
+        <Text style ={styles.addressName}>{place?.vicinity}</Text>
+        <View style={styles.ratingContainer}>
+          <Rating
+            type='star'
+            ratingCount={5}
+            imageSize={20}
+            startingValue={place?.rating || 0}
+            readonly={true}
+            showRating={false}
+          />
+          <Text style={styles.ratingText}>
+            {place?.rating !== null && place?.rating !== undefined
+              ? `(${place?.user_ratings_total} ratings)`
+              : 'No ratings'}
+          </Text>
         </View>
+        {/* Create Event Button */}
+        <TouchableOpacity
+          style={[styles.button, styles.createEventButton]}
+          onPress={() => onAddEvent()}
+          >
+          <Ionicons name="md-add-circle" size={20} color="white" />
+          <Text style={styles.buttonText}>Create Event</Text>
+        </TouchableOpacity>
+
+        {/* Add Rating Button */}
+        {/* <TouchableOpacity
+          style={[styles.button, styles.addRatingButton]}
+          onPress={onAddRating}
+        >
+          <Ionicons name="md-star" size={20} color="white" />
+          <Text style={styles.buttonText}>Add Rating</Text>
+        </TouchableOpacity> */}
+         {/* Button to navigate to the next page */}
+         <TouchableOpacity style={styles.nextPageButton} onPress={goToNextPage}>
+          <Text style={styles.buttonText}>View Events</Text>
+        </TouchableOpacity>
+
+
+       {showCreateEvent && (
+         <CreateEvent
+         userInfo={userInfo}
+         isVisible={true}
+         onClose={() => handleCloseModal()}
+         onSubmit={(eventData) => onSubmitEvent(eventData)}
+         longitude={longitude}
+         latitude={latitude}
+        />
+)}
+
+     </>
+   ) : (
+     // Second Page: Additional Content
+     <>
+       <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+         <FontAwesome name="times" size={20} color="black" />
+       </TouchableOpacity>
+       <View style={styles.eventContainer}>
+          
+
+        <ScrollView>
+            {/* Display a list of events in the modal */}
+            {events.length > 0 ? (
+              events.map((event, index) => (
+                <EventPreviewComponent
+                  key={index.toString()} // Use index as a key (ensure it's unique)
+                  eventInfo={event}
+                  onPress={() => handleEventSelection(event)}
+                />
+              ))
+            ) : (
+              <Text style={styles.noEventsText}>No events</Text>
+            )}
+
+            {/* Conditionally render EventComponent if an event is selected */}
+            {selectedEvent && (
+              <EventComponent
+                initialEventInfo={selectedEvent}
+                onClose={() => {
+                  handleCloseEvent();
+                }}
+                userInfo ={userInfo}
+                leaveEvent={leaveEvent}
+                joinEvent={joinEvent}
+                onJoinLeave={(isJoined) => {
+                  // Handle join/leave logic here
+                  console.log('Join/Leave event:', isJoined);
+                }}
+              />
+            )}
+          </ScrollView>
+
+        </View>
+       {/* Button to navigate back to the first page */}
+       <TouchableOpacity style={styles.nextPageButton} onPress={goToPreviousPage}>
+         <Text style={styles.buttonText}>Back</Text>
+       </TouchableOpacity>
+     </>
+   )}
       </View>
+    </View>
     </Modal>
   );
 };
 
-  
 const styles = StyleSheet.create({
   popupContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
   },
   popupContent: {
     backgroundColor: 'white',
@@ -122,18 +226,30 @@ const styles = StyleSheet.create({
   addRatingButton: {
     backgroundColor: '#4169E1', // Royal Blue color
   },
+  nextPageButton: {
+    backgroundColor: '#FF6347', // Tomato color
+    alignSelf: 'center',
+    paddingVertical: 20, // Adjust vertical padding to match the Create Event button
+    paddingHorizontal: 105, // Adjust horizontal padding to match the Create Event button
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: 'center', // Align text and icon to center
+    flexDirection: 'row', // Align text and icon in a row
+  },
+  
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
   },
-  closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 15,
-    zIndex: 1,
-  },
+  noEventsText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+  }
+  
 });
 
 export default PopUpForPlace;

@@ -11,7 +11,7 @@ const ChooseLocation = ({ onCloseMod, isVisible, onClose, onSelectLocation, long
   const [selectedLatitude, setSelectedLatitude] = useState(latitude);
   const [selectedLongitude, setSelectedLongitude] = useState(longitude);
   const [selectedAddress, setSelectedAddress] = useState(eventData?.eventAddress || ''); // Set initial value
-
+  console.log("Made it to choose location with visibility: ", isVisible);
   const getAddressFromCoordinates = async (lat, lng) => {
     try {
       const response = await Geocoder.from({ latitude: lat, longitude: lng });
@@ -73,6 +73,7 @@ const ChooseLocation = ({ onCloseMod, isVisible, onClose, onSelectLocation, long
   };
 
   return (
+
     <Modal transparent={true} visible={isVisible} animationType="slide">
       <View style={styles.modalContainer}>
         <View style={styles.innerContainer}>

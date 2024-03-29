@@ -55,14 +55,17 @@ const EventPreviewComponent = ({ eventInfo, onPress, userInfo }) => {
 
       {/* Event Time and Date */}
       <View style={styles.infoContainer}>
-        <Text>{`Start Time: ${eventInfo?.eventTime?.start}`}</Text>
-        <Text>{`End Time: ${eventInfo?.eventTime?.end}`}</Text>
-        <Text>{`Date: ${eventInfo?.eventDate}`}</Text>
+        <Text style={styles.label}>{`Start:`}</Text>
+        <Text>{`${eventInfo?.eventTime?.start}`}</Text>
+        <Text style={styles.label}>{`End:`}</Text>
+        <Text>{`${eventInfo?.eventTime?.end}`}</Text>
+        <Text>{`${eventInfo?.eventDate}`}</Text>
       </View>
 
       {/* Users Participating */}
       <View style={styles.usersContainer}>
-        <Text>{`Participants: ${eventInfo.usersJoined.length}`}</Text>
+       <Text style={styles.label}>{`Joined:`}</Text>
+        <Text>{`${eventInfo.usersJoined.length}`}</Text>
       </View>
 
     </TouchableOpacity>
@@ -91,7 +94,10 @@ const styles = StyleSheet.create({
   },
   usersContainer: {
     flex: 1,
-    alignItems: 'flex-end',
+    alignItems: 'center',
+  },
+  label: {
+    fontWeight: 'bold',
   },
 });
 

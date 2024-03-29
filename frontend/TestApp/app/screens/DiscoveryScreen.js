@@ -10,9 +10,10 @@ import { ActivityIndicator } from 'react-native';
 import PopUpForPlace from './DiscoveryPageComponents/PopUpForPlace';
 import axios from 'axios';
 import EventFilterModal from './DiscoveryPageComponents/EventFilterModal';
+import EventParkMarkers from './DiscoveryPageComponents/EventParkMarkers';
 
 const DiscoveryScreen = (userInfo) => {
-const BASE_URL = 'http://192.168.1.119:5000';
+  const BASE_URL = 'http://192.168.1.119:5000';
 
   const [location, setLocation] = useState(null);
   const [longitude, setLongitude] = useState(null);
@@ -27,32 +28,44 @@ const BASE_URL = 'http://192.168.1.119:5000';
   const [createEventVisible, setCreateEventVisible] = useState(false);
   const [tempSelectedPlaceLocation, setTempSelectedPlaceLocation] = useState(null);
   const [events, setEvents] = useState({});
-  const [eventsList, setEventsList] = useState([]);  
+  const [eventsList, setEventsList] = useState([]);
   const [isEventListVisible, setEventListVisible] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [eventAddresses, setEventAddresses] = useState([])
+  const [eventAddresses, setEventAddresses] = useState([]);
   const [eventsInArea, setEventsInArea] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isFilterModalVisible, setFilterModalVisible] = useState(true);
+  const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+  const [selectedPlaceEvent, setSelectedPlaceEvent] = useState(null);
+  const [placesByAddress, setPlacesByAddress] = useState({});
+  const [eventsByAddress, setEventsByAddress] = useState({});
+  const [placesFetched, setPlacesFetched] = useState(false);
+  const [plusORAddButton, setPlusORAddButton] = useState(null);
+  const [eventAdded, setEventAdded] = useState(false);
 
-
-  
   const [selectedFilters, setSelectedFilters] = useState({
     selectedSports: [],
     showPublicEvents: true,
     showPrivateEvents: true,
     // Add more filter options here
   });
+  useEffect(() => {
+    if (eventAdded) {
+      handleGetEvents(selectedFilters);
+      setEventAdded(false); // Reset eventAdded after calling handleGetEvents
+    }
+  }, [eventAdded]);
+
   const handleEventListClose = () => {
     setEventListVisible(false);
   };
+
   const joinEvent = async (eventID) => {
     try {
       const response = await axios.post(`${BASE_URL}/joinEvent`, {
         eventID: eventID,
         userID: userInfo.route.params.userInfo.userID,
       });
-  
+
       if (response.data.success) {
         console.log(response.data.message);
         const updatedEventInfo = response.data.event;
@@ -66,7 +79,6 @@ const BASE_URL = 'http://192.168.1.119:5000';
       throw new Error('Failed to join the event');
     }
   };
-  
 
   const leaveEvent = async (eventID) => {
     try {
@@ -74,7 +86,7 @@ const BASE_URL = 'http://192.168.1.119:5000';
         eventID: eventID,
         userID: userInfo.route.params.userInfo.userID,
       });
-  
+
       if (response.data.success) {
         console.log(response.data.message);
         const updatedEventInfo = response.data.event;
@@ -88,63 +100,55 @@ const BASE_URL = 'http://192.168.1.119:5000';
       throw new Error('Failed to leave the event');
     }
   };
-  
-  
+
   const toggleCreateEventVisibility = () => {
     setCreateEventVisible(!createEventVisible);
   };
-  const handleMarkerPress = (place) => {
-    setSelectedPlace(place);
-  };
-  const handleEventMarkerPress = (inputAddress) => {
-    console.log("Setting event list ");
-    if (Array.isArray(events[inputAddress])) {
-      setEventsList(events[inputAddress]);
-      // Set isModalVisible to true when an event marker is pressed
-      setEventListVisible(true);
-      setIsModalVisible(true); // Add this line to set isModalVisible to true
-      setSelectedAddress(inputAddress); // Set the selected address for event list
-    } else {
-      console.error('Invalid events data:', events);
-    }
-  };
-  
 
-  const handlePlacePopupClose = () => {
-    setSelectedPlace(null);
+  
+  const handleMarkerPress = (placeData) => {
+    setSelectedPlaceEvent(placeData);
+    //console.log("place data: ", placeData);
   };
- 
+
+//   const handleEventMarkerPress = (inputAddress) => {
+//     if (Array.isArray(events[inputAddress])) {
+//       setEventsList(events[inputAddress]);
+//       setEventListVisible(true);
+//       setIsModalVisible(true);
+//       setSelectedAddress(inputAddress);
+//     } else {
+//       console.error('Invalid events data:', events);
+//     }
+//   };
+
   const handleGetEvents = async (eventFilters) => {
-    console.log("filters from discovery page ", eventFilters);
     setSelectedFilters(eventFilters);
     try {
-      // Make an API call to fetch events
       const response = await axios.post(`${BASE_URL}/getEvents`, {
         latitude: latitude,
         longitude: longitude,
         filters: eventFilters,
+        places: places
       });
-  
-      // Process the response and update state
+
       const eventsRetrieved = response.data.events;
       setEvents(eventsRetrieved);
-  
-      // Update this line to use eventAddresses instead of Object.keys(events)
+      setPlacesByAddress(eventsRetrieved);
+      // Combine events with existing places data
+      console.log("Events retrieved: ", eventsRetrieved);
+      if (eventsRetrieved && typeof eventsRetrieved === 'object') {
+      } else {
+        console.log('No events retrieved or eventsRetrieved is not an array');
+      }
+     
       const addresses = Object.keys(eventsRetrieved);
       setEventAddresses(addresses);
       setEventsInArea(addresses.length > 0);
       setFilterModalVisible(false);
-      console.log('Events Retrieved:', eventsRetrieved);
     } catch (error) {
       console.error('Error fetching events:', error);
     }
-  };
-  
-  
-  
-  
-  const handleAddRating = () => {
-    console.log('Add Rating');
   };
 
   useEffect(() => {
@@ -171,20 +175,18 @@ const BASE_URL = 'http://192.168.1.119:5000';
     })();
   }, []);
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch location/places data
         const placesResponse = await fetch(
           `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
           `location=${latitude},${longitude}&radius=10000&type=park|gym&key=AIzaSyDDVvsCzt1dbSWIIC5wKRji6vW87bGUEcg`
         );
-  
+
         if (!placesResponse.ok) {
           throw new Error('Failed to fetch places data');
         }
-  
+
         const placesData = await placesResponse.json();
         const placesWithPhotos = await Promise.all(
           placesData.results.map(async (place) => {
@@ -201,116 +203,73 @@ const BASE_URL = 'http://192.168.1.119:5000';
             } else {
               return {
                 ...place,
-                photos: [], // No photos for this place
+                photos: [],
               };
             }
           })
         );
-  
         setPlaces(placesWithPhotos);
-  
-        // Fetch events data using fetch
-      
-      } catch (error) {
+        setPlacesFetched(true);
+        setFilterModalVisible(true);
+
+        // Update the state with combined data
+        console.log("fetching places done");
+    } catch (error) {
         console.error('Error getting location/places or events:', error);
         setErrorMsg('Error getting location/places or events: ' + error.message);
       } finally {
         setMapLoading(false);
       }
     };
-  
-    // Only fetch data when latitude or longitude changes
+
     fetchData();
+    console.log("Finished fetching places");
   }, [latitude, longitude]);
   
-  
   const handleAddEventButtonPress = () => {
-    // Toggle the visibility of CreateEvent
     setTempSelectedPlaceLocation(null);
+    setSelectedPlaceEvent(null);
     setAddEventModalVisible(!isAddEventModalVisible);
     console.log("Creating New Event");
+    console.log("Setting temp and modal visibility: ", tempSelectedPlaceLocation, isAddEventModalVisible);
   };
- 
-  const handleAddEventPopUpPress = () => {
-    // Set temporary location before toggling the visibility of CreateEvent
-    setTempSelectedPlaceLocation({
-      latitude: selectedPlace.geometry.location.lat,
-      longitude: selectedPlace.geometry.location.lng,
-    });
-    handlePlacePopupClose();
-    setAddEventModalVisible(!isAddEventModalVisible);
-    console.log("Creating New Event");
-  };
+
+//   const handleAddEventPopUpPress = () => {
+  
+//     setTempSelectedPlaceLocation({
+//       latitude: selectedPlaceEvent.places[0].geometry.location.lat,
+//       longitude: selectedPlaceEvent.places[0].geometry.location.lng,
+//     });
+//     console.log("TempSelectedPlaceLocation: ", tempSelectedPlaceLocation);
+//     setSelectedPlaceEvent(null);
+//     console.log("isAddEvenModalVisible: ", isAddEventModalVisible);
+//     setAddEventModalVisible(!isAddEventModalVisible);
+//     console.log("isAddEvenModalVisible: ", isAddEventModalVisible);
+//   };
 
   const handleAddEventSubmit = async (eventData) => {
     console.log(eventData);
     try {
-      // Assuming your backend endpoint for creating an event is '/api/createEvent'
       const response = await fetch(`${BASE_URL}/addEvent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // You might need to include additional headers, such as authentication headers
         },
         body: JSON.stringify(eventData),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to submit event to the backend');
       }
-  
-      // Handle the response from the backend if needed
+
       const responseData = await response.json();
+      setEventAdded(true); // Reset eventAdded after calling handleGetEvents
       console.log('Backend Response:', responseData);
-  
     } catch (error) {
       console.error('Error submitting event to the backend:', error);
-      // Handle the error, e.g., show an error message to the user
     }
   };
-  
-  
-  const displayMarkers = () => {
-    const markers = places.map((place) => (
-      <Marker
-        key={`place_${place.place_id}`}
-        coordinate={{
-          latitude: place.geometry.location.lat,
-          longitude: place.geometry.location.lng,
-        }}
-        title={place.name}
-        description={place.vicinity}
-        onPress={() => handleMarkerPress(place)}
-        pinColor="red"
-      />
-    ));
-  
-    const eventMarkers = Object.entries(events).flatMap(([address, eventData]) => {
-      const latitude = parseFloat(eventData[0].eventLat);
-      const longitude = parseFloat(eventData[0].eventLong);
-  
-      if (!isNaN(latitude) && !isNaN(longitude)) {
-        // Render event marker
-        return (
-          <Marker
-            key={`event_${address}`}
-            coordinate={{
-              latitude: latitude,
-              longitude: longitude,
-            }}
-            onPress={() => handleEventMarkerPress(address)}
-            pinColor="blue"
-          />
-        );
-      } else {
-        console.error('Invalid coordinates for event:', eventData);
-        return null; // Skip rendering this marker
-      }
-    });
-  
-    return [...markers, ...eventMarkers];
-  };
-  
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -330,15 +289,48 @@ const BASE_URL = 'http://192.168.1.119:5000';
               provider={MapView.PROVIDER_DEFAULT}
               apiKey="AIzaSyDDVvsCzt1dbSWIIC5wKRji6vW87bGUEcg"
             >
-            
-            {/* Display markers for events */}
-            {displayMarkers()}
+               {/* Render EventMarkers component */}
+               {Object.keys(placesByAddress).map((address) => (
+            <Marker
+              key={address}
+              coordinate={{
+                latitude:
+                  placesByAddress[address].places[0]?.geometry?.location.lat ||
+                  placesByAddress[address].events[0]?.eventLat ||
+                  0,
+                longitude:
+                  placesByAddress[address].places[0]?.geometry?.location.lng ||
+                  placesByAddress[address].events[0]?.eventLong ||
+                  0,
+              }}
+              title={address}
+              onPress={() => handleMarkerPress(placesByAddress[address])}
+              // Set marker color based on the condition
+              pinColor={placesByAddress[address].places.length > 0 ? 'red' : 'blue'}
+            />
+          ))}
 
-
-            </MapView>
+              </MapView>
           )}
-  
-          {isAddEventModalVisible && (
+
+          {/* Render the EventParkMarkers component when a marker is selected */}
+            {selectedPlaceEvent && (
+                <EventParkMarkers
+                isVisible={true} // Set this to true when the component should be visible
+                placeInfo={selectedPlaceEvent}
+                onClose={() => setSelectedPlaceEvent(null)} // Close the component when needed
+                joinEvent ={joinEvent}
+                leaveEvent={leaveEvent}
+                userInfo={userInfo}
+                addEvent={() => handleAddEventButtonPress()}
+                handleAddEventSubmit={handleAddEventSubmit}
+                submitEvent={handleAddEventSubmit}
+                />
+            )}
+
+
+
+          { isAddEventModalVisible && (
             <CreateEvent
               userInfo={userInfo}
               isVisible={isAddEventModalVisible}
@@ -358,14 +350,18 @@ const BASE_URL = 'http://192.168.1.119:5000';
             />
           )}
 
-            {/* Display the retrieved events on the map */}
-        
         <TouchableOpacity
-            style={styles.getEventsButton}  
-           onPress={() => setFilterModalVisible(true)}
-              >
-           <Text style={{ color: 'black', fontSize: 16 }}>Filter Events</Text>
-         </TouchableOpacity>
+            style={styles.getEventsButton}
+            onPress={() => {
+              if (placesFetched) {
+                setFilterModalVisible(true);
+              } else {
+                console.log('Places data not fetched yet.');
+              }
+            }}
+          >
+            <Text style={{ color: 'black', fontSize: 16 }}>Filter Events</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.plusButton}
             onPress={handleAddEventButtonPress}
@@ -374,30 +370,15 @@ const BASE_URL = 'http://192.168.1.119:5000';
           </TouchableOpacity>
         </>
       )}
-
-       {isEventListVisible && (
-        <EventListComponent events={events[selectedAddress]}
-          isModalVisible={isEventListVisible}
-          userInfo={userInfo}
-          onClose={handleEventListClose}
-          leaveEvent={leaveEvent}
-          joinEvent={joinEvent}
-          />
-        )}
-        <EventFilterModal
+      <EventFilterModal
         isVisible={isFilterModalVisible}
         onClose={() => setFilterModalVisible(false)}
         onApplyFilters={handleGetEvents}
-        />
-      <PopUpForPlace
-        placeInfo={selectedPlace}
-        onClose={handlePlacePopupClose}
-        onAddEvent={handleAddEventPopUpPress}
-        onAddRating={handleAddRating}
       />
+   
     </View>
   );
-          };  
+};
 
 const styles = StyleSheet.create({
   plusButton: {
@@ -407,15 +388,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'blue',
     borderRadius: 25,
     padding: 16,
-    zIndex: 1,
-  },
-  selectedPlaceInfo: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: 'white',
     zIndex: 1,
   },
   loadingIndicator: {
@@ -428,7 +400,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     left: 16,
-    backgroundColor: 'green',  // Set your desired color
+    backgroundColor: 'green',
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 20,
