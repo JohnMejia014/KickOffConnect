@@ -19,9 +19,9 @@ const FeedScreen = (userInfo) => (
 
   return(
         <Stack.Navigator>
-            <Stack.Screen name="Root" component={FeedList} options={{headerShown: false}}/>
-            <Stack.Screen name="Video" component={VideoPlayer} options={{headerShown: false }}/>
-            <Stack.Screen name="Create" component={PostObject} options={{headerShown: false}}/>
+            <Stack.Screen name="Root" component={FeedList} options={{headerShown: false}} route={{params: {userInfo}}}/>
+            <Stack.Screen name="Video" component={VideoPlayer} options={{headerShown: false}}/>
+            <Stack.Screen name="Create" component={PostObject} options={{headerShown: false}} route={{params: {userInfo}}}/>
         </Stack.Navigator>
     )
 );
