@@ -24,7 +24,7 @@ const CreateEvent = ({ userInfo, isVisible, onClose, onSubmit, initialEventData,
     eventTime: {start: '', end: ''},  // example
     eventDate: '',  // example
     eventSports: [],  // example
-    eventHost: userInfo.route.params.userInfo.userID,  // example
+    eventHost: userInfo.userID,  // example
     eventVisibility: '',  // example
     usersInvited: [],  // example
     usersJoined: [],  // example

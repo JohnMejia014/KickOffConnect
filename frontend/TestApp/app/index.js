@@ -16,7 +16,7 @@ const Tab = createBottomTabNavigator();
 function AppScreen() {
   const route = useRoute();
   const { userInfo } = route.params || {};
-  console.log(userInfo);
+ 
   return(
     <Tab.Navigator
     initialRouteName = "Feed"

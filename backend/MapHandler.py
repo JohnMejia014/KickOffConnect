@@ -10,6 +10,7 @@ import MapHandler
 from datetime import datetime
 from functools import reduce
 from math import radians, sin, cos, sqrt, atan2
+from datetime import datetime, timedelta
 
 userHandler = UserHandler.UserHandler()
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -158,7 +159,47 @@ class MapHandler:
         if isinstance(value, float):
             return Decimal(str(value))
         return value
+    def delete_past_events(self):
+        try:
+            # Get the current date and time
+            current_datetime = datetime.now()
+
+            # Calculate the date threshold for past events (e.g., events older than 2 days)
+            date_threshold = current_datetime - timedelta(days=2)  # Changed to 2 days threshold
+
+            # Define a filter expression to retrieve events older than the threshold
+            filter_expression = Attr("eventDate").lt(date_threshold.isoformat())
+
+            # Use scan operation to retrieve events that match the filter
+            events_to_delete = self.__table.scan(FilterExpression=filter_expression)['Items']
+
+             # Iterate through the events to delete
+            for event in events_to_delete:
+                event_id = event['eventID']
+
+                # Remove the event ID from the eventHost user's eventsHosted ID list
+                self.__table.update_item(
+                    Key={'userID': event['eventHost']},
+                    UpdateExpression='DELETE eventsHosted :event_id',
+                    ExpressionAttributeValues={':event_id': {event_id}}
+                )
+
+                # Iterate through the usersJoined list and remove the event ID from their eventsJoined ID list
+                for user_id in event['usersJoined']:
+                    self.__table.update_item(
+                        Key={'userID': user_id},
+                        UpdateExpression='DELETE eventsJoined :event_id',
+                        ExpressionAttributeValues={':event_id': {event_id}}
+                    )
+
+                # Delete the event from the events table
+                self.__table.delete_item(Key={'eventID': event_id})
+            return True, None  # Success message
+
+        except Exception as e:
+            return False, str(e)  # Error message
     def createEvent(self, criteria: dict):
+        self.delete_past_events()
         eventAdded = False
         _err = "Event was not created"
         eventDocument = {
@@ -212,28 +253,36 @@ class MapHandler:
         try:
             # Retrieve the event information
             event_info = self.__table.get_item(Key={'eventID': eventID}).get('Item')
-
+            print("eventInfo: ", event_info)
             if not event_info:
-                return False, 'Event not found'
+                return False, None,  'Event not found'
 
             # Check if the user is in the list of participants
             if userID not in event_info['usersJoined']:
-                return False, 'User not joined the event'
+                return False, None, 'User not joined the event'
 
             # Remove the user from the list of participants
             event_info['usersJoined'].remove(userID)
+            print("eventInfo after removing user: ", event_info)
 
             # Update the event information in the DynamoDB table
             self.__table.put_item(Item=event_info)
 
+            # Remove the eventID from eventsJoined of the user
+            user_info = self.__tableUsers.get_item(Key={'userID': userID}).get('Item')
+            print("user info: ", user_info)
+            user_info['eventsJoined'].remove(eventID)
+            self.__tableUsers.put_item(Item=user_info)
+            print("user info after deleting eventID: ", user_info)
+            self.__tableUsers.put_item(Item=user_info)
+
             return True, event_info, None
         except Exception as e:
             print(f"Error leaving event: {e}")
-            return False, 'Internal server error'
+            return False, None, 'Internal server error'
+
 
     def joinEvent(self, userID, eventID):
-    
-    
         try:
             # Use get_item to retrieve the event information based on eventID
             response = self.__table.get_item(Key={'eventID': eventID})
@@ -243,16 +292,43 @@ class MapHandler:
             if not event_info:
                 return False, 'Event not found'
 
-            print("Appending user to event")
             # Add the user to the list of participants
             event_info['usersJoined'].append(userID)
-            print("Appended user to event")
 
-            print("event_infr updated: ", event_info['usersJoined'])
             # Update the event information in the DynamoDB table
             self.__table.put_item(Item=event_info)
 
+            # Update eventsJoined list in user database for the user with eventID
+            user_info = self.__tableUsers.query(KeyConditionExpression=Key('userID').eq(userID)).get('Items')[0]
+            events_joined = user_info.get('eventsJoined', [])
+            events_joined.append(eventID)  # Append only the event ID
+            self.__tableUsers.update_item(
+                Key={'userID': userID},
+                UpdateExpression='SET eventsJoined = :val',
+                ExpressionAttributeValues={':val': events_joined}
+            )
             return True, event_info, None
         except Exception as e:
             print(f"Error joining event: {e}")
             return False, 'Internal server error'
+
+    def getEventsList(self, eventIDs):
+        try:
+            # Convert eventIDs to a list if it's not already
+            if not isinstance(eventIDs, list):
+                eventIDs = [eventIDs]
+
+            # Initialize an empty list to store retrieved events
+            events = []
+
+            # Iterate through each event ID and retrieve the corresponding event from MongoDB
+            for eventID in eventIDs:
+                event = self.__table.get_item(Key={'eventID': eventID}).get('Item')
+                if event:
+                    events.append(event)
+            print("Maphandler eventIDs", eventIDs)
+            print("MapHandler events: ", events)
+            return events, None  # Return retrieved events and no error
+        except Exception as e:
+            print(f"Error retrieving events: {e}")
+            return None, 'Internal server error'

@@ -49,13 +49,17 @@ const EventListComponent = ({ events, isModalVisible, onClose, userInfo, leaveEv
 
           <ScrollView>
             {/* Display a list of events in the modal */}
-            {events.map((event) => (
-              <EventPreviewComponent
-                key={event.eventName}
-                eventInfo={event}
-                onPress={() => handleEventSelection(event)}
-              />
-            ))}
+            {events.length > 0 ? (
+              events.map((event) => (
+                <EventPreviewComponent
+                  key={event.eventName}
+                  eventInfo={event}
+                  onPress={() => handleEventSelection(event)}
+                />
+              ))
+            ) : (
+              <Text>No events available</Text>
+            )}
 
             {/* Conditionally render EventComponent if an event is selected */}
             {selectedEvent && (

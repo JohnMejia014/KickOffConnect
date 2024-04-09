@@ -11,10 +11,11 @@ import PopUpForPlace from './DiscoveryPageComponents/PopUpForPlace';
 import axios from 'axios';
 import EventFilterModal from './DiscoveryPageComponents/EventFilterModal';
 import EventParkMarkers from './DiscoveryPageComponents/EventParkMarkers';
+import { useIsFocused } from '@react-navigation/native'; // Import useIsFocused hook
 
-const DiscoveryScreen = (userInfo) => {
+const DiscoveryScreen = ({route}) => {
   const BASE_URL = 'http://192.168.1.119:5000';
-
+  const [userInfo, setUserInfo] = useState(route.params?.userInfo || {});
   const [location, setLocation] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [longitude1, setLongitude1] = useState(null);
@@ -41,13 +42,72 @@ const DiscoveryScreen = (userInfo) => {
   const [placesFetched, setPlacesFetched] = useState(false);
   const [plusORAddButton, setPlusORAddButton] = useState(null);
   const [eventAdded, setEventAdded] = useState(false);
+  const isFocused = useIsFocused(); // Hook to check if the screen is focused
 
-  const [selectedFilters, setSelectedFilters] = useState({
-    selectedSports: [],
-    showPublicEvents: true,
-    showPrivateEvents: true,
-    // Add more filter options here
-  });
+  const currentDate = new Date().toISOString().slice(0, 10); // Get current date in "YYYY-MM-DD" format
+
+const [selectedFilters, setSelectedFilters] = useState({
+  selectedStartDate: currentDate,
+  selectedEndDate: currentDate,
+  selectedSports: [],
+  selectedVisibility: 'both',
+  showPublicEvents: true,
+  showPrivateEvents: true,
+  // Add more filter options here
+});
+// Assuming 'isFocused', 'selectedFilters', 'handleGetEvents', and 'userInfo' are defined in your component's state
+// Also assuming 'BASE_URL' is defined elsewhere in your code
+console.log("userInfo: ", userInfo);
+useEffect(() => {
+  const fetchUserInfo = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/getUserInfo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userID: userInfo.userID }), // Use userInformation.userID in the request body
+      });
+      const data = await response.json();
+
+      console.log("data: ", data);
+      setUserInfo(data.userInfo); // Update userInfo state
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+    }
+  };
+
+  // Fetch user info when component mounts
+  fetchUserInfo();
+}, [isFocused]);
+
+useEffect(() => {
+  const fetchData = async () => {
+    // Fetch data again when the component is focused
+    if (isFocused && placesFetched ) {
+      console.log("selectedFilters: ", selectedFilters);
+      const response = await fetch(`${BASE_URL}/getEvents`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ filters: selectedFilters }),
+      });
+      const eventData = await response.json();
+      //handleGetEvents(eventData); // Update events state or handle the data as needed
+    }
+  };
+
+  fetchData(); // Initial fetch when component mounts
+
+  // Cleanup function
+  return () => {
+    // Optionally perform cleanup or clear any subscriptions
+  };
+}, [isFocused]);
+
+// Render your component content here
+
   useEffect(() => {
     if (eventAdded) {
       handleGetEvents(selectedFilters);
@@ -63,7 +123,7 @@ const DiscoveryScreen = (userInfo) => {
     try {
       const response = await axios.post(`${BASE_URL}/joinEvent`, {
         eventID: eventID,
-        userID: userInfo.route.params.userInfo.userID,
+        userID: userInfo.userID,
       });
 
       if (response.data.success) {
@@ -84,7 +144,7 @@ const DiscoveryScreen = (userInfo) => {
     try {
       const response = await axios.post(`${BASE_URL}/leaveEvent`, {
         eventID: eventID,
-        userID: userInfo.route.params.userInfo.userID,
+        userID: userInfo.userID,
       });
 
       if (response.data.success) {
@@ -123,6 +183,7 @@ const DiscoveryScreen = (userInfo) => {
 //   };
 
   const handleGetEvents = async (eventFilters) => {
+    console.log("event filters: ", eventFilters);
     setSelectedFilters(eventFilters);
     try {
       const response = await axios.post(`${BASE_URL}/getEvents`, {

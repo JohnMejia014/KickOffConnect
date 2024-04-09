@@ -2,6 +2,7 @@ import sys
 import os
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
+from boto3.dynamodb.types import TypeDeserializer
 
 
 from flask import jsonify
@@ -54,7 +55,8 @@ class UserHandler:
                 "privacy": {'S':"public"},
                 "totalRatings": {'N':'0'},
                 "totalRatingStars": {'N':'0'},
-                "eventsHosted": {'L':[]}
+                "eventsHosted": {'L':[]},
+                "eventsInvited": {'L':[]},
             }
 
             # add user to the database
@@ -123,6 +125,48 @@ class UserHandler:
         if(count > 0):
             doesUserExist = True
         return value, doesUserExist
+    def getFriends(self, userID: str):
+        try:
+            # Query DynamoDB to get the list of friend IDs associated with the user
+            response = self.__table.query(
+                KeyConditionExpression=Key('userID').eq(userID)
+            )
+
+            friends_list = []
+            deserializer = TypeDeserializer()
+            
+           # print("response: ", response)
+            if response.get('Items'):
+                # User with the provided userID exists
+                retrieved_user = response['Items'][0]
+               # print("retrieved user: ", retrieved_user)
+                friends_ids =retrieved_user['friends']
+                #print("friendsid: ", friends_ids)
+                # Fetch information for each friend ID
+                for friend_id in friends_ids:
+                    friend_info_response = self.__table.query(
+                        KeyConditionExpression=Key('userID').eq(friend_id)
+                    )
+
+                    if friend_info_response.get('Items'):
+                        # Friend information found
+                        friend_info = friend_info_response['Items'][0]
+                        friends_list.append(friend_info)
+                    else:
+                        # Friend information not found, handle the error
+                        return None, "Error: Friend information not found."
+
+            else:
+                # User not found, handle the error
+                return None, "Error: User not found."
+
+            return friends_list, None  # Return friends list and no error
+
+        except Exception as e:
+            # Handle any unexpected exceptions
+            error_message = f"Error: {str(e)}"
+            return None, error_message
+
 
     def findemail(self, criteria : dict):
         doesUserExist = False
@@ -143,7 +187,22 @@ class UserHandler:
             return returnVal, doesUserExist
         else:
             return None, False
-    
+    def get_user_info(self, userID: str):
+        """
+        Fetch user information based on userID.
+        """
+        # Assume that you have a DynamoDB table named 'Users' and 'userID' is the primary key
+        response = self.__table.query(
+            KeyConditionExpression=Key('userID').eq(userID)
+        )
+
+        if response.get('Items'):
+            # User with the provided userID exists
+            retrieved_user = response['Items'][0]
+            return retrieved_user
+        else:
+            # User not found
+            return None
     def resetUserCollection(self):
         if(self.__debugMode == True):
             self.__users.delete_many({})

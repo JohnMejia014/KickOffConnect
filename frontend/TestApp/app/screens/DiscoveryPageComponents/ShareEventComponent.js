@@ -1,23 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text, Button, Modal, StyleSheet, FlatList, CheckBox } from 'react-native';
 
-const FriendsList = ({ friends, selectedFriends, onSelectFriend }) => {
+const FriendsList = ({ friends }) => {
+  console.log("Friends: ", friends);
   return (
-    <FlatList
-      data={friends}
-      keyExtractor={(friend) => friend.id.toString()}
-      renderItem={({ item }) => (
-        <View style={styles.friendItem}>
-          <CheckBox
-            value={selectedFriends.includes(item.id)}
-            onValueChange={() => onSelectFriend(item.id)}
-          />
-          <Text>{item.name}</Text>
-        </View>
-      )}
-    />
+    <View style={styles.friendsContainer}>
+      <Text style={styles.friendsHeaderText}>Friends ({friends.length})</Text>
+      <FlatList
+        data={friends}
+        keyExtractor={(friend, index) => index.toString()} // Use index as key for strings
+        renderItem={({ item }) => <Text style={styles.friendText}>{item}</Text>}
+      />
+    </View>
   );
 };
+  
 
 const ShareEventComponent = ({ userInfo, eventData, isVisible, onBack, onSubmit, onClose }) => {
   const [selectedFriends, setSelectedFriends] = useState([]);
@@ -35,10 +32,10 @@ const ShareEventComponent = ({ userInfo, eventData, isVisible, onBack, onSubmit,
 
   const handleShareEvent = () => {
     // Update eventData properties based on the selected friends and visibility
-    eventData.eventHost = userInfo.route.params.userInfo.userID;
+    eventData.eventHost = userInfo.userID;
     eventData.eventVisibility = eventVisibility;
     eventData.usersInvited = selectedFriends;
-    eventData.usersJoined.push(userInfo.route.params.userInfo.userID);
+    eventData.usersJoined.push(userInfo.userID);
     console.log(eventData.usersJoined);
     // Call the onSubmit function with the updated eventData
     onSubmit(eventData);
@@ -78,17 +75,28 @@ const ShareEventComponent = ({ userInfo, eventData, isVisible, onBack, onSubmit,
 };
 
 const styles = StyleSheet.create({
-  friendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0)',
     justifyContent: 'center',
     padding: 30,
     marginTop: 50,
+  },
+  friendsHeader: {
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'lightgray',
+    paddingBottom: 5,
+  },
+  friendsHeaderText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  friendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   modalContainer: {
     backgroundColor: 'white',

@@ -174,7 +174,52 @@ def getEvents():
             return jsonify({'events': events})  # Assuming events is a dictionary
 
     return jsonify({'error': 'Invalid request'}), 400
-   
+   #route for returning user info 
+@app.route('/getUserInfo', methods=['POST'])
+def getUserInfo():
+    data = request.get_json()
+    userID = data.get('userID')
+    if userID:
+        user_info = userHandler.get_user_info(userID)
+
+        if user_info:
+            return jsonify({'userInfo': user_info})
+        else:
+            return jsonify({'error': 'User not found'}), 404
+    else:
+        return jsonify({'error': 'Invalid request'}), 400
+@app.route('/getEventInfo', methods=['POST'])
+def getEventInfo():
+    data = request.get_json()
+    event_ids = data.get('eventIDs')
+    print("eventIDs: ", event_ids)
+        # Get the list of event IDs from the request data
+        
+        # Query the events collection for the events with the given IDs
+    events, error = mapHandler.getEventsList(event_ids)
+        
+    print("events: ", events)
+        # Prepare the response JSON
+    if error:
+        return jsonify({"error":  error})
+    else:
+        return jsonify({"events":  events})
+@app.route('/getFriends', methods=['POST'])
+def getFriends():
+    data = request.get_json()
+    userID = data.get('userID')
+    print("userID: ", userID)
+        # Get the list of event IDs from the request data
+        
+        # Query the events collection for the events with the given IDs
+    friends, error = userHandler.getFriends(userID)
+    print("friends: ", friends)
+        # Prepare the response JSON
+    if error:
+        return jsonify({"error":  error})
+    else:
+        return jsonify({"friends":  friends})
+
 
 # Running app
 if __name__ == '__main__':

@@ -6,7 +6,7 @@ import { Rating } from 'react-native-ratings';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ErrorMessageModal from './ErrorMessageModal';
 
-const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveEvent }) => {
+const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveEvent, isProfilePage }) => {
    const [showParticipantsModal, setShowParticipantsModal] = useState(false);
    const [isUserJoined, setIsUserJoined] = useState(eventInfo?.usersJoined?.includes(userInfo.route.params.userInfo.userID));
    /* Add logic to determine if the user is joined to the event */
@@ -21,11 +21,11 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
   const [errorMessage, setErrorMessage] = useState(null);
   useEffect(() => {
     // This effect will run whenever eventInfo changes
-    setIsUserJoined(eventInfo?.usersJoined?.includes(userInfo.route.params.userInfo.userID));
-  }, [eventInfo, userInfo.route.params.userInfo.userID]);
+    setIsUserJoined(eventInfo?.usersJoined?.includes(userInfo.userID));
+  }, [eventInfo, userInfo.userID]);
 
   const handleJoinLeave = async () => {
-    if (eventInfo.eventHost === userInfo.route.params.userInfo.userID) {
+    if (eventInfo.eventHost === userInfo.userID) {
       // Display a message that the host cannot leave their own event
       setErrorMessage('You are the host. You cannot leave your own event.');
     } else {
@@ -33,6 +33,7 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
         if (isUserJoined) {
           // User is already joined, so leave the event
           const updatedEventInfo = await leaveEvent(eventInfo.eventID); // Pass the eventID or any unique identifier
+          if (isProfilePage){onClose(); return null;}
           setEventInfo(updatedEventInfo);          
         } else {
           // User is not joined, so join the event
@@ -95,6 +96,8 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
     );
   };
   
+
+
 
   return (
     <Modal transparent={true} animationType="slide" visible={eventInfo !== null}>

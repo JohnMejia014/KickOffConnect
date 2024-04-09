@@ -100,8 +100,12 @@ const PopUpForPlace = ({ placeInfo, onClose, onAddRating, userInfo, joinEvent, l
         </TouchableOpacity> */}
          {/* Button to navigate to the next page */}
          <TouchableOpacity style={styles.nextPageButton} onPress={goToNextPage}>
-          <Text style={styles.buttonText}>View Events</Text>
-        </TouchableOpacity>
+         <Text style={styles.buttonText}>
+            View Events ({events.length})
+          </Text>
+
+          </TouchableOpacity>
+
 
 
        {showCreateEvent && (
@@ -227,13 +231,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#4169E1', // Royal Blue color
   },
   nextPageButton: {
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#FF6347', // Tomato color
     alignSelf: 'center',
-    paddingVertical: 20, // Adjust vertical padding to match the Create Event button
-    paddingHorizontal: 105, // Adjust horizontal padding to match the Create Event button
+    paddingHorizontal: 90, // Adjust horizontal padding to match the Create Event button
+    paddingVertical:20,
     borderRadius: 5,
     marginTop: 10,
-    alignItems: 'center', // Align text and icon to center
     flexDirection: 'row', // Align text and icon in a row
   },
   
@@ -248,7 +256,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 20,
-  }
+  },
+  buttonTextWithCount: {
+    flexWrap: 'nowrap', // Prevent text wrapping
+    overflow: 'hidden', // Hide overflow text if it exceeds the container width
+  },
+  
   
 });
 

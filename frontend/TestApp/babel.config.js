@@ -1,7 +1,16 @@
 module.exports = function(api) {
   api.cache(true);
+
   return {
-    presets: ['babel-preset-expo'],
+    presets: [
+      [
+        'module:metro-react-native-babel-preset',
+        {
+          useTransformReactJSXExperimental: true,
+        },
+      ],
+      'babel-preset-expo',
+    ],
     plugins: ['expo-router/babel'],
   };
 };
