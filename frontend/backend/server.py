@@ -209,6 +209,36 @@ def get_friends():
     return jsonify({'friends': friend_ids}), 200
 
 
+@app.route('/invite-to-event', methods=['POST'])
+def invite_to_event():
+    data = request.get_json()
+    user_ids = data.get('userIds')
+    event_id = data.get('eventId')
+
+    if not user_ids or not event_id:
+        return jsonify({'error': 'Missing required data'}), 400
+
+    # Update each user's eventsInvited list with the new event ID
+    for user_id in user_ids:
+        user = users_collection.find_one({'userId': user_id})
+        if user:
+            users_collection.update_one(
+                {'userId': user_id},
+                {'$push': {'eventsInvited': event_id}}
+            )
+        else:
+            return jsonify({'error': f'User with ID {user_id} not found'}), 404
+
+    # Add the event to the events collection
+    event = {
+        '_id': event_id,
+        'invitedUsers': user_ids
+    }
+    events_collection.insert_one(event)
+
+    return jsonify({'message': 'Event invites sent successfully'}), 200
+
+
 # Running app
 if __name__ == '__main__':
     app.run(host='192.168.1.14')
