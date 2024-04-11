@@ -129,7 +129,6 @@ class MapHandler:
 
         except Exception as e:
             _err = str(e)
-        print("Error: ",_err)    
 
         return events_within_radius, _err
 
@@ -239,6 +238,24 @@ class MapHandler:
                 self.__tableUsers.put_item(Item=user_data)
             else:
                 _err = "User does not exist"
+             # Update eventsInvited for each user in selectedFriends
+           # Iterate through each user in usersInvited
+            for user_id in criteria["usersInvited"]:
+                # Retrieve the user information
+                user_info, does_user_exist = userHandler.findUser(user_id)
+                print(does_user_exist)
+                print(user_info)
+                if does_user_exist:
+                    # Extract user data from the response
+                    user_data = user_info['Items'][0]
+
+                    # Update the user's eventsInvited attribute with the new eventID
+                    user_data['eventsInvited'].append(criteria["eventID"])
+
+                    # Update the user's information in the DynamoDB table
+                    self.__tableUsers.put_item(Item=user_data)
+                else:
+                    _err = f"User {user_id} does not exist"
         except Exception as e:
             print(f"Error adding event to DynamoDB: {e}")
 
@@ -311,6 +328,34 @@ class MapHandler:
         except Exception as e:
             print(f"Error joining event: {e}")
             return False, 'Internal server error'
+    def inviteFriends(self, selectedFriends, eventID):
+        try:
+
+            # Fetch the event document from DynamoDB
+            event = self.__table.get_item(Key={'eventID': eventID}).get('Item')
+            print("event: ", event)
+            if not event:
+                return False, f"Event with ID {eventID} not found"
+            
+            # Update the usersInvited list with selectedFriends
+            event['usersInvited'] = selectedFriends
+
+            # Update the event document in DynamoDB
+            self.__table.put_item(Item=event)
+
+            # Update eventsInvited for each user in selectedFriends
+            for user_id in selectedFriends:
+                user = self.__tableUsers.get_item(Key={'userID': user_id}).get('Item')
+                if user:
+                    user['eventsInvited'].append(eventID)
+                    self.__tableUsers.put_item(Item=user)
+            print("Inviting friends is succesfull")
+            return True, None  # Invitation successful
+
+        except Exception as e:
+            print("Inviting friends is not succesfull", str(e))
+
+            return False, str(e)  # Return error message if any exception occurs
 
     def getEventsList(self, eventIDs):
         try:

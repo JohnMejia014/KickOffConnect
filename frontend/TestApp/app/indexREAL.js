@@ -2,7 +2,7 @@
 import  Welcome  from "./screens/Welcome";  // Correct import statement
 import  LoginScreen  from "./screens/LoginScreen";  // Correct import statement
 import  FeedScreen  from "./screens/FeedScreen";  // Correct import statement
-import  ProfileScreen  from "./screens/ProfileScreen";  // Correct import statement
+import  ProfileScreen  from "./screens/UserProfileScreen";  // Correct import statement
 import  DiscoveryScreen  from "./screens/DiscoveryScreen";  // Correct import statement
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";

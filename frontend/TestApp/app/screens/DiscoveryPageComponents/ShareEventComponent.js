@@ -1,23 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Modal, StyleSheet, FlatList, CheckBox } from 'react-native';
+import { View, Text, Button, Modal, StyleSheet, FlatList, ScrollView, TouchableOpacity } from 'react-native';
+import { CheckBox } from 'react-native-elements';
+const FriendsList = ({ friends, selectedFriends, onSelectFriend }) => {
+  const handleSelectFriend = (friendId) => {
+    onSelectFriend(friendId);
+  };
 
-const FriendsList = ({ friends }) => {
-  console.log("Friends: ", friends);
   return (
     <View style={styles.friendsContainer}>
-      <Text style={styles.friendsHeaderText}>Friends ({friends.length})</Text>
-      <FlatList
-        data={friends}
-        keyExtractor={(friend, index) => index.toString()} // Use index as key for strings
-        renderItem={({ item }) => <Text style={styles.friendText}>{item}</Text>}
-      />
+      <ScrollView style={styles.scrollView}>
+        {friends.map((friend) => (
+          <TouchableOpacity
+            key={friend}
+            style={styles.friendItem}
+            onPress={() => handleSelectFriend(friend)}
+          >
+            <CheckBox
+              checked={selectedFriends.includes(friend)}
+              onPress={() => handleSelectFriend(friend)} // Changed to onPress event
+            />
+            <Text style={styles.friendText}>{friend}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </View>
   );
 };
+
   
 
-const ShareEventComponent = ({ userInfo, eventData, isVisible, onBack, onSubmit, onClose }) => {
-  const [selectedFriends, setSelectedFriends] = useState([]);
+const ShareEventComponent = ({ userInfo, eventData, isVisible, onBack, onSubmit, onSubmit2, onClose }) => {
+  const [selectedFriends, setSelectedFriends] = useState(userInfo.friends);
   const [eventVisibility, setEventVisibility] = useState('public'); // Default visibility
 
   const handleSelectFriend = (friendId) => {
@@ -28,16 +41,18 @@ const ShareEventComponent = ({ userInfo, eventData, isVisible, onBack, onSubmit,
         return [...prevSelectedFriends, friendId];
       }
     });
+
   };
 
   const handleShareEvent = () => {
     // Update eventData properties based on the selected friends and visibility
+    console.log("Selected friend: ",  selectedFriends);
     eventData.eventHost = userInfo.userID;
     eventData.eventVisibility = eventVisibility;
     eventData.usersInvited = selectedFriends;
     eventData.usersJoined.push(userInfo.userID);
-    console.log(eventData.usersJoined);
     // Call the onSubmit function with the updated eventData
+    console.log("eventID: ", eventData.eventID);
     onSubmit(eventData);
     onClose();
   };
@@ -89,21 +104,25 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   friendsHeaderText: {
-    fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 5,
   },
+  friendText:{
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   friendItem: {
+    fontSize: 14,
+    fontWeight: 'bold',
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 0,
   },
   modalContainer: {
     backgroundColor: 'white',
     alignItems: 'center',
     borderRadius: 10,
     overflow: 'hidden',
-    height: '35%',
+    height: '45%',
   },
   modalContent: {
     padding: 20,

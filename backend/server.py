@@ -11,9 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 app = Flask(__name__)
 
-client = MongoClient('mongodb+srv://marcoflo02:Kickoff@cluster0.qgnjjxr.mongodb.net/?retryWrites=true&w=majority')
-db = client['Users']
-users_collection = db['Users']
+
 
 import UserHandler 
 import MapHandler 
@@ -50,30 +48,6 @@ container = s3_resource.Bucket(bucket)
 
 dynamo = aws_mag_con.client('dynamodb')
 dynamo_resource = aws_mag_con.resource('dynamodb')
-
-@app.route('/retrieve-location', methods=['POST'])
-def retrieve_location():
-    #userId = "KevinFdz"
-    #latitude = 21
-    #longitude = 42
-    data = request.get_json()
-    userId = data.get('userId')
-    latitude = data.get('latitude')
-    longitude = data.get('longitude')
-
-    if not userId or not latitude or not longitude:
-        return jsonify({'error': 'Missing username, latitude, or longitude'}), 400
-
-    userData = db[userId]
-    user = userData.find_one({'userId': userId})
-
-
-    if user:
-        userData.update_one(
-            {'userId': user['userId']},
-            {'$set': {'latitude': latitude, 'longitude': longitude}}
-        )
-        return jsonify({'message': 'Location updated successfully'})
 
 
 
@@ -141,6 +115,24 @@ def addEvent():
     else:
         return jsonify({'message': 'Invalid request'})
     
+@app.route('/inviteFriends', methods=['POST'])
+def inviteFriends():
+    data = request.get_json()
+    print("Data in invite friends: ",data)
+    selectedFriends = data.get('selectedFriends')
+    event_id = data.get('eventID')
+
+    if not selectedFriends or not event_id:
+        return jsonify({'error': 'Missing required data'}), 400
+
+    success, error = mapHandler.inviteFriends(selectedFriends, event_id)
+
+    if success:
+        return jsonify({'message': 'Event invites sent successfully'}), 200
+    else:
+        return jsonify({'error': error}), 500  # Return appropriate error status code
+
+
 
 @app.route('/joinEvent', methods=['POST'])
 def joinEvent():
@@ -182,18 +174,15 @@ def getEvents():
     user_long = data.get('longitude')
     filters = data.get('filters')
     places = data.get('places')
-    print(filters)
     radius = 1000  # You might want to include a radius in the request data
     if user_lat and user_long and radius:
         # Convert latitude, longitude, and radius to float
         user_lat = float(user_lat)
         user_long = float(user_long)
         radius = float(radius)
-        print("getEvents called")
 
         # Retrieve events within the specified radius
         events, error = mapHandler.get_events_within_radius(user_lat, user_long, radius, filters, places)
-        print("Events: ", events)
         if error:
             return jsonify({'error': error}), 500
         else:
@@ -223,9 +212,6 @@ def getEventInfo():
         
         # Query the events collection for the events with the given IDs
     events, error = mapHandler.getEventsList(event_ids)
-        
-    print("events: ", events)
-        # Prepare the response JSON
     if error:
         return jsonify({"error":  error})
     else:
