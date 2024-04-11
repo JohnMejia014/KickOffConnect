@@ -6,25 +6,38 @@ import axios from 'axios';
 import {Video} from "expo-av";
 
 
-const FeedList = ({navigation}) => {
-    const baseUrl = 'http://192.168.1.119:5000'; // Define your base URL here
+const FeedList = ({navigation, route}) => {
+    const baseUrl = 'http://192.168.1.253:5000'; // Define your base URL here
     const [searchQuery, setSearchQuery] = useState('');
     const [feed, setFeed] = useState([]);
     const [imageL, setImageL] = useState([]);
     const [length, setLength] = useState(0)
     const [desc, setDesc] = useState([]);
     const [type, setType] = useState([]);
+    const [load, setLoad] = useState(0);
     const [more, setMore] = useState(0);
+    const [userInfo, setUserInfo] = useState(route.params);
+
+
+
+
+    const user = userInfo.params.userID
 
     const ref = useRef(null);
     useScrollToTop(ref)
 
+    const Increment = () => {
 
+        setLoad(load + 1)
+
+    }
 
 
     useEffect(() => {
 
-        axios.post(`${baseUrl}/S3List`, {})
+        axios.post(`${baseUrl}/S3FriendList`, {
+            user: user
+        })
             .then((response) => {
 
                 console.log(response.data.list);
@@ -38,7 +51,7 @@ const FeedList = ({navigation}) => {
                 setType(response.data.type);
 
             })
-    }, []);
+    }, [load]);
 
 
     const FindUsers = () => {
@@ -58,8 +71,8 @@ const FeedList = ({navigation}) => {
         <View>
 
 
-            <Button title={"load feed"} onPress={() => useEffect} />
-            <Button title={"Post Creation"} onPress={() => navigation.navigate("Create")} />
+            <Button title={"load feed"} onPress={Increment} />
+            <Button title={"Post Creation"} onPress={() => navigation.navigate("Create", {source: user})} />
 
             <Text>Feed Screen</Text>
             <View style={styles.search}>
@@ -97,7 +110,7 @@ const FeedList = ({navigation}) => {
                                 <View style = {styles.postView}>
                                     <View style={styles.postTitle}>
 
-                                        <View>
+                                        <View style={styles.postFormat}>
 
                                             {type[index] === "mp4" ?
                                                 <TouchableOpacity onPress={() => navigation.navigate("Video", {source: imageL[index]})}>
@@ -156,12 +169,20 @@ const styles = StyleSheet.create({
         width:"90%",
         display:'flex',
         justifyContent:'space-between',
-        flexDirection:'row'
+        flexDirection:'row',
+        borderStyle: "solid",
+        borderWidth: 10,
+        borderColor: "black",
     },
     postView:{
         width:'100%',
         alignItems: "center",
         marginTop: 10,
+        maxHeight: 300,
+
+    },
+    postFormat:{
+      width: "100%",
     },
     userPhoto:{
         width: 50,
@@ -170,8 +191,10 @@ const styles = StyleSheet.create({
     imageView:{
         display: "flex",
         flexDirection: "row",
-        width: 200,
+        maxWidth: "100%",
         height: 200,
+        resizeMode: "contain"
+
     },
     search: {
         display: "flex",

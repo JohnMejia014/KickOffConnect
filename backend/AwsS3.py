@@ -51,14 +51,13 @@ def S3Uploader():
     path = data.get('path')
     type = data.get('type')
 
-    # user = data.get('user')
-    user = "UltJMejia/"
+    user = data.get('user')
 
     if text == '':
         text = 'No text'
 
     try:
-        check = s3.list_objects_v2(Bucket=bucket, Prefix='posts/' + user + str(postTitle) + "/")
+        check = s3.list_objects_v2(Bucket=bucket, Prefix= user + '/posts/' + str(postTitle) + "/")
     except:
         check = None
 
@@ -77,13 +76,13 @@ def S3Uploader():
         s3.upload_file(
             'image.jpg',
             bucket,
-            'posts/' + user + str(postTitle) + '/' + str(postTitle) + '.jpg',
+             user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.jpg',
             ExtraArgs={'Metadata': {'User': user}}
         )
         s3.upload_file(
             'input.txt',
             bucket,
-            'posts/' + user + str(postTitle) + '/' + str(postTitle) + '.txt',
+             user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.txt',
 
             ExtraArgs={'Metadata': {'User': user}}
         )
@@ -99,7 +98,7 @@ def S3Uploader():
         s3.upload_file(
             'input.txt',
             bucket,
-            'posts/' + user + str(postTitle) + '/' + str(postTitle) + '.txt',
+             user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.txt',
 
             ExtraArgs={'Metadata': {'User': user}}
         )
@@ -107,7 +106,7 @@ def S3Uploader():
         s3.upload_file(
             "input.mp4",
             bucket,
-            'posts/' + user + str(postTitle) + '/' + str(postTitle) + '.mp4',
+             user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.mp4',
 
             ExtraArgs={'Metadata': {'User': user}}
         )
@@ -230,17 +229,15 @@ def S3List():
 
 @app.route('/S3ProfileList', methods=['POST'])
 def S3ProfileList():
-    # data = request.get_json()
-    # user = data.get('user')
-    user = "UltJMejia"
+    data = request.get_json()
+    user = data.get('user')
 
     total = []
-
-    dirLen = len(str("posts/" + user + "/"))
+    dirLen = len(str(user + "/posts/"))
     userResp = s3.list_objects(
         Bucket=bucket,
-        Prefix="posts/" + user,
-        Marker='posts/' + user + "/",
+        Prefix=user + "/posts",
+        Marker=user + "/posts/",
         MaxKeys=100,
     )
     count1 = 0
@@ -321,10 +318,9 @@ def S3ProfileList():
 
 @app.route('/S3FriendList', methods=['POST'])
 def S3FriendList():
-    # data = request.get_json()
-    # user = data.get('user')
+    data = request.get_json()
+    user = data.get('user')
 
-    user = "1"
     friends = dynamo.get_item(TableName='Users', Key={'userID': {'S': user}})
     friendList = friends['Item']['friends']['L']
     total = []
@@ -332,11 +328,11 @@ def S3FriendList():
     for i in range(len(friendList)):
 
         friend = friendList[i]['S']
-        dirLen = len(str("posts/" + friend + "/"))
+        dirLen = len(str(friend + "/posts/"))
         friendResp = s3.list_objects(
             Bucket=bucket,
-            Prefix="posts/" + friend,
-            Marker='posts/' + friend + "/",
+            Prefix=friend + "/posts",
+            Marker=friend + "/posts/",
             MaxKeys=10,
         )
 
