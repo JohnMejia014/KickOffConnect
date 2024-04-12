@@ -469,6 +469,8 @@ def S3ProfileList():
     TextList = []
     imageList = []
     typeList = []
+
+    timePost = []
     for key in userResp['Contents']:
 
         count1 += 1
@@ -478,16 +480,19 @@ def S3ProfileList():
         index = key["Key"].find("/", dirLen)
         title = key["Key"][dirLen:index]
 
+        time = key["LastModified"]
+        time = time.strftime("%Y-%m-%d %H:%M:%S")
+
         absent = True
         if total == []:
-            total.append([title, [], []])
+            total.append([title, [], [], time])
         else:
             for k in total:
                 if title == k[0]:
                     absent = False
                     break
             if absent:
-                total.append([title, [], []])
+                total.append([title, [], [], time])
 
         url = s3.generate_presigned_url('get_object',
                                         Params={'Bucket': bucket, 'Key': key['Key']},
@@ -527,7 +532,8 @@ def S3ProfileList():
         feedResponse.append(total[i][0])
         imageList.append(total[i][1][0])
         typeList.append(total[i][2][0])
-        TextList.append(total[i][3])
+        timePost.append(total[i][3])
+        TextList.append(total[i][4])
 
     size = len(feedResponse)
 
@@ -536,6 +542,7 @@ def S3ProfileList():
                 'size': size,
                 'image': imageList,
                 'type': typeList,
+                'time': timePost,
                 }
     return jsonify(response)
 
@@ -548,6 +555,9 @@ def S3FriendList():
     friends = dynamo.get_item(TableName='Users', Key={'userID': {'S': user}})
     friendList = friends['Item']['friends']['L']
     total = []
+
+    friendPost = []
+    timePost = []
 
     for i in range(len(friendList)):
 
@@ -581,16 +591,19 @@ def S3FriendList():
             index = key["Key"].find("/", dirLen)
             title = key["Key"][dirLen:index]
 
+            time = key["LastModified"]
+            time = time.strftime("%m-%d-%Y %H:%M %p")
+
             absent = True
             if total == []:
-                total.append([title, [], []])
+                total.append([title, [], [], friend, time])
             else:
                 for k in total:
                     if title == k[0]:
                         absent = False
                         break
                 if absent:
-                    total.append([title, [], []])
+                    total.append([title, [], [], friend, time])
 
             url = s3.generate_presigned_url('get_object',
                                             Params={'Bucket': bucket, 'Key': key['Key']},
@@ -630,7 +643,9 @@ def S3FriendList():
         feedResponse.append(total[i][0])
         imageList.append(total[i][1][0])
         typeList.append(total[i][2])
-        TextList.append(total[i][3])
+        friendPost.append(total[i][3])
+        timePost.append(total[i][4])
+        TextList.append(total[i][5])
 
     size = len(feedResponse)
 
@@ -639,6 +654,8 @@ def S3FriendList():
                 'size': size,
                 'image': imageList,
                 'type': typeList,
+                'time': timePost,
+                'friend': friendPost,
                 }
     return jsonify(response)
 

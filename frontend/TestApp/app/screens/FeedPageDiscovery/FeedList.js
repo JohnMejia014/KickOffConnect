@@ -16,7 +16,9 @@ const FeedList = ({navigation, route}) => {
     const [type, setType] = useState([]);
     const [load, setLoad] = useState(0);
     const [more, setMore] = useState(0);
+    const [friendL, setFriend] = useState([]);
     const [userInfo, setUserInfo] = useState(route.params);
+    const [time, setTime] = useState([]);
 
 
 
@@ -40,15 +42,15 @@ const FeedList = ({navigation, route}) => {
         })
             .then((response) => {
 
-                console.log(response.data.list);
-                console.log(response.data.text);
-                console.log(response.data.size);
-                console.log(response.data.image);
                 setFeed(response.data.list);
                 setLength(response.data.size);
                 setDesc(response.data.text);
                 setImageL(response.data.image);
                 setType(response.data.type);
+                setFriend(response.data.friend);
+                setTime(response.data.time);
+                console.log(response.data.friend)
+                console.log(response.data.time)
 
             })
     }, [load]);
@@ -60,9 +62,6 @@ const FeedList = ({navigation, route}) => {
             query: searchQuery
 
         }).then(
-
-
-
 
         )
     }
@@ -119,6 +118,7 @@ const FeedList = ({navigation, route}) => {
                                                 :
                                                 <Image style={styles.imageView} source={{uri: imageL[index]}}/>
                                             }
+                                            <Text>by {friendL[index]} at {time[index]}</Text>
                                             <Text>{desc[index]}</Text>
                                         </View>
                                     </View>
