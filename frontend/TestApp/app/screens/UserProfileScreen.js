@@ -90,6 +90,10 @@ const UserProfileScreen = ({ navigation, route }) => {
     setModalVisible(false);
   };
   useEffect(() => {
+    fetchFeedData();
+    fetchEvents();
+  }, [friendPage]); // Fetch data when modalVisible changes
+  const fetchFeedData = () => {
     axios
       .post(`${BASE_URL}/S3ProfileList`, { user: username })
       .then((response) => {
@@ -98,9 +102,13 @@ const UserProfileScreen = ({ navigation, route }) => {
         setDesc(response.data.text);
         setImageL(response.data.image);
         setType(response.data.type);
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+        // Handle error if needed
       });
-  }, [modalVisible]); // Fetch data when modalVisible changes
-
+  };
+  
   const handlePageReset = () => {
     console.log("Friend :", friend);
     setUserInfo(RealuserInfo);
@@ -277,6 +285,10 @@ const UserProfileScreen = ({ navigation, route }) => {
   // Use useFocusEffect to refetch user info when the screen is focused
   useFocusEffect(
     React.useCallback(() => {
+      setUserInfo(RealuserInfo);
+      setFriendPage(false);
+      fetchEvents();
+      fetchFeedData();
       fetchUserInfo(); // Fetch user info when screen is focused
     }, [])
   );
@@ -288,14 +300,14 @@ const UserProfileScreen = ({ navigation, route }) => {
     { key: 'invited', title: 'Events Invited' },
   ]);
   const renderFeedItems = () => {
-    if (!feed || feed.length === 0) {
+    if (!feed || feed.length === 0 || !type || type.length === 0) {
       return null; // Return null if feed is empty or undefined
   }
     const rows = [];
     let currentRow = [];
-    console.log("type: ", type);
+    console.log("feed: ", feed);
     feed.forEach((item, index) => {
-      // Assuming type[index] is either 'mp4' or 'image' based on your existing code
+      // Assuming type[ sindex] is either 'mp4' or 'image' based on your existing code
       const mediaType = type[index];
       const mediaSource = imageL[index];
       const mediaDescription = desc[index];
@@ -328,33 +340,30 @@ const UserProfileScreen = ({ navigation, route }) => {
   };
   
   
-  
+ 
   
   const renderContent = () => {
-    switch (activeTab) {
-      case 'joined':
-        return (
-          <View style={styles.contentContainer}>
-            {/* Content for 'Joined' tab */}
-            {renderEventList(eventsJoined)}
-          </View>
-        );
-      case 'hosted':
-        return (
-          <View style={styles.contentContainer}>
-            {/* Content for 'Hosted' tab */}
-            {renderEventList(eventsHosted)}
-          </View>
-        );
-      case 'invited':
-        return (
-          <View style={styles.contentContainer}>
-            {/* Content for 'Invited' tab */}
-            {renderEventList(eventsInvited)}
-          </View>
-        );
-      default:
-        return null;
+    if (friendPage) {
+      console.log("Friends page");
+      return (
+        <View style={styles.contentContainer}>
+          {/* Content for 'Joined' tab */}
+          {activeTab === 'joined' && renderEventList(eventsJoined)}
+          {/* Content for 'Hosted' tab */}
+          {activeTab === 'hosted' && renderEventList(eventsHosted)}
+        </View>
+      );
+    } else {
+      return (
+        <View style={styles.contentContainer}>
+          {/* Content for 'Joined' tab */}
+          {activeTab === 'joined' && renderEventList(eventsJoined)}
+          {/* Content for 'Hosted' tab */}
+          {activeTab === 'hosted' && renderEventList(eventsHosted)}
+          {/* Content for 'Invited' tab */}
+          {activeTab === 'invited' && renderEventList(eventsInvited)}
+        </View>
+      );
     }
   };
  
@@ -382,7 +391,6 @@ const UserProfileScreen = ({ navigation, route }) => {
     if (friendPage) {
       return (
         <View style={styles.contentContainer}>
-          <Text style={styles.friendsPageLabel}>Friends Page</Text>
           {renderContent()}
         </View>
       );
@@ -460,14 +468,17 @@ const UserProfileScreen = ({ navigation, route }) => {
                   Hosted
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tabButton, activeTab === 'invited' && styles.activeTabButton]}
-                onPress={() => handleTabPress('invited')}
+              {!friendPage && (
+                <TouchableOpacity
+                  style={[styles.tabButton, activeTab === 'invited' && styles.activeTabButton]}
+                  onPress={() => handleTabPress('invited')}
                 >
-                <Text style={[styles.tabButtonText, activeTab === 'invited' && styles.activeTabButtonText]}>
-                  Invited
-                </Text>
-              </TouchableOpacity>
+                  <Text style={[styles.tabButtonText, activeTab === 'invited' && styles.activeTabButtonText]}>
+                    Invited
+                  </Text>
+                </TouchableOpacity>
+              )}
+
             </View>
           </View>
 

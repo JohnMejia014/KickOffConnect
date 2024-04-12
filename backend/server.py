@@ -440,7 +440,7 @@ def S3List():
 def S3ProfileList():
     data = request.get_json()
     user = data.get('user')
-
+    print("user:", user)
     total = []
     dirLen = len(str(user + "/posts/"))
     userResp = s3.list_objects(
@@ -456,6 +456,10 @@ def S3ProfileList():
     typeList = []
 
     timePost = []
+    try:
+        userResp['Contents']
+    except:
+        return jsonify({"Success": False})
     for key in userResp['Contents']:
 
         count1 += 1
@@ -529,6 +533,7 @@ def S3ProfileList():
                 'type': typeList,
                 'time': timePost,
                 }
+    print("response: ", response)
     return jsonify(response)
 
 
