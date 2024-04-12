@@ -1,3 +1,4 @@
+
 import React, {useState} from 'react';
 import {View, Text, TouchableOpacity, TextInput, StyleSheet, Button} from 'react-native';
 import ImageUpload from './ImageUpload.js';
@@ -13,10 +14,13 @@ const PostObject=({navigation, route})=>{
     const [file, setFile] = useState(null)
     const [base, setBase] = useState(null)
     const [type, setType] = useState(null)
-    const baseUrl = 'http://192.168.1.119:5000'; // Define your base URL here
+    const [user, setUser] = useState(route.params.source)
+    const baseUrl = 'http://192.168.1.119:5000';// Define your base URL here
+    console.log(route.params.source)
 
 
 
+    console.log(user)
     const step = "image change"
     const imageChange = (event) => {
 
@@ -26,10 +30,12 @@ const PostObject=({navigation, route})=>{
 
     }
 
-    //const user = route.params.user
+
 
 
     const post = () => {
+
+
 
         axios.post(`${baseUrl}/S3Uploader`, {
             image: base,
@@ -37,7 +43,7 @@ const PostObject=({navigation, route})=>{
             postTitle: postTitle,
             path: file,
             type: type,
-            //user: user,
+            user: user,
 
         }).then(res => {
             console.log(res.data);

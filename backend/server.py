@@ -248,6 +248,7 @@ def VidDownload():
 
 @app.route('/S3Uploader', methods=['POST'])
 def S3Uploader():
+
     data = request.get_json()
     image = data.get('image')
     text = data.get('text')
@@ -255,8 +256,7 @@ def S3Uploader():
     path = data.get('path')
     type = data.get('type')
 
-    # user = data.get('user')
-    user = "UltJMejia/"
+    user = data.get('user')
 
     if text == '':
         text = 'No text'
@@ -281,13 +281,13 @@ def S3Uploader():
         s3.upload_file(
             'image.jpg',
             bucket,
-            'posts/' + user + str(postTitle) + '/' + str(postTitle) + '.jpg',
+            user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.jpg',
             ExtraArgs={'Metadata': {'User': user}}
         )
         s3.upload_file(
             'input.txt',
             bucket,
-            'posts/' + user + str(postTitle) + '/' + str(postTitle) + '.txt',
+            user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.txt',
 
             ExtraArgs={'Metadata': {'User': user}}
         )
@@ -303,7 +303,7 @@ def S3Uploader():
         s3.upload_file(
             'input.txt',
             bucket,
-            'posts/' + user + str(postTitle) + '/' + str(postTitle) + '.txt',
+            user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.txt',
 
             ExtraArgs={'Metadata': {'User': user}}
         )
@@ -311,7 +311,7 @@ def S3Uploader():
         s3.upload_file(
             "input.mp4",
             bucket,
-            'posts/' + user + str(postTitle) + '/' + str(postTitle) + '.mp4',
+            user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.mp4',
 
             ExtraArgs={'Metadata': {'User': user}}
         )
@@ -434,22 +434,19 @@ def S3List():
                 'image': imageList,
                 'type': typeList,
                 }
-    return jsonify(response)
 
 
 @app.route('/S3ProfileList', methods=['POST'])
 def S3ProfileList():
-    # data = request.get_json()
-    # user = data.get('user')
-    user = "UltJMejia"
+    data = request.get_json()
+    user = data.get('user')
 
     total = []
-
-    dirLen = len(str("posts/" + user + "/"))
+    dirLen = len(str(user + "/posts/"))
     userResp = s3.list_objects(
         Bucket=bucket,
-        Prefix="posts/" + user,
-        Marker='posts/' + user + "/",
+        Prefix=user + "/posts",
+        Marker=user + "/posts/",
         MaxKeys=100,
     )
     count1 = 0
@@ -457,6 +454,8 @@ def S3ProfileList():
     TextList = []
     imageList = []
     typeList = []
+
+    timePost = []
     for key in userResp['Contents']:
 
         count1 += 1
@@ -466,16 +465,19 @@ def S3ProfileList():
         index = key["Key"].find("/", dirLen)
         title = key["Key"][dirLen:index]
 
+        time = key["LastModified"]
+        time = time.strftime("%Y-%m-%d %H:%M:%S")
+
         absent = True
         if total == []:
-            total.append([title, [], []])
+            total.append([title, [], [], time])
         else:
             for k in total:
                 if title == k[0]:
                     absent = False
                     break
             if absent:
-                total.append([title, [], []])
+                total.append([title, [], [], time])
 
         url = s3.generate_presigned_url('get_object',
                                         Params={'Bucket': bucket, 'Key': key['Key']},
@@ -515,7 +517,8 @@ def S3ProfileList():
         feedResponse.append(total[i][0])
         imageList.append(total[i][1][0])
         typeList.append(total[i][2][0])
-        TextList.append(total[i][3])
+        timePost.append(total[i][3])
+        TextList.append(total[i][4])
 
     size = len(feedResponse)
 
@@ -524,28 +527,31 @@ def S3ProfileList():
                 'size': size,
                 'image': imageList,
                 'type': typeList,
+                'time': timePost,
                 }
     return jsonify(response)
 
 
 @app.route('/S3FriendList', methods=['POST'])
 def S3FriendList():
-    # data = request.get_json()
-    # user = data.get('user')
+    data = request.get_json()
+    user = data.get('user')
 
-    user = "1"
     friends = dynamo.get_item(TableName='Users', Key={'userID': {'S': user}})
     friendList = friends['Item']['friends']['L']
     total = []
 
+    friendPost = []
+    timePost = []
+
     for i in range(len(friendList)):
 
         friend = friendList[i]['S']
-        dirLen = len(str("posts/" + friend + "/"))
+        dirLen = len(str(friend + "/posts/"))
         friendResp = s3.list_objects(
             Bucket=bucket,
-            Prefix="posts/" + friend,
-            Marker='posts/' + friend + "/",
+            Prefix=friend + "/posts",
+            Marker=friend + "/posts/",
             MaxKeys=10,
         )
 
@@ -554,6 +560,13 @@ def S3FriendList():
         TextList = []
         imageList = []
         typeList = []
+        print(friendResp)
+
+        try:
+            friendResp['Contents']
+        except:
+            continue
+
         for key in friendResp['Contents']:
 
             count1 += 1
@@ -563,16 +576,19 @@ def S3FriendList():
             index = key["Key"].find("/", dirLen)
             title = key["Key"][dirLen:index]
 
+            time = key["LastModified"]
+            time = time.strftime("%m-%d-%Y %H:%M %p")
+
             absent = True
             if total == []:
-                total.append([title, [], []])
+                total.append([title, [], [], friend, time])
             else:
                 for k in total:
                     if title == k[0]:
                         absent = False
                         break
                 if absent:
-                    total.append([title, [], []])
+                    total.append([title, [], [], friend, time])
 
             url = s3.generate_presigned_url('get_object',
                                             Params={'Bucket': bucket, 'Key': key['Key']},
@@ -612,7 +628,9 @@ def S3FriendList():
         feedResponse.append(total[i][0])
         imageList.append(total[i][1][0])
         typeList.append(total[i][2])
-        TextList.append(total[i][3])
+        friendPost.append(total[i][3])
+        timePost.append(total[i][4])
+        TextList.append(total[i][5])
 
     size = len(feedResponse)
 
@@ -621,8 +639,13 @@ def S3FriendList():
                 'size': size,
                 'image': imageList,
                 'type': typeList,
+                'time': timePost,
+                'friend': friendPost,
                 }
     return jsonify(response)
+
+
+
 # Running app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False, port=5000)
+    app.run(host='0.0.0.0', debug=True , port=5000)

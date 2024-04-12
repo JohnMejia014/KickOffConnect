@@ -9,14 +9,22 @@ import PostObject from "./FeedPageDiscovery/PostObject";
 
 const Stack = createNativeStackNavigator();
 
-const FeedScreen = ({userInfo}) => (
- 
-        <Stack.Navigator>
-            <Stack.Screen name="Root" component={FeedList} options={{headerShown: false}} route={{params: {userInfo}}}/>
-            <Stack.Screen name="Video" component={VideoPlayer} options={{headerShown: false}}/>
-            <Stack.Screen name="Create" component={PostObject} options={{headerShown: false}} route={{params: {userInfo}}}/>
-        </Stack.Navigator>
+const FeedScreen = ({navigation, route}) => (
+
+
+
+
+    <Stack.Navigator
+        initialRouteName={"Root"}
+    >
+        <Stack.Screen name="Root" component={FeedList} options={{headerShown: false}} initialParams={{params: route.params.userInfo}} />
+        <Stack.Screen name="Video" component={VideoPlayer} options={{headerShown: false}}/>
+        <Stack.Screen name="Create" component={PostObject} options={{headerShown: false}}/>
+    </Stack.Navigator>
+
+
     
 );
+
 
 export default FeedScreen;

@@ -8,7 +8,6 @@ import axios from 'axios';
 import { useScrollToTop} from "@react-navigation/native";
 import {Video} from "expo-av";
 const UserProfileScreen = ({ navigation, route }) => {
-  console.log("navigation: ", navigation);
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
   const [activeTab, setActiveTab] = useState('joined'); // State for the active tab
@@ -31,7 +30,7 @@ const UserProfileScreen = ({ navigation, route }) => {
   const [length, setLength] = useState(0)
   const [desc, setDesc] = useState([]);
   const [type, setType] = useState([]);
-
+  const username = userInfo.userID
   const ref = useRef(null);
   useScrollToTop(ref)
 
@@ -40,12 +39,9 @@ const UserProfileScreen = ({ navigation, route }) => {
 
   useEffect(() => {
 
-      axios.post(`${BASE_URL}/S3ProfileList`, {})
-          .then((response) => {
-              console.log(response.data.list);
-              console.log(response.data.text);
-              console.log(response.data.size);
-              console.log(response.data.image);
+    axios.post(`${BASE_URL}/S3ProfileList`, { user: username })
+        .then((response) => {
+              
               setFeed(response.data.list);
               setLength(response.data.size);
               setDesc(response.data.text);
@@ -55,7 +51,6 @@ const UserProfileScreen = ({ navigation, route }) => {
           })
   }, []);
 
-  console.log("UserInfo: ",userInfo);
 
   const fetchFriends = async () => {
     try {
@@ -80,14 +75,39 @@ const UserProfileScreen = ({ navigation, route }) => {
     setModalVisible(!modalVisible); // Toggle modal visibility
   };
 
-  const handleFriendPress = (friend) => {
+  const handleFriendPress = async (friend) => {
     console.log("Friend :", friend);
-    setUserInfo(friend);
-    setFriendPage(true);
-    fetchEvents();
+    if (friend.userID === RealuserInfo.userID) {
+      // If the selected friend is the real user, reset to default view
+      setUserInfo(RealuserInfo);
+      setFriendPage(false);
+    } else {
+      // Otherwise, set the selected friend's info and navigate to their page
+      setUserInfo(friend);
+      setFriendPage(true);
+      // Fetch the selected friend's posts and events
+    }
     setModalVisible(false);
-
   };
+  useEffect(() => {
+    axios
+      .post(`${BASE_URL}/S3ProfileList`, { user: username })
+      .then((response) => {
+        setFeed(response.data.list);
+        setLength(response.data.size);
+        setDesc(response.data.text);
+        setImageL(response.data.image);
+        setType(response.data.type);
+      });
+  }, [modalVisible]); // Fetch data when modalVisible changes
+
+  const handlePageReset = () => {
+    console.log("Friend :", friend);
+    setUserInfo(RealuserInfo);
+    setFriendPage(false);
+    setModalVisible(false);
+  };
+  
   
 
   const renderFriendsList = () => {
@@ -268,9 +288,12 @@ const UserProfileScreen = ({ navigation, route }) => {
     { key: 'invited', title: 'Events Invited' },
   ]);
   const renderFeedItems = () => {
+    if (!feed || feed.length === 0) {
+      return null; // Return null if feed is empty or undefined
+  }
     const rows = [];
     let currentRow = [];
-  
+    console.log("type: ", type);
     feed.forEach((item, index) => {
       // Assuming type[index] is either 'mp4' or 'image' based on your existing code
       const mediaType = type[index];
@@ -355,12 +378,24 @@ const UserProfileScreen = ({ navigation, route }) => {
       </View>
     );
   };
-
+  const renderContentWithFriendsLabel = () => {
+    if (friendPage) {
+      return (
+        <View style={styles.contentContainer}>
+          <Text style={styles.friendsPageLabel}>Friends Page</Text>
+          {renderContent()}
+        </View>
+      );
+    } else {
+      return renderContent();
+    }
+  };
     const handleEditButtonPress = () => {
       setIsEditingBio(!isEditingBio);
     };
     return (
-        <LinearGradient colors={['#0d47a1', '#1565c0']} style={styles.container}>
+        <LinearGradient colors={friendPage ? ['#e3f2fd', '#bbdefb'] : ['#0d47a1', '#1565c0']}
+         style={styles.container}>
         <ScrollView contentContainerStyle={[styles.scrollViewContent, { paddingBottom: 100 }]}>
 
           <SafeAreaView style={styles.container}>
@@ -437,7 +472,7 @@ const UserProfileScreen = ({ navigation, route }) => {
           </View>
 
                 {/* Render Content */}
-                {renderContent()}
+                {renderContentWithFriendsLabel()}
                 {/* View for EventListComponent */}
                 {renderFriendsList()}
 
@@ -703,6 +738,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         width: 200,
         height: 200,
+        resizeMode: 'contain',
     },
     postContainer: {
       backgroundColor: '#ADD8E6', // Light background color for the post container
