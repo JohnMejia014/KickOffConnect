@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     },
     mainPostView: {
         width: "100%",
-        marginBottom: 310,
+        marginBottom: 650,
 
     },
     titleView:{
