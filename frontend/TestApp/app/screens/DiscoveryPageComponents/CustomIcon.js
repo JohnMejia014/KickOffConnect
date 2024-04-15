@@ -5,6 +5,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for soccer icon
 
 const CustomIcon = ({ markerInfo }) => {
+  console.error('MarkerInfo:', markerInfo);
+
   const sportIcons = {
     Soccer: 'football',
     Basketball: 'basketball',
@@ -28,10 +30,10 @@ const CustomIcon = ({ markerInfo }) => {
         <FontAwesome name="tree" size={24} color="green" /> // Park icon using FontAwesome
       ) : (
         <>
-          {markerInfo.icon === 'Soccer' ? ( // Check if icon is Soccer
-            <Ionicons name={sportIcons[markerInfo.icon]} size={24} color="black" /> // Soccer icon using Ionicons
+          {markerInfo.sport === 'Soccer' ? ( // Check if icon is Soccer
+            <Ionicons name={sportIcons[markerInfo.sport]} size={24} color="black" /> // Soccer icon using Ionicons
           ) : (
-            <MaterialCommunityIcons name={sportIcons[markerInfo.icon]} size={24} color="black" /> // Other sport icons
+            <MaterialCommunityIcons name={sportIcons[markerInfo.sport]} size={24} color="black" /> // Other sport icons
           )}
         </>
       )}

@@ -394,7 +394,7 @@ useEffect(() => {
             onPress={() => handleMarkerPress(placesByAddress[address])}
           >
             {/* Use your CustomIcon component as the marker's icon */}
-            <CustomIcon markerInfo={placesByAddress[address].places.length > 0 ? { park: true } : { sport: placesByAddress[address].events[0]?.eventSportIcon}} />
+            <CustomIcon markerInfo={placesByAddress[address].places.length > 0 ? { park: true } : { sport: placesByAddress[address].events[0]?.eventSports[0]}} />
           </Marker>
           ))}
 
