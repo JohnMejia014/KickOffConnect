@@ -85,7 +85,6 @@ const EventListComponent = ({ events, isModalVisible, onClose, userInfo, leaveEv
   );
 };
 
-export default EventListComponent;
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -106,3 +105,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 });
+export default EventListComponent;

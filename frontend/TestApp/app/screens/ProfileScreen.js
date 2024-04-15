@@ -39,7 +39,7 @@ const ProfileScreen = ({route }) => {
 
 
   useEffect(() => {
-
+        
     axios.post(`${BASE_URL}/S3ProfileList`, { user: username })
         .then((response) => {
               
@@ -77,7 +77,6 @@ const ProfileScreen = ({route }) => {
   };
 
   const handleFriendPress = async (friend) => {
-    console.log("Friend :", friend);
     if (friend.userID === RealuserInfo.userID) {
       // If the selected friend is the real user, reset to default view
       setUserInfo(RealuserInfo);
@@ -98,7 +97,6 @@ const ProfileScreen = ({route }) => {
     setModalVisible(false);
   };
   const fetchFeedData = (friend) => {
-    console.log("username: ", friend.userID);
     axios
       .post(`${BASE_URL}/S3ProfileList`, { user: friend.userID })
       .then((response) => {
@@ -107,7 +105,6 @@ const ProfileScreen = ({route }) => {
         setDesc(response.data.text);
         setImageL(response.data.image);
         setType(response.data.type);
-        console.log("response");
       })
 
       .catch((error) => {
@@ -153,7 +150,6 @@ const ProfileScreen = ({route }) => {
     const [bio, setBio] = useState(userInfo.bio || '');
     const [isEditingBio, setIsEditingBio] = useState(false);
     const joinEvent = async (eventID) => {
-      console.log("eventID: ", eventID, "userID", userInfo.userID);
       try {
         const response = await axios.post(`${BASE_URL}/joinEvent`, {
           eventID: eventID,
@@ -191,7 +187,10 @@ const ProfileScreen = ({route }) => {
         throw new Error('Failed to leave the event');
       }
     };
-  
+    const handleFriendRequestsPress = () => {
+        setFriendRequestsModalVisible(true); // Set friendRequestsModalVisible to true to open the modal
+      };
+      
     const fetchUserInfo = async () => {
       try {    
         const response = await fetch(`${BASE_URL}/getUserInfo`, {
@@ -203,7 +202,6 @@ const ProfileScreen = ({route }) => {
         });
         const data = await response.json();
        
-        console.log("data: ", data);
         setUserInfo(data.userInfo); // Update userInfo state
 
       } catch (error) {
@@ -305,9 +303,10 @@ const ProfileScreen = ({route }) => {
     if (!feed || feed.length === 0) {
       return null; // Return null if feed is empty or undefined
   }
+    setPostsCount(feed.length);
+    console.log("feed.length: ", feed.length);
     const rows = [];
     let currentRow = [];
-    console.log("type: ", type);
     feed.forEach((item, index) => {
       // Assuming type[index] is either 'mp4' or 'image' based on your existing code
       const mediaType = type[index];
@@ -376,8 +375,6 @@ const ProfileScreen = ({route }) => {
     if(events === null){
       return null;
     }
-    console.log("events: ", events);
-    console.log("friendsPage: ", friendPage);
     return (
       <View>
         <ProfileEventList
@@ -397,10 +394,8 @@ const ProfileScreen = ({route }) => {
   const renderContentWithFriendsLabel = () => {
     if (friendPage) {
       return (
-        <View style={styles.contentContainer}>
-          <Text style={styles.friendsPageLabel}>Friends Page</Text>
-          {renderContent()}
-        </View>
+ 
+          renderContent()
       );
     } else {
       return renderContent();
@@ -430,7 +425,7 @@ const ProfileScreen = ({route }) => {
                 <View style={styles.userStatsContainer}>
                   {/* Number of Posts */}
                   <View style={styles.userStats}>
-                    <Text style={styles.statsLabel}>Posts </Text>
+                    <Text style={styles.statsLabel}>Poss</Text>
                     <Text style={styles.statsValue}>{postsCount}</Text>
                   </View>
     
@@ -441,7 +436,7 @@ const ProfileScreen = ({route }) => {
                 </TouchableOpacity>
                 </View>
               {/* Label for Posts */}
-              <Text style={styles.eventsLabel}>Posts</Text>
+              <Text style={styles.eventsLabel}>Poss</Text>
 
 
 

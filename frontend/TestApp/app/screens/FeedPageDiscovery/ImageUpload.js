@@ -3,7 +3,7 @@ import React, {useState} from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 
-export default function ImageUpload(props) {
+const ImageUpload = (props) => {
 
 
     const [showAppOptions, setShowAppOptions] = useState(false);
@@ -145,6 +145,7 @@ export default function ImageUpload(props) {
 }
 
 
+
 // <Button title="Take an Video from camera" onPress={takeVid} />
 // <Button title="Take a Picture from camera" onPress={takePic} />
 
@@ -172,3 +173,4 @@ const styles = StyleSheet.create({
     },
 
 });
+export default ImageUpload;

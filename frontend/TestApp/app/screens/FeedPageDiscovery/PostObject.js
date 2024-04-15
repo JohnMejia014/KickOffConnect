@@ -71,7 +71,6 @@ const PostObject=({navigation, route})=>{
 }
 
 
-export default PostObject;
 
 const styles = StyleSheet.create({
     container: {
@@ -90,3 +89,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 });
+
+export default PostObject;
+

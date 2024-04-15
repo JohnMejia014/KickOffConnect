@@ -10,6 +10,7 @@ import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import { useRoute } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
+import { DEFAULT_ICON_COLOR } from "@expo/vector-icons/build/createIconSet";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -47,7 +48,7 @@ function AppScreen() {
          </Tab.Navigator>
   )
 }
-export default function Page() {
+const Page = () => {
   return (
     <NavigationContainer independent={true}>
       <Stack.Navigator
@@ -71,3 +72,4 @@ export default function Page() {
     </NavigationContainer>
   );
 }
+export default Page;

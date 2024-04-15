@@ -139,7 +139,6 @@ const FeedList = ({navigation, route}) => {
     )
 };
 
-export default FeedList;
 
 
 const styles = StyleSheet.create({
@@ -287,3 +286,5 @@ const styles = StyleSheet.create({
       },
 
 })
+
+export default FeedList;

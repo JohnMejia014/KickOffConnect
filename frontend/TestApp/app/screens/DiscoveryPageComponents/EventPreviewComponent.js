@@ -19,7 +19,6 @@ const EventPreviewComponent = ({ eventInfo, onPress, userInfo }) => {
   };
 
   const renderIcons = (sports) => {
-    console.log("eventsInfo in event preview component: ", eventInfo);
     return sports.map((sport, index) => (
       <View key={index} style={styles.iconContainer}>
         {sportIcons[sport] && (
