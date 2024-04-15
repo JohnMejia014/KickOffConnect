@@ -7,6 +7,9 @@ import ProfileEventList from './DiscoveryPageComponents/ProfileEventList';
 import axios from 'axios';
 import { useScrollToTop} from "@react-navigation/native";
 import {Video} from "expo-av";
+import { Feather } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
+
 const UserProfileScreen = ({ navigation, route }) => {
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
@@ -23,7 +26,9 @@ const UserProfileScreen = ({ navigation, route }) => {
   const [friendsVisible, setFriendsVisible] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-
+  const [friendRequests, setFriendRequests] = useState(userInfo.friendRequests);
+  const [friendRequestsModalVisible, setFriendRequestsModalVisible] = useState(false);
+  
   const [friendsCount, setFriendsCount] = useState(userInfo.friends.length);
   const [feed, setFeed] = useState([]);
   const [imageL, setImageL] = useState([]);
@@ -102,6 +107,7 @@ const UserProfileScreen = ({ navigation, route }) => {
         setDesc(response.data.text);
         setImageL(response.data.image);
         setType(response.data.type);
+        setPostsCount(response.data.size);
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
@@ -186,7 +192,27 @@ const UserProfileScreen = ({ navigation, route }) => {
         throw new Error('Failed to leave the event');
       }
     };
-  
+    const handleRespondFriendRequest = async (friendID, action) => {
+      try {
+        const response = await axios.post(`${BASE_URL}/respondFriendRequest`, {
+          userID: userInfo.userID,
+          friendID,
+          action,
+        });
+    
+        if (response.data.success) {
+          console.log(response.data.message);
+          // Update the friend requests list based on the response
+          const updatedRequests = userInfo.friendRequests.filter((request) => request !== friendID);
+          setUserInfo((prevUserInfo) => ({ ...prevUserInfo, friendRequests: updatedRequests }));
+        } else {
+          throw new Error('Failed to respond to friend request');
+        }
+      } catch (error) {
+        console.error('Error responding to friend request:', error);
+        // Handle error if needed
+      }
+    };
     const fetchUserInfo = async () => {
       try {    
         const response = await fetch(`${BASE_URL}/getUserInfo`, {
@@ -305,7 +331,6 @@ const UserProfileScreen = ({ navigation, route }) => {
   }
     const rows = [];
     let currentRow = [];
-    console.log("feed: ", feed);
     feed.forEach((item, index) => {
       // Assuming type[ sindex] is either 'mp4' or 'image' based on your existing code
       const mediaType = type[index];
@@ -366,7 +391,7 @@ const UserProfileScreen = ({ navigation, route }) => {
       );
     }
   };
- 
+  
   const renderEventList = (events) => {
     if(events === null){
       return null;
@@ -386,18 +411,11 @@ const UserProfileScreen = ({ navigation, route }) => {
         />
       </View>
     );
+  };const handleFriendRequestsPress = () => {
+    setFriendRequestsModalVisible(true); // Set friendRequestsModalVisible to true to open the modal
   };
-  const renderContentWithFriendsLabel = () => {
-    if (friendPage) {
-      return (
-        <View style={styles.contentContainer}>
-          {renderContent()}
-        </View>
-      );
-    } else {
-      return renderContent();
-    }
-  };
+  
+ 
     const handleEditButtonPress = () => {
       setIsEditingBio(!isEditingBio);
     };
@@ -427,12 +445,46 @@ const UserProfileScreen = ({ navigation, route }) => {
                   </View>
     
                   {/* Number of Friends */}
+                    <View style ={styles.userStats}>
                 <TouchableOpacity onPress={handleFriendsPress}>
                   <Text style={styles.statsLabel}>Friends</Text>
                   <Text style={styles.statsValue}>{userInfo.friends.length}</Text>
                 </TouchableOpacity>
+                  </View>
                 </View>
+              {/* Friend Requests */}
+              {!friendPage && (
+                <TouchableOpacity onPress={handleFriendRequestsPress} style={styles.friendRequestsButton}>
+                <Feather name="mail" size={24} color="black" style={styles.mailIcon} />
+                <Text style={styles.friendRequestsText}>Friend Requests</Text>
+                <Text style={styles.friendRequestsCount}>{userInfo.friendRequests.length}</Text>
+              </TouchableOpacity>
+              )}
               {/* Label for Posts */}
+              {/* Modal for Friend Requests */}
+                <Modal visible={friendRequestsModalVisible} animationType="slide" transparent={true}>
+                  <View style={styles.modalBackground}>
+                    <View style={styles.modalContainer}>
+                      <Text style={styles.modalTitle}>Friend Requests:</Text>
+                      <ScrollView style={styles.modalContent}>
+                        {userInfo.friendRequests.map((request, index) => (
+                          <View key={index} style={styles.friendRequestItem}>
+                          <Text style={styles.friendRequestText}>{request}</Text>
+                          <TouchableOpacity onPress={() => handleRespondFriendRequest(request, 'accept')}>
+                            <FontAwesome name="check" size={24} color="green" />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => handleRespondFriendRequest(request, 'reject')}>
+                            <FontAwesome name="times" size={24} color="red" />
+                          </TouchableOpacity>
+                        </View>
+                        ))}
+                      </ScrollView>
+                      <TouchableOpacity style={styles.closeButton} onPress={() => setFriendRequestsModalVisible(false)}>
+                        <Text style={styles.closeButtonText}>Close</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </Modal>
               <Text style={styles.eventsLabel}>Posts</Text>
 
 
@@ -571,10 +623,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginTop: 10,
-    
+    marginBottom: 10,
+    paddingBottom:10,
   },
   userStats: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         justifyContent: 'space-around',
         marginTop: 10,
         marginHorizontal: 10,
@@ -757,6 +810,66 @@ const styles = StyleSheet.create({
       padding: 10,
       marginVertical: 10,
       alignItems: 'center', // Center the content horizontally
+    },
+    friendRequestsButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#e3f2fd', // Example background color
+      padding: 10,
+      borderRadius: 10,
+      marginBottom: 10,
+    },
+    mailIcon: {
+      marginRight: 10,
+    },
+    friendRequestsText: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: 'black',
+    },
+    friendRequestsCount: {
+      marginLeft: 'auto', // Push the count to the right
+      fontWeight: 'bold',
+    },
+    modalBackground: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)', // Green background color with some transparency
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContainer: {
+      backgroundColor: '#fff',
+      borderRadius: 10,
+      padding: 20,
+      width: '80%',
+      maxHeight: '80%', // Adjust as needed
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 10,
+      textAlign: 'center',
+    },
+   
+    friendRequestItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderBottomWidth: 1,
+      borderBottomColor: '#ccc',
+      paddingVertical: 10,
+    },
+    friendRequestText: {
+      fontSize: 16,
+      flex: 1, // Take up remaining space in the row
+    },
+    closeButton: {
+      marginTop: 20,
+      alignSelf: 'flex-end',
+    },
+    closeButtonText: {
+      fontSize: 16,
+      color: '#333',
     },
     
     });
