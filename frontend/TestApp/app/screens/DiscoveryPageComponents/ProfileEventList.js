@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-nati
 import EventPreviewComponent from './EventPreviewComponent';
 import EventComponent from './EventComponent';
 
-const ProfileEventList = ({ events, userInfo, leaveEvent, joinEvent, isProfilePage, fetchEvents }) => {
+const ProfileEventList = ({ events, userInfo, leaveEvent, joinEvent, isProfilePage, fetchEvents, isFriend }) => {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   const handleEventSelection = (event) => {
@@ -45,6 +45,7 @@ const ProfileEventList = ({ events, userInfo, leaveEvent, joinEvent, isProfilePa
             console.log('Join/Leave event:', isJoined);
           }}
           isProfilePage={isProfilePage}
+          isFriend={isFriend}
         />
       )}
     </ScrollView>

@@ -483,7 +483,7 @@ const UserProfileScreen = ({ navigation, route }) => {
           </View>
 
                 {/* Render Content */}
-                {renderContentWithFriendsLabel()}
+                {renderContent()}
                 {/* View for EventListComponent */}
                 {renderFriendsList()}
 

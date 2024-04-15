@@ -73,7 +73,6 @@ const FeedList = ({navigation, route}) => {
 
 
             <Button title={"load feed"} onPress={Increment} />
-            <Button title={"Post Creation"} onPress={() => navigation.navigate("Create", {source: user})} />
 
             <View style={styles.search}>
                 <TextInput value={searchQuery} onChangeText={(val) => setSearchQuery(val)}
@@ -123,8 +122,9 @@ const FeedList = ({navigation, route}) => {
                                 </View>
                             )}
                             />
+            <Button title={"Post Creation"} onPress={() => navigation.navigate("Create", {source: user})} />
 
-                        <Button title={"load more"} load more/>
+                        {/* <Button title={"load more"} load more/> */}
                     </View>
 
                 }
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     },
     mainPostView: {
         width: "100%",
-        marginBottom: 650,
+        marginBottom:500,
 
     },
     titleView:{

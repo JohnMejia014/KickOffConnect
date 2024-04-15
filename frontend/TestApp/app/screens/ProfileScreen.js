@@ -377,6 +377,7 @@ const ProfileScreen = ({route }) => {
       return null;
     }
     console.log("events: ", events);
+    console.log("friendsPage: ", friendPage);
     return (
       <View>
         <ProfileEventList
@@ -388,6 +389,7 @@ const ProfileScreen = ({route }) => {
           joinEvent={joinEvent}
           isProfilePage={true}
           fetchEvents={fetchEvents}
+          isFriend={friendPage}
         />
       </View>
     );

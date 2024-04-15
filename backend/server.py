@@ -535,8 +535,37 @@ def S3ProfileList():
                 }
     print("response: ", response)
     return jsonify(response)
+@app.route('/sendFriendRequest', methods=['POST'])
+def sendFriendRequest():
+    data = request.get_json()
+    userID = data.get('userID')
+    friendID = data.get('friendID')
 
+    success, message = userHandler.sendFriendRequest(userID, friendID)
 
+    if success:
+        return jsonify({'message': 'Friend request sent successfully.'}), 200
+    else:
+        return jsonify({'error': message}), 500  # Adjust the HTTP status code as needed for the error
+@app.route('/respondFriendRequest', methods=['POST'])
+def respondFriendRequest():
+    data = request.get_json()
+    userID = data.get('userID')
+    friendID = data.get('friendID')
+    action = data.get('action')  # 'accept' or 'reject'
+
+    data = request.get_json()
+    userID = data.get('userID')
+    friendID = data.get('friendID')
+    action = data.get('action')  # 'accept' or 'reject'
+
+    # Call the respondFriendRequest method from the UserHandler instance
+    success, message = userHandler.respondFriendRequest(userID, friendID, action)
+
+    if success:
+        return jsonify({'message': message}), 200
+    else:
+        return jsonify({'error': message}), 400  # Adjust the HTTP status code as needed
 @app.route('/S3FriendList', methods=['POST'])
 def S3FriendList():
     data = request.get_json()
