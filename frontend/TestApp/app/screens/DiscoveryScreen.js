@@ -12,6 +12,7 @@ import axios from 'axios';
 import EventFilterModal from './DiscoveryPageComponents/EventFilterModal';
 import EventParkMarkers from './DiscoveryPageComponents/EventParkMarkers';
 import { useIsFocused } from '@react-navigation/native'; // Import useIsFocused hook
+import CustomIcon from './DiscoveryPageComponents/CustomIcon'; // Import your custom icon component
 
 const DiscoveryScreen = ({route}) => {
   const BASE_URL = 'http://192.168.1.119:5000';
@@ -379,22 +380,22 @@ useEffect(() => {
                {/* Render EventMarkers component */}
                {Object.keys(placesByAddress).map((address) => (
             <Marker
-              key={address}
-              coordinate={{
-                latitude:
-                  placesByAddress[address].places[0]?.geometry?.location.lat ||
-                  placesByAddress[address].events[0]?.eventLat ||
-                  0,
-                longitude:
-                  placesByAddress[address].places[0]?.geometry?.location.lng ||
-                  placesByAddress[address].events[0]?.eventLong ||
-                  0,
-              }}
-              title={address}
-              onPress={() => handleMarkerPress(placesByAddress[address])}
-              // Set marker color based on the condition
-              pinColor={placesByAddress[address].places.length > 0 ? 'red' : 'blue'}
-            />
+            coordinate={{
+              latitude:
+                placesByAddress[address]?.places[0]?.geometry?.location.lat ||
+                placesByAddress[address]?.events[0]?.eventLat ||
+                0,
+              longitude:
+                placesByAddress[address]?.places[0]?.geometry?.location.lng ||
+                placesByAddress[address]?.events[0]?.eventLong ||
+                0,
+            }}
+            title={address}
+            onPress={() => handleMarkerPress(placesByAddress[address])}
+          >
+            {/* Use your CustomIcon component as the marker's icon */}
+            <CustomIcon markerInfo={placesByAddress[address].places.length > 0 ? { park: true } : { sport: placesByAddress[address].events[0]?.eventSportIcon}} />
+          </Marker>
           ))}
 
               </MapView>
