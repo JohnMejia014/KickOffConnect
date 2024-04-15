@@ -125,6 +125,66 @@ class UserHandler:
         if(count > 0):
             doesUserExist = True
         return value, doesUserExist
+    def sendFriendRequest(self, userID: str, friendID: str):
+        try:
+            # Check if the friendID exists in the database
+            friend_response, friend_exists = self.findUser(friendID)
+            if friend_exists:
+                # Add the userID to the friend requests list of the potential friend (friendID)
+                update_response = self.__table.update_item(
+                    Key={'userID': friendID},
+                    UpdateExpression='SET friendRequests = list_append(if_not_exists(friendRequests, :empty_list), :user_id)',
+                    ExpressionAttributeValues={
+                        ':user_id': [userID],
+                        ':empty_list': []
+                    },
+                    ReturnValues='UPDATED_NEW'
+                )
+                if update_response.get('Attributes'):
+                    # Friend request sent successfully
+                    return True, None
+                else:
+                    # Error updating friend requests list
+                    return False, "Error updating friend requests list"
+
+            else:
+                # Friend with friendID not found
+                return False, "Error: Friend not found"
+        except Exception as e:
+            # Handle any unexpected exceptions
+            error_message = f"Error: {str(e)}"
+            return False, error_message
+    def respondFriendRequest(self, userID: str, friendID: str, action: str):
+        try:
+            # Check if the friend request exists and is pending
+            response = self.__table.query(
+                KeyConditionExpression=Key('sender').eq(friendID) & Key('receiver').eq(userID) & Key('status').eq('pending')
+            )
+            items = response['Items']
+            if not items:
+                return False, "No pending friend request found."
+
+            # Assuming 'action' is either 'accept' or 'reject'
+            if action == 'accept':
+                # Update the friend request to 'accepted'
+                for item in items:
+                    self.__table.update_item(
+                        Key={'sender': item['sender'], 'receiver': item['receiver']},
+                        UpdateExpression='SET #s = :status',
+                        ExpressionAttributeNames={'#s': 'status'},
+                        ExpressionAttributeValues={':status': 'accepted'}
+                    )
+                return True, "Friend requests accepted successfully."
+            elif action == 'reject':
+                # Remove the friend request
+                for item in items:
+                    self.__table.delete_item(Key={'sender': item['sender'], 'receiver': item['receiver']})
+                return True, "Friend requests rejected."
+            else:
+                return False, "Invalid action."
+        except Exception as e:
+            return False, f"Error: {str(e)}"
+
     def getFriends(self, userID: str):
         try:
             # Query DynamoDB to get the list of friend IDs associated with the user

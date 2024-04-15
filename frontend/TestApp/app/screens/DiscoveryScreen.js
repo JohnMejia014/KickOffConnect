@@ -330,6 +330,32 @@ useEffect(() => {
       console.error('Error submitting event to the backend:', error);
     }
   };
+  const handleAddEventSubmit2 = async (selectedFriends, eventID) => {
+    console.log("selected friends in discovery: ", selectedFriends);
+    try {
+        const dataToSend = {
+            selectedFriends: selectedFriends,
+            eventID: eventID
+        };
+
+        const response = await fetch(`${BASE_URL}/inviteFriends`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSend)
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to invite friends to the backend');
+        }
+
+        // Handle successful response here
+    } catch (error) {
+        // Handle error here
+        console.error('Error inviting friends:', error);
+    }
+}
 
 
   return (
@@ -397,6 +423,7 @@ useEffect(() => {
               isVisible={isAddEventModalVisible}
               onClose={() => setAddEventModalVisible(false)}
               onSubmit={handleAddEventSubmit}
+              onSubmit2={handleAddEventSubmit2}
               tabBarHeight={1}
               longitude={
                 isAddEventModalVisible && tempSelectedPlaceLocation

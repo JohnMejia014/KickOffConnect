@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { SafeAreaView, StyleSheet, TextInput, View, Text, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
 
 const LoginScreen = ({navigation}) => {
   const [username, setUsername] = useState('');
@@ -35,12 +34,12 @@ const LoginScreen = ({navigation}) => {
     if (mode === 'signup') {
       requestData.email = email;
     }
-    console.log(requestData);
+    console.log("logging in");
     const endpoint = mode === 'signup' ? 'signup' : 'login';
     axios
       .post(`http://192.168.1.119:5000/${endpoint}`, requestData)
       .then((response) => {
-        console.log(response.data.userInfo);
+        console.log("Made it here");
         if (response.data.message === 'User successfully created' || response.data.message === "Login successful") {
             navigation.navigate('AppScreen', { userInfo: response.data.userInfo });
         } else {

@@ -14,6 +14,7 @@ import { useScrollToTop} from "@react-navigation/native";
 import {StyleSheet} from "react-native";
 import axios from 'axios';
 import {Video} from "expo-av";
+import { LinearGradient } from 'expo-linear-gradient';
 
 
 const FeedList = ({navigation, route}) => {
@@ -85,6 +86,8 @@ const FeedList = ({navigation, route}) => {
     }
 
     return(
+        <LinearGradient colors={['#0d47a1', '#1565c0']} style={styles.gradientContainer}>
+
         <View>
 
             <Button title={"load feed"} onPress={Increment} />
@@ -172,6 +175,8 @@ const FeedList = ({navigation, route}) => {
 
             </TouchableWithoutFeedback>
         </View>
+
+            </LinearGradient>
 
     )
 };
@@ -299,5 +304,46 @@ const styles = StyleSheet.create({
 
 
     },
+    postTitle: {
+        width: "100%",
+        flexDirection: 'column',
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "#ccc",
+      },
+      postView: {
+        width: '100%',
+        alignItems: "center",
+        marginTop: 10,
+        paddingBottom: 10,
+      },
+      imageView: {
+        width: "100%",
+        height: 300,
+        resizeMode: "cover",
+        marginBottom: 10,
+      },
+      postContent: {
+        paddingHorizontal: 10,
+        marginBottom: 10,
+      },
+      postHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 5,
+      },
+      friendName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginRight: 10,
+      },
+      postTime: {
+        fontSize: 12,
+        color: "#888",
+      },
+      postDescription: {
+        fontSize: 14,
+        lineHeight: 20,
+      },
 
 })

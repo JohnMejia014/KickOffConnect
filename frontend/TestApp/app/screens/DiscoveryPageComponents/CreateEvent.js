@@ -6,7 +6,7 @@ import AddEventComponent from './AddEventComponent';
 import ShareEventComponent from './ShareEventComponent';
 import { v4 as uuidv4 } from 'react-native-uuid';  // Import uuid from react-native-uuid
 
-const CreateEvent = ({ userInfo, isVisible, onClose, onSubmit, initialEventData, longitude, latitude }) => {
+const CreateEvent = ({ userInfo, isVisible, onClose, onSubmit, onSubmit2, longitude, latitude }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const generateUniqueID = () => {
     const timestamp = new Date().getTime();  // Get the current timestamp
@@ -97,6 +97,7 @@ const CreateEvent = ({ userInfo, isVisible, onClose, onSubmit, initialEventData,
           initialEventData={eventData}
           shareEvent={handleShareEvent}
           onSubmit={onSubmit}
+          onSubmit2={onSubmit2}
           onClose={onClose}
         />
       )}

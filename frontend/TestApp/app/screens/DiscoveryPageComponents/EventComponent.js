@@ -6,9 +6,9 @@ import { Rating } from 'react-native-ratings';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ErrorMessageModal from './ErrorMessageModal';
 
-const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveEvent, isProfilePage }) => {
+const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveEvent, isProfilePage, isFriend }) => {
    const [showParticipantsModal, setShowParticipantsModal] = useState(false);
-   const [isUserJoined, setIsUserJoined] = useState(eventInfo?.usersJoined?.includes(userInfo.route.params.userInfo.userID));
+   const [isUserJoined, setIsUserJoined] = useState(initialEventInfo?.usersJoined?.includes(userInfo.userID));
    /* Add logic to determine if the user is joined to the event */
   const eventName = eventInfo?.eventName || 'No Event';
   const eventSport = eventInfo?.eventSport || 'No Sport';
@@ -16,15 +16,16 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
   const eventDescription = eventInfo?.eventDescription || 'No Description';
   const eventAddress = eventInfo?.eventAddress || 'No Address';
   const [eventInfo, setEventInfo] = useState(initialEventInfo);
-
+  console.log("isUserJoined: ",isUserJoined);
  
   const [errorMessage, setErrorMessage] = useState(null);
   useEffect(() => {
     // This effect will run whenever eventInfo changes
     setIsUserJoined(eventInfo?.usersJoined?.includes(userInfo.userID));
   }, [eventInfo, userInfo.userID]);
-
+  console.log("isFriend:", isFriend);
   const handleJoinLeave = async () => {
+    console.log("is profile page:  ", isProfilePage);
     if (eventInfo.eventHost === userInfo.userID) {
       // Display a message that the host cannot leave their own event
       setErrorMessage('You are the host. You cannot leave your own event.');
@@ -38,6 +39,7 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
         } else {
           // User is not joined, so join the event
           const updatedEventInfo = await joinEvent(eventInfo.eventID); // Pass the eventID or any unique identifier
+          if (isProfilePage){onClose(); return null;}
           setEventInfo(updatedEventInfo);          
         }
         // Update isUserJoined state after successful join/leave
@@ -69,13 +71,14 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
     // Add more sports and their corresponding icons as needed
   };
   const renderIcons = (sports) => {
+    console.log("Sports: ", sports);
     return (
       <View style={styles.sportContainer}>
-        {sports.map((sport, index) => (
+        {sports?.map((sport, index) => (
           <View key={index} style={styles.iconContainer}>
             {sportIcons[sport] && (
               <>
-                {(sport === 'Soccer') ? (
+                {sport === 'Soccer' ? (
                   <Ionicons
                     name={sportIcons[sport]}
                     size={50}
@@ -95,6 +98,7 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
       </View>
     );
   };
+  
   
 
 
@@ -141,14 +145,16 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
 
           </View>
   
-          {/* Join/Leave Button */}
-          <TouchableOpacity
-            style={[styles.button, isUserJoined ? styles.leaveButton : styles.joinButton]}
-            onPress={handleJoinLeave}
-          >
-            <Ionicons name={isUserJoined ? 'md-exit' : 'md-log-in'} size={20} color="white" />
-            <Text style={styles.buttonText}>{isUserJoined ? 'Leave' : 'Join'}</Text>
-          </TouchableOpacity>
+          {/* Conditionally render Join/Leave Button */}
+          {!isFriend && (
+            <TouchableOpacity
+              style={[styles.button, isUserJoined ? styles.leaveButton : styles.joinButton]}
+              onPress={handleJoinLeave}
+            >
+              <Ionicons name={isUserJoined ? 'md-exit' : 'md-log-in'} size={20} color="white" />
+              <Text style={styles.buttonText}>{isUserJoined ? 'Leave' : 'Join'}</Text>
+            </TouchableOpacity>
+          )}
   
           {/* Participants Modal */}
           <Modal transparent={true} animationType="slide" visible={showParticipantsModal}>

@@ -52,7 +52,7 @@ const EventListComponent = ({ events, isModalVisible, onClose, userInfo, leaveEv
             {events.length > 0 ? (
               events.map((event) => (
                 <EventPreviewComponent
-                  key={event.eventName}
+                  key={event.eventID}
                   eventInfo={event}
                   onPress={() => handleEventSelection(event)}
                 />
