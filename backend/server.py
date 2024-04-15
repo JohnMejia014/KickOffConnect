@@ -91,7 +91,15 @@ def signup():
         if userSignup == False:
             return jsonify({'message': _err})
         else:
-        
+
+
+            s3.upload_file(
+                'PP sample.jpg',
+                bucket,
+                username + '/profile/profile.jpg',
+                ExtraArgs={'Metadata': {'User': username}}
+            )
+
             return jsonify({'message': 'User successfully created', 'userInfo': user_info})
     else:
         return jsonify({'message': 'Invalid request' })
@@ -357,20 +365,68 @@ def S3DownloaderImg(key, count):
 @app.route('/SearchUsers', methods=['POST'])
 def SearchUsers():
 
-    #data = request.get_json()
-    #userID = data.get('query')
+    data = request.get_json()
+    userID = data.get('query')
+    user = data.get('user')
 
-    userID = "1"
+
+    friends = dynamo.get_item(TableName='Users', Key={'userID': {'S': user}})
+    friendList = friends['Item']['friends']['L']
+    isFriend = False
+
+    for i in friendList:
+        if i['S'] == userID:
+            isFriend = True
+
+
 
     table = dynamo_resource.Table('Users')
 
+    try:
+        resp = table.query(
+            KeyConditionExpression=Key('userID').eq(userID),
+        )
+    except:
+        response = {
+            'success': False,
+            'profile': None,
+        }
+        return jsonify(response)
 
-    resp = table.query(
-        KeyConditionExpression=Key('userID').eq(userID),
+    if resp['Items'] == []:
+        response = {
+            'success': False,
+            'profile': None,
+        }
+        return jsonify(response)
 
+    imgResp = s3.list_objects(
+        Bucket=bucket,
+        Prefix=userID + "/profile/",
+        Marker=userID + "/profile/",
+        MaxKeys=1,
     )
 
-    print(resp)
+    imgResp = imgResp['Contents'][0]
+
+    url = s3.generate_presigned_url('get_object',
+                                    Params={'Bucket': bucket, 'Key': imgResp['Key']},
+                                    ExpiresIn=3600)
+
+
+    response = {
+        'success': True,
+        'profile': url,
+        'friend': isFriend
+    }
+
+    return jsonify(response)
+
+
+
+
+
+
 
 
 def S3DownloaderText(key, count):

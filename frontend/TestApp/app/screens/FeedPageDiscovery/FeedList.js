@@ -1,5 +1,15 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Image, Button} from 'react-native';
+import {
+    View,
+    Text,
+    FlatList,
+    TouchableOpacity,
+    TextInput,
+    ActivityIndicator,
+    Image,
+    Button,
+    TouchableWithoutFeedback
+} from 'react-native';
 import { useScrollToTop} from "@react-navigation/native";
 import {StyleSheet} from "react-native";
 import axios from 'axios';
@@ -19,6 +29,9 @@ const FeedList = ({navigation, route}) => {
     const [friendL, setFriend] = useState([]);
     const [userInfo, setUserInfo] = useState(route.params);
     const [time, setTime] = useState([]);
+    const [queryResponse, setQueryResponse] = useState(false);
+    const [profile, setProfile] = useState(null);
+    const [stranger, setStranger] = useState(null);
 
 
 
@@ -59,80 +72,105 @@ const FeedList = ({navigation, route}) => {
     const FindUsers = () => {
 
         axios.post(`${baseUrl}/SearchUsers`, {
-            query: searchQuery
+            query: searchQuery,
+            user: user
 
-        }).then(
+        }).then((response) => {
 
-        )
+            console.log(response.data)
+            setQueryResponse(response.data.success)
+            setProfile(response.data.profile)
+            setStranger(response.data.friend)
+        })
     }
 
     return(
         <View>
 
-
             <Button title={"load feed"} onPress={Increment} />
             <Button title={"Post Creation"} onPress={() => navigation.navigate("Create", {source: user})} />
+            <TouchableWithoutFeedback onPress={() => setQueryResponse(false)}>
 
-            <Text>Feed Screen</Text>
-            <View style={styles.search}>
-                <TextInput value={searchQuery} onChangeText={(val) => setSearchQuery(val)}
-                           placeholder={"Enter user or hashtag"} style={styles.TextInput}/>
-                {searchQuery === ''?
-                    <TouchableOpacity style={styles.searchButton} onPress={FindUsers}>
-                        <Text style={styles.queryText}>Search</Text>
-                    </TouchableOpacity>
-                    :
-                    <View style={styles.searchButton}>
-                        <TouchableOpacity  onPress={() => setSearchQuery('')}>
-                            <Text style={styles.clearText} selectionColor={"white"} >X</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={FindUsers}>
-                            <Text style={styles.queryText}>Search</Text>
-                        </TouchableOpacity>
+                <View>
+                    <View style={styles.mainSearch}>
+                        <View style={styles.search}>
+                            <TextInput value={searchQuery} onChangeText={(val) => setSearchQuery(val)}
+                                       placeholder={"Enter user or hashtag"} style={styles.TextInput}/>
+                            {searchQuery === ''?
+                                <TouchableOpacity style={styles.searchButton} onPress={FindUsers}>
+                                    <Text style={styles.queryText}>Search</Text>
+                                </TouchableOpacity>
+                                :
+                                <View style={styles.searchButton}>
+                                    <TouchableOpacity  onPress={() => {setSearchQuery(''), setQueryResponse(false)}}>
+                                        <Text style={styles.clearText} selectionColor={"white"} >X</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={FindUsers}>
+                                        <Text style={styles.queryText}>Search</Text>
+                                    </TouchableOpacity>
 
-                    </View>
-                }
-
-
-            </View>
-
-
-            <View style={styles.mainPostView}>
-                {length < 1?
-                    <ActivityIndicator size={"large"}/>
-                    :
-                    <View>
-                        <FlatList
-                            data = {feed}
-                            ref = {ref}
-                            renderItem={({item, index})=>(
-                                <View style = {styles.postView}>
-                                    <View style={styles.postTitle}>
-
-                                        <View style={styles.postFormat}>
-
-                                            {type[index] === "mp4" ?
-                                                <TouchableOpacity onPress={() => navigation.navigate("Video", {source: imageL[index]})}>
-                                                    <Video style={styles.imageView} source={{uri: imageL[index]}}/>
-                                                </TouchableOpacity>
-                                                :
-                                                <Image style={styles.imageView} source={{uri: imageL[index]}}/>
-                                            }
-                                            <Text>by {friendL[index]} at {time[index]}</Text>
-                                            <Text>{desc[index]}</Text>
-                                        </View>
-                                    </View>
                                 </View>
-                            )}
-                        />
-                        <Button title={"load more"} load more/>
+                            }
+                        </View>
+                        {queryResponse === true?
+                            <View style={styles.searchResponse}>
+
+                                    <View style={styles.searchView}>
+                                        <Image style={styles.userPhoto} source={{uri: profile}}/>
+                                        {!stranger &&
+                                        <TouchableOpacity >
+                                            <Text style={styles.searchResults}> Add </Text>
+                                        </TouchableOpacity> }
+                                        <TouchableOpacity >
+                                            <Text style={styles.searchResults}>View Profile</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                            </View>
+                            :
+                            <View>
+
+                            </View>
+
+                        }
                     </View>
 
-                }
+                    <View style={styles.mainPostView}>
+                        {length < 1?
+                            <ActivityIndicator size={"large"}/>
+                            :
+                            <View style={{height: "85%"}}>
+                                <FlatList
+                                    data = {feed}
+                                    ref = {ref}
+                                    renderItem={({item, index})=>(
+                                        <View style = {styles.postView}>
+                                            <View style={styles.postTitle}>
 
-            </View>
+                                                <View style={styles.postFormat}>
 
+                                                    {type[index] === "mp4" ?
+                                                        <TouchableOpacity onPress={() => navigation.navigate("Video", {source: imageL[index]})}>
+                                                            <Video style={styles.imageView} source={{uri: imageL[index]}}/>
+                                                        </TouchableOpacity>
+                                                        :
+                                                        <Image style={styles.imageView} source={{uri: imageL[index]}}/>
+                                                    }
+                                                    <Text>by {friendL[index]} at {time[index]}</Text>
+                                                    <Text>{desc[index]}</Text>
+                                                </View>
+                                            </View>
+                                        </View>
+                                    )}
+                                />
+                                <Button title={"load more"} load more/>
+                            </View>
 
+                        }
+                    </View>
+
+                </View>
+
+            </TouchableWithoutFeedback>
         </View>
 
     )
@@ -159,8 +197,10 @@ const styles = StyleSheet.create({
     },
     mainPostView: {
         width: "100%",
-        marginBottom: 310,
-
+        zIndex: 1,
+    },
+    mainSearch: {
+        zIndex: 2,
     },
     titleView:{
         marginLeft:15,
@@ -200,7 +240,26 @@ const styles = StyleSheet.create({
         display: "flex",
         flexDirection: "row",
         justifyContent: "flex-end",
+        zIndex: 2,
 
+    },
+    searchResponse: {
+        width: "90%",
+        zIndex: 2,
+    },
+    searchView: {
+        display:"flex",
+        flexDirection:"row",
+        justifyContent:"space-evenly",
+        zIndex: 2,
+
+    },
+    searchResults: {
+        display: "flex",
+        justifyContent:"space-evenly",
+        flexDirection: "row",
+        textAlign:"center",
+        zIndex: 2,
     },
     searchButton: {
 
@@ -210,9 +269,6 @@ const styles = StyleSheet.create({
         width: "15%",
         textAlign: "auto",
         paddingVertical: 10,
-
-
-
     },
     queryText: {
 
