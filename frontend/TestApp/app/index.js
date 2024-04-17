@@ -2,7 +2,7 @@
 import  Welcome  from "./screens/Welcome";  // Correct import statement
 import  LoginScreen  from "./screens/LoginScreen";  // Correct import statement
 import  FeedScreen  from "./screens/FeedScreen";  // Correct import statement
-import  ProfileScreen  from "./screens/UserProfileScreen";  // Correct import statement
+import  ProfileScreen  from "./screens/ProfileScreen";  // Correct import statement
 import  DiscoveryScreen  from "./screens/DiscoveryScreen";  // Correct import statement
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -10,7 +10,6 @@ import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import { useRoute } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
-import { DEFAULT_ICON_COLOR } from "@expo/vector-icons/build/createIconSet";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

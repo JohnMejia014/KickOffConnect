@@ -14,6 +14,7 @@ import EventParkMarkers from './DiscoveryPageComponents/EventParkMarkers';
 import { useIsFocused } from '@react-navigation/native'; // Import useIsFocused hook
 import CustomIcon from './DiscoveryPageComponents/CustomIcon'; // Import your custom icon component
 
+
 const DiscoveryScreen = ({route}) => {
   const BASE_URL = 'http://192.168.1.119:5000';
   const [userInfo, setUserInfo] = useState(route.params?.userInfo || {});
@@ -380,6 +381,7 @@ useEffect(() => {
                {/* Render EventMarkers component */}
                {Object.keys(placesByAddress).map((address) => (
             <Marker
+            key={address}
             coordinate={{
               latitude:
                 placesByAddress[address]?.places[0]?.geometry?.location.lat ||

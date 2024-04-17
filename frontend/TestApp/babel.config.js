@@ -11,6 +11,8 @@ module.exports = function(api) {
       ],
       'babel-preset-expo',
     ],
-    plugins: ['expo-router/babel'],
+    plugins: [
+      // Remove the 'expo-router/babel' plugin and add any other required plugins here
+    ],
   };
 };

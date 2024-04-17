@@ -5,7 +5,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for soccer icon
 
 const CustomIcon = ({ markerInfo }) => {
-  console.error('MarkerInfo:', markerInfo);
 
   const sportIcons = {
     Soccer: 'football',
@@ -43,7 +42,7 @@ const CustomIcon = ({ markerInfo }) => {
 
 const styles = StyleSheet.create({
   iconContainer: {
-    backgroundColor: 'white',
+    backgroundColor: 'lightblue',
     borderRadius: 12,
     padding: 5,
   },

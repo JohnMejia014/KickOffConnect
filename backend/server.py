@@ -516,7 +516,7 @@ def S3ProfileList():
             file_stream = response['Body']
             text = file_stream.read().decode('utf-8')
             total[row].append(text)
-
+    print("Made it here")
     for i in range(len(total)):
         feedResponse.append(total[i][0])
         imageList.append(total[i][1][0])

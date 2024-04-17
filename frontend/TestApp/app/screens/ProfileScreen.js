@@ -7,7 +7,9 @@ import ProfileEventList from './DiscoveryPageComponents/ProfileEventList';
 import axios from 'axios';
 import { useScrollToTop} from "@react-navigation/native";
 import {Video} from "expo-av";
-
+import FriendsList from './ProfileComponents/FriendsList';
+import ProfileFeedList from './ProfileComponents/ProfileFeedList';
+import ChangeProfilePictureModal from './ProfileComponents/ChangeProfilePictureModal';
 const ProfileScreen = ({route }) => {
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
@@ -33,10 +35,13 @@ const ProfileScreen = ({route }) => {
   const [type, setType] = useState([]);
   const username = userInfo.userID
   const ref = useRef(null);
+  const [changePictureModalVisible, setChangePictureModalVisible] = useState(false);
+
+  // Function to toggle the visibility of the change picture modal
+  const toggleChangePictureModal = () => {
+    setChangePictureModalVisible(!changePictureModalVisible);
+  };
   useScrollToTop(ref)
-
-
-
 
   useEffect(() => {
         
@@ -51,6 +56,13 @@ const ProfileScreen = ({route }) => {
 
           })
   }, []);
+  useEffect(() => {
+    fetchUserInfo();
+    fetchEventsHosted();
+    fetchEventsJoined();
+    fetchEventsInvited(); 
+  
+  }, [modalVisible]);
 
 
   const fetchFriends = async () => {
@@ -63,7 +75,6 @@ const ProfileScreen = ({route }) => {
         body: JSON.stringify({ userID: userInfo.userID }), // Send userID to fetch friends
       });
       const data = await response.json();
-      console.log("friend data: ",data.friends);
       setFriendsList(data.friends); // Update friendsList state
       setLoading(false);
     } catch (error) {
@@ -108,7 +119,7 @@ const ProfileScreen = ({route }) => {
       })
 
       .catch((error) => {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching datas:', error);
         // Handle error if needed
       });
   };
@@ -117,38 +128,7 @@ const ProfileScreen = ({route }) => {
     setFriendPage(false);
     setModalVisible(false);
   };
-  
-  
 
-  const renderFriendsList = () => {
-    if (!modalVisible) {
-      return null;
-    }
-    return (
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Friends:</Text>
-            <ScrollView style={styles.modalContent}>
-              {friendsList.map((friend, index) => (
-                <TouchableOpacity key={index} onPress={() => handleFriendPress(friend)}>
-                  <Text style={styles.friendName}>
-                    {friend.userID}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-  
-    const [bio, setBio] = useState(userInfo.bio || '');
-    const [isEditingBio, setIsEditingBio] = useState(false);
     const joinEvent = async (eventID) => {
       try {
         const response = await axios.post(`${BASE_URL}/joinEvent`, {
@@ -293,56 +273,11 @@ const ProfileScreen = ({route }) => {
     }, [])
   );
  
-
   const [routes] = useState([
     { key: 'hosted', title: 'Events Hosted' },
     { key: 'joined', title: 'Events Joined' },
     { key: 'invited', title: 'Events Invited' },
-  ]);
-  const renderFeedItems = () => {
-    if (!feed || feed.length === 0) {
-      return null; // Return null if feed is empty or undefined
-  }
-    setPostsCount(feed.length);
-    console.log("feed.length: ", feed.length);
-    const rows = [];
-    let currentRow = [];
-    feed.forEach((item, index) => {
-      // Assuming type[index] is either 'mp4' or 'image' based on your existing code
-      const mediaType = type[index];
-      const mediaSource = imageL[index];
-      const mediaDescription = desc[index];
-  
-      currentRow.push(
-        <View key={index} style={styles.postContainer}>
-          <TouchableOpacity onPress={() => handleMediaPress(mediaSource, mediaType)}>
-            {mediaType === 'mp4' ? (
-              <Video style={styles.imageView} source={{ uri: mediaSource }} />
-            ) : (
-              <Image style={styles.imageView} source={{ uri: mediaSource }} />
-            )}
-          </TouchableOpacity>
-          <Text>{mediaDescription}</Text>
-        </View>
-      );
-  
-      // If the current row is filled (reached 3 items) or we've reached the end of the feed items
-      if (currentRow.length === 3 || index === feed.length - 1) {
-        rows.push(
-          <View key={rows.length} style={styles.gridRow}>
-            {currentRow}
-          </View>
-        );
-        currentRow = []; // Reset currentRow for the next row
-      }
-    });
-  
-    return rows;
-  };
-  
-  
-  
-  
+  ]);  
   const renderContent = () => {
     switch (activeTab) {
       case 'joined':
@@ -410,12 +345,19 @@ const ProfileScreen = ({route }) => {
         <ScrollView contentContainerStyle={[styles.scrollViewContent, { paddingBottom: 100 }]}>
 
           <SafeAreaView style={styles.container}>
+         
             <View style={styles.profileContainer}>
               {/* Profile Picture */}
+              <TouchableOpacity onPress={toggleChangePictureModal}>
               <View style={styles.profilePictureContainer}>
                 {/* Placeholder circle */}
-                <View style={styles.placeholderCircle}></View>
+                <Image
+                  source={{ uri: './image.jpg' }} // Replace userInfo.profilePicture with the actual source
+                  style={styles.profilePicture}
+                />              
               </View>
+              </TouchableOpacity>
+            
     
               {/* User Information */}
               <View style={styles.header}>
@@ -425,7 +367,7 @@ const ProfileScreen = ({route }) => {
                 <View style={styles.userStatsContainer}>
                   {/* Number of Posts */}
                   <View style={styles.userStats}>
-                    <Text style={styles.statsLabel}>Poss</Text>
+                    <Text style={styles.statsLabel}>Posts</Text>
                     <Text style={styles.statsValue}>{postsCount}</Text>
                   </View>
     
@@ -436,18 +378,25 @@ const ProfileScreen = ({route }) => {
                 </TouchableOpacity>
                 </View>
               {/* Label for Posts */}
-              <Text style={styles.eventsLabel}>Poss</Text>
+              <Text style={styles.eventsLabel}>Posts</Text>
 
 
 
-                    {/* Display feed items */}
+                  {/* Display feed items */}
                   <View style={styles.feedContainer}>
                     {loading ? (
                       <ActivityIndicator size="large" />
                     ) : (
-                      renderFeedItems()
+                      <ProfileFeedList
+                        feed={feed}
+                        type={type}
+                        imageL={imageL}
+                        desc={desc}
+                        handleMediaPress={(mediaSource, mediaType) => handleMediaPress(mediaSource, mediaType)}
+                      />
                     )}
                   </View>
+
 
 
                   {/* Label for Events */}
@@ -485,10 +434,18 @@ const ProfileScreen = ({route }) => {
                 {/* Render Content */}
                 {renderContentWithFriendsLabel()}
                 {/* View for EventListComponent */}
-                {renderFriendsList()}
-
+              {/* Change Profile Picture Modal */}
+              <ChangeProfilePictureModal
+                      isVisible={changePictureModalVisible}
+                      onClose={toggleChangePictureModal}
+                    />
                 {/* {renderEventList()} */}
-
+                <FriendsList
+              modalVisible={modalVisible}
+              friendsList={friendsList}
+              handleFriendPress={handleFriendPress}
+              closeModal={() => setModalVisible(false)}
+      />
           </View>
           </SafeAreaView>
           </ScrollView>
@@ -663,19 +620,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3,
-      },
-      friendsContainer: {
-        marginTop: 20,
-        alignItems: 'center',
-      },
-      friendsTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-      },
-      friendName: {
-        fontSize: 16,
-        marginBottom: 5,
       },
       modalBackground: {
         flex: 1,

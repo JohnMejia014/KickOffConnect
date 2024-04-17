@@ -86,7 +86,7 @@ const PopUpForPlace = ({ placeInfo, onClose, onAddRating, userInfo, joinEvent, l
           style={[styles.button, styles.createEventButton]}
           onPress={() => onAddEvent()}
           >
-          <Ionicons name="md-add-circle" size={20} color="white" />
+          <Ionicons name="add-circle-outline" size={20} color="white" />
           <Text style={styles.buttonText}>Create Event</Text>
         </TouchableOpacity>
 

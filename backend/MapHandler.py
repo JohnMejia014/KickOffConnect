@@ -371,8 +371,6 @@ class MapHandler:
                 event = self.__table.get_item(Key={'eventID': eventID}).get('Item')
                 if event:
                     events.append(event)
-            print("Maphandler eventIDs", eventIDs)
-            print("MapHandler events: ", events)
             return events, None  # Return retrieved events and no error
         except Exception as e:
             print(f"Error retrieving events: {e}")
