@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const FriendsList = ({ modalVisible, friendsList, handleFriendPress, closeModal }) => {
     
@@ -10,7 +11,7 @@ const FriendsList = ({ modalVisible, friendsList, handleFriendPress, closeModal 
   return (
     <Modal visible={modalVisible} animationType="slide" transparent={true}>
       <View style={styles.modalBackground}>
-        <View style={styles.modalContainer}>
+      <LinearGradient colors={['#e3f2fd', '#bbdefb'] } style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Friends:</Text>
           <ScrollView style={styles.modalContent}>
             {friendsList.map((friend, index) => (
@@ -22,8 +23,10 @@ const FriendsList = ({ modalVisible, friendsList, handleFriendPress, closeModal 
           <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
-        </View>
+        </LinearGradient>
+
       </View>
+
     </Modal>
   );
 };
