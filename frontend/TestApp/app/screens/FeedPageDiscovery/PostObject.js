@@ -20,7 +20,7 @@ const PostObject=({navigation, route})=>{
 
 
 
-    console.log(user)
+    console.log(user);
     const step = "image change"
     const imageChange = (event) => {
 

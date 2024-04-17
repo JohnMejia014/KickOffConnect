@@ -10,6 +10,8 @@ import {Video} from "expo-av";
 import FriendsList from './ProfileComponents/FriendsList';
 import ProfileFeedList from './ProfileComponents/ProfileFeedList';
 import ChangeProfilePictureModal from './ProfileComponents/ChangeProfilePictureModal';
+import { Feather } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 const ProfileScreen = ({route }) => {
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
@@ -26,6 +28,10 @@ const ProfileScreen = ({route }) => {
   const [friendsVisible, setFriendsVisible] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [friendRequests, setFriendRequests] = useState(userInfo.friendRequests);
+  const [friendRequestsModalVisible, setFriendRequestsModalVisible] = useState(false);
+  const [profilePicUrl, setProfilePicUrl] = useState(null);
+  const [loading2, setLoading2] = useState(false);
 
   const [friendsCount, setFriendsCount] = useState(userInfo.friends.length);
   const [feed, setFeed] = useState([]);
@@ -39,10 +45,31 @@ const ProfileScreen = ({route }) => {
 
   // Function to toggle the visibility of the change picture modal
   const toggleChangePictureModal = () => {
+    fetchProfilePicture();
     setChangePictureModalVisible(!changePictureModalVisible);
   };
   useScrollToTop(ref)
-
+ const fetchProfilePicture = () => {
+        setLoading(true);
+        axios
+            .post(`${BASE_URL}/getProfilePic`, { user: userInfo.userID })
+            .then((response) => {
+                const { success, profile_url } = response.data;
+                if (success) {
+                    setProfilePicUrl(profile_url);
+                } else {
+                    // Handle error or display default profile picture
+                    console.log('Failed to fetch profile picture');
+                }
+            })
+            .catch((error) => {
+                // Handle error or display default profile picture
+                console.error('Error fetching profile picture:', error);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    };
   useEffect(() => {
         
     axios.post(`${BASE_URL}/S3ProfileList`, { user: username })
@@ -52,18 +79,41 @@ const ProfileScreen = ({route }) => {
               setLength(response.data.size);
               setDesc(response.data.text);
               setImageL(response.data.image);
+              setPostsCount(response.data.size);
               setType(response.data.type);
 
           })
   }, []);
   useEffect(() => {
     fetchUserInfo();
+    fetchProfilePicture();
     fetchEventsHosted();
     fetchEventsJoined();
     fetchEventsInvited(); 
   
   }, [modalVisible]);
+  
+  const handleRespondFriendRequest = async (friendID, action) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/respondFriendRequest`, {
+        userID: userInfo.userID,
+        friendID,
+        action,
+      });
 
+      if (response.data.success) {
+        console.log(response.data.message);
+        // Update the friend requests list based on the response
+        const updatedRequests = userInfo.friendRequests.filter((request) => request !== friendID);
+        setUserInfo((prevUserInfo) => ({ ...prevUserInfo, friendRequests: updatedRequests }));
+      } else {
+        throw new Error('Failed to respond to friend request');
+      }
+    } catch (error) {
+      console.error('Error responding to friend request:', error);
+      // Handle error if needed
+    }
+  };
 
   const fetchFriends = async () => {
     try {
@@ -326,38 +376,30 @@ const ProfileScreen = ({route }) => {
       </View>
     );
   };
-  const renderContentWithFriendsLabel = () => {
-    if (friendPage) {
-      return (
- 
-          renderContent()
-      );
-    } else {
-      return renderContent();
-    }
-  };
-    const handleEditButtonPress = () => {
-      setIsEditingBio(!isEditingBio);
-    };
+
+   
     return (
         <LinearGradient colors={friendPage ? ['#e3f2fd', '#bbdefb'] : ['#0d47a1', '#1565c0']}
          style={styles.container}>
         <ScrollView contentContainerStyle={[styles.scrollViewContent, { paddingBottom: 100 }]}>
 
-          <SafeAreaView style={styles.container}>
-         
+          
+        <SafeAreaView style={styles.container}>
             <View style={styles.profileContainer}>
               {/* Profile Picture */}
               <TouchableOpacity onPress={toggleChangePictureModal}>
               <View style={styles.profilePictureContainer}>
-                {/* Placeholder circle */}
-                <Image
-                  source={{ uri: './image.jpg' }} // Replace userInfo.profilePicture with the actual source
-                  style={styles.profilePicture}
-                />              
+                {profilePicUrl ? (
+                  <Image
+                    source={{ uri: profilePicUrl }}
+                    style={styles.profilePicture}
+                  />
+                ) : (
+                  <View style={styles.placeholderCircle} />
+                )}
               </View>
-              </TouchableOpacity>
-            
+            </TouchableOpacity>
+
     
               {/* User Information */}
               <View style={styles.header}>
@@ -367,16 +409,50 @@ const ProfileScreen = ({route }) => {
                 <View style={styles.userStatsContainer}>
                   {/* Number of Posts */}
                   <View style={styles.userStats}>
-                    <Text style={styles.statsLabel}>Posts</Text>
+                    <Text style={styles.statsLabel}>Posts </Text>
                     <Text style={styles.statsValue}>{postsCount}</Text>
                   </View>
-    
+
                   {/* Number of Friends */}
+                    <View style ={styles.userStats}>
                 <TouchableOpacity onPress={handleFriendsPress}>
                   <Text style={styles.statsLabel}>Friends</Text>
                   <Text style={styles.statsValue}>{userInfo.friends.length}</Text>
                 </TouchableOpacity>
+                  </View>
                 </View>
+              {/* Friend Requests */}
+              {!friendPage && (
+                <TouchableOpacity onPress={handleFriendRequestsPress} style={styles.friendRequestsButton}>
+                <Feather name="mail" size={24} color="black" style={styles.mailIcon} />
+                <Text style={styles.friendRequestsText}>Friend Requests</Text>
+                <Text style={styles.friendRequestsCount}>{userInfo.friendRequests.length}</Text>
+              </TouchableOpacity>
+               )}
+               {/* Modal for Friend Requests */}
+               <Modal visible={friendRequestsModalVisible} animationType="slide" transparent={true}>
+                  <View style={styles.modalBackground}>
+                    <View style={styles.modalContainer}>
+                      <Text style={styles.modalTitle}>Friend Requests:</Text>
+                      <ScrollView style={styles.modalContent}>
+                        {userInfo.friendRequests.map((request, index) => (
+                          <View key={index} style={styles.friendRequestItem}>
+                          <Text style={styles.friendRequestText}>{request}</Text>
+                          <TouchableOpacity onPress={() => handleRespondFriendRequest(request, 'accept')}>
+                            <FontAwesome name="check" size={24} color="green" />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => handleRespondFriendRequest(request, 'reject')}>
+                            <FontAwesome name="times" size={24} color="red" />
+                          </TouchableOpacity>
+                        </View>
+                        ))}
+                      </ScrollView>
+                      <TouchableOpacity style={styles.closeButton} onPress={() => setFriendRequestsModalVisible(false)}>
+                        <Text style={styles.closeButtonText}>Close</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </Modal>
               {/* Label for Posts */}
               <Text style={styles.eventsLabel}>Posts</Text>
 
@@ -432,13 +508,16 @@ const ProfileScreen = ({route }) => {
           </View>
 
                 {/* Render Content */}
-                {renderContentWithFriendsLabel()}
+                {renderContent()}
                 {/* View for EventListComponent */}
               {/* Change Profile Picture Modal */}
+              {!friendPage && (
               <ChangeProfilePictureModal
                       isVisible={changePictureModalVisible}
                       onClose={toggleChangePictureModal}
+                      userID={userInfo.userID}
                     />
+              )}
                 {/* {renderEventList()} */}
                 <FriendsList
               modalVisible={modalVisible}
@@ -480,7 +559,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 50,
-    backgroundColor: 'gray', // Color for the placeholder circle
+  },
+  profilePicture: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
   },
   header: {
     marginBottom: 20,
@@ -531,10 +614,11 @@ const styles = StyleSheet.create({
     
   },
   userStats: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         justifyContent: 'space-around',
         marginTop: 10,
         marginHorizontal: 10,
+        paddingBottom: 30,
       },
       statsLabel: {
         fontSize: 16,
@@ -621,36 +705,67 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3,
       },
+      friendRequestsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#e3f2fd', // Example background color
+        padding: 10,
+        borderRadius: 10,
+        marginBottom: 10,
+      },
+      mailIcon: {
+        marginRight: 10,
+      },
+      friendRequestsText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'black',
+      },
+      friendRequestsCount: {
+        marginLeft: 'auto', // Push the count to the right
+        fontWeight: 'bold',
+      },
       modalBackground: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0)',
-        //justifyContent: 'flex-end', // Modal will appear at the bottom
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Green background color with some transparency
+        justifyContent: 'center',
+        alignItems: 'center',
       },
       modalContainer: {
         backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingTop: 100,
-        paddingHorizontal: 20,
-        paddingBottom: 10,
+        borderRadius: 10,
+        padding: 20,
+        width: '80%',
         maxHeight: '80%', // Adjust as needed
       },
       modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
+        textAlign: 'center',
       },
-      modalContent: {
-       // minHeight: 20, // Example height, adjust as needed
+  
+      friendRequestItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+        paddingVertical: 10,
+      },
+      friendRequestText: {
+        fontSize: 16,
+        flex: 1, // Take up remaining space in the row
       },
       closeButton: {
-        marginTop: 10,
+        marginTop: 20,
         alignSelf: 'flex-end',
       },
       closeButtonText: {
         fontSize: 16,
         color: '#333',
       },
+  
       Heading:{
         fontSize:32,
         marginTop:60,
@@ -702,6 +817,7 @@ const styles = StyleSheet.create({
       marginVertical: 10,
       alignItems: 'center', // Center the content horizontally
     },
+    
     
     });
 export default ProfileScreen;

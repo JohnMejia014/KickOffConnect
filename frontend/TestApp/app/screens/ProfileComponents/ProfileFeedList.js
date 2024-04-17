@@ -1,6 +1,6 @@
 // FeedList.js
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from 'react-native';
 
 const ProfileFeedList = ({ feed, type, imageL, desc, handleMediaPress }) => {
   if (!feed || feed.length === 0) {
@@ -24,5 +24,23 @@ const ProfileFeedList = ({ feed, type, imageL, desc, handleMediaPress }) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  postContainer: {
+    backgroundColor: '#ADD8E6', // Light background color for the post container
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 10,
+    alignItems: 'center', // Center the content horizontally
+  },
+  imageView: {
+    display: 'flex',
+    flexDirection: 'row',
+    width: 200,
+    height: 200,
+    resizeMode: 'contain',
+  },
+  // You can add more styles here as needed
+});
 
 export default ProfileFeedList;

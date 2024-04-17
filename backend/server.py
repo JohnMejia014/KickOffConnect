@@ -7,11 +7,16 @@ from boto3.dynamodb.conditions import Key, Attr
 
 # Set the working directory to the root of the project
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from flask import request, jsonify
+from werkzeug.utils import secure_filename
+import os
 
 
 app = Flask(__name__)
 
-
+client = MongoClient('mongodb+srv://marcoflo02:Kickoff@cluster0.qgnjjxr.mongodb.net/?retryWrites=true&w=majority')
+db = client['Users']
+users_collection = db['Users']
 
 import UserHandler 
 import MapHandler 
@@ -49,6 +54,30 @@ container = s3_resource.Bucket(bucket)
 dynamo = aws_mag_con.client('dynamodb')
 dynamo_resource = aws_mag_con.resource('dynamodb')
 
+@app.route('/retrieve-location', methods=['POST'])
+def retrieve_location():
+    #userId = "KevinFdz"
+    #latitude = 21
+    #longitude = 42
+    data = request.get_json()
+    userId = data.get('userId')
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+
+    if not userId or not latitude or not longitude:
+        return jsonify({'error': 'Missing username, latitude, or longitude'}), 400
+
+    userData = db[userId]
+    user = userData.find_one({'userId': userId})
+
+
+    if user:
+        userData.update_one(
+            {'userId': user['userId']},
+            {'$set': {'latitude': latitude, 'longitude': longitude}}
+        )
+        return jsonify({'message': 'Location updated successfully'})
+
 
 
 
@@ -65,7 +94,15 @@ def signup():
         if userSignup == False:
             return jsonify({'message': _err})
         else:
-        
+
+
+            s3.upload_file(
+                'PP sample.jpg',
+                bucket,
+                username + '/profile/profile.jpg',
+                ExtraArgs={'Metadata': {'User': username}}
+            )
+
             return jsonify({'message': 'User successfully created', 'userInfo': user_info})
     else:
         return jsonify({'message': 'Invalid request' })
@@ -115,24 +152,6 @@ def addEvent():
     else:
         return jsonify({'message': 'Invalid request'})
     
-@app.route('/inviteFriends', methods=['POST'])
-def inviteFriends():
-    data = request.get_json()
-    print("Data in invite friends: ",data)
-    selectedFriends = data.get('selectedFriends')
-    event_id = data.get('eventID')
-
-    if not selectedFriends or not event_id:
-        return jsonify({'error': 'Missing required data'}), 400
-
-    success, error = mapHandler.inviteFriends(selectedFriends, event_id)
-
-    if success:
-        return jsonify({'message': 'Event invites sent successfully'}), 200
-    else:
-        return jsonify({'error': error}), 500  # Return appropriate error status code
-
-
 
 @app.route('/joinEvent', methods=['POST'])
 def joinEvent():
@@ -174,8 +193,9 @@ def getEvents():
     user_long = data.get('longitude')
     filters = data.get('filters')
     places = data.get('places')
+    print(user_lat,user_long)
     radius = 1000  # You might want to include a radius in the request data
-    if user_lat and user_long and radius:
+    if True:
         # Convert latitude, longitude, and radius to float
         user_lat = float(user_lat)
         user_long = float(user_long)
@@ -183,6 +203,7 @@ def getEvents():
 
         # Retrieve events within the specified radius
         events, error = mapHandler.get_events_within_radius(user_lat, user_long, radius, filters, places)
+        print("events: ", error)
         if error:
             return jsonify({'error': error}), 500
         else:
@@ -212,6 +233,9 @@ def getEventInfo():
         
         # Query the events collection for the events with the given IDs
     events, error = mapHandler.getEventsList(event_ids)
+        
+    print("events: ", events)
+        # Prepare the response JSON
     if error:
         return jsonify({"error":  error})
     else:
@@ -244,6 +268,49 @@ def VidDownload():
     }
 
     return jsonify(response)
+
+@app.route('/getProfilePic', methods=['POST'])
+def getProfilePic():
+    data = request.get_json()
+    user = data.get('user')
+
+    if not user:
+        return jsonify({'error': 'Missing user information'}), 400
+
+    try:
+        # Check if the user's profile image exists in the S3 bucket
+        s3.head_object(Bucket=bucket, Key=user + '/profile/profile.jpg')
+        # If it exists, generate a presigned URL to access the image
+        profile_url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': user + '/profile/profile.jpg'}, ExpiresIn=3600)
+        response = {'success': True, 'profile_url': profile_url}
+        return jsonify(response)
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'User profile not found'}), 404
+
+@app.route('/updateProfilePic', methods=['POST'])
+def updateProfilePic():
+    try:
+        # Get user ID and image file from the request
+        user = request.form.get('user')
+        image_file = request.files['file']
+        print(user, image_file)
+        if not user or not image_file:
+            return jsonify({'error': 'Missing user or image information'}), 400
+
+        # Upload the new image to the S3 bucket without specifying ACL
+        s3.upload_fileobj(image_file, bucket, f'{user}/profile/profile.jpg')
+
+        # Generate a presigned URL for the updated profile picture
+        profile_url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': f'{user}/profile/profile.jpg'}, ExpiresIn=3600)
+
+        # You can update the user's profile URL in your database here
+
+        response = {'success': True, 'profile_url': profile_url}
+        return jsonify(response)
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'Failed to update profile picture'}), 500
 
 
 @app.route('/S3Uploader', methods=['POST'])
@@ -327,7 +394,7 @@ def S3Uploader():
             'text': "false",
         }
         return jsonify(response)
-    
+
 def S3DownloaderImg(key, count):
     folder = key
     location = appPath + '/Navigation/FeedPageDiscovery/Posts/post' + str(
@@ -343,20 +410,68 @@ def S3DownloaderImg(key, count):
 @app.route('/SearchUsers', methods=['POST'])
 def SearchUsers():
 
-    #data = request.get_json()
-    #userID = data.get('query')
+    data = request.get_json()
+    userID = data.get('query')
+    user = data.get('user')
 
-    userID = "1"
+
+    friends = dynamo.get_item(TableName='Users', Key={'userID': {'S': user}})
+    friendList = friends['Item']['friends']['L']
+    isFriend = False
+
+    for i in friendList:
+        if i['S'] == userID:
+            isFriend = True
+
+
 
     table = dynamo_resource.Table('Users')
 
+    try:
+        resp = table.query(
+            KeyConditionExpression=Key('userID').eq(userID),
+        )
+    except:
+        response = {
+            'success': False,
+            'profile': None,
+        }
+        return jsonify(response)
 
-    resp = table.query(
-        KeyConditionExpression=Key('userID').eq(userID),
+    if resp['Items'] == []:
+        response = {
+            'success': False,
+            'profile': None,
+        }
+        return jsonify(response)
 
+    imgResp = s3.list_objects(
+        Bucket=bucket,
+        Prefix=userID + "/profile/",
+        Marker=userID + "/profile/",
+        MaxKeys=1,
     )
 
-    print(resp)
+    imgResp = imgResp['Contents'][0]
+
+    url = s3.generate_presigned_url('get_object',
+                                    Params={'Bucket': bucket, 'Key': imgResp['Key']},
+                                    ExpiresIn=3600)
+
+
+    response = {
+        'success': True,
+        'profile': url,
+        'friend': isFriend
+    }
+
+    return jsonify(response)
+
+
+
+
+
+
 
 
 def S3DownloaderText(key, count):
@@ -434,15 +549,16 @@ def S3List():
                 'image': imageList,
                 'type': typeList,
                 }
+    return jsonify(response)
 
 
 @app.route('/S3ProfileList', methods=['POST'])
 def S3ProfileList():
     data = request.get_json()
     user = data.get('user')
-    print("user:", user)
     total = []
     dirLen = len(str(user + "/posts/"))
+    print("DirLen: ", dirLen)
     userResp = s3.list_objects(
         Bucket=bucket,
         Prefix=user + "/posts",
@@ -456,10 +572,6 @@ def S3ProfileList():
     typeList = []
 
     timePost = []
-    try:
-        userResp['Contents']
-    except:
-        return jsonify({"Success": False})
     for key in userResp['Contents']:
 
         count1 += 1
@@ -516,7 +628,7 @@ def S3ProfileList():
             file_stream = response['Body']
             text = file_stream.read().decode('utf-8')
             total[row].append(text)
-    print("Made it here")
+
     for i in range(len(total)):
         feedResponse.append(total[i][0])
         imageList.append(total[i][1][0])
@@ -533,39 +645,9 @@ def S3ProfileList():
                 'type': typeList,
                 'time': timePost,
                 }
-    print("response: ", response)
     return jsonify(response)
-@app.route('/sendFriendRequest', methods=['POST'])
-def sendFriendRequest():
-    data = request.get_json()
-    userID = data.get('userID')
-    friendID = data.get('friendID')
 
-    success, message = userHandler.sendFriendRequest(userID, friendID)
 
-    if success:
-        return jsonify({'message': 'Friend request sent successfully.'}), 200
-    else:
-        return jsonify({'error': message}), 500  # Adjust the HTTP status code as needed for the error
-@app.route('/respondFriendRequest', methods=['POST'])
-def respondFriendRequest():
-    data = request.get_json()
-    userID = data.get('userID')
-    friendID = data.get('friendID')
-    action = data.get('action')  # 'accept' or 'reject'
-
-    data = request.get_json()
-    userID = data.get('userID')
-    friendID = data.get('friendID')
-    action = data.get('action')  # 'accept' or 'reject'
-
-    # Call the respondFriendRequest method from the UserHandler instance
-    success, message = userHandler.respondFriendRequest(userID, friendID, action)
-
-    if success:
-        return jsonify({'message': message}), 200
-    else:
-        return jsonify({'error': message}), 400  # Adjust the HTTP status code as needed
 @app.route('/S3FriendList', methods=['POST'])
 def S3FriendList():
     data = request.get_json()

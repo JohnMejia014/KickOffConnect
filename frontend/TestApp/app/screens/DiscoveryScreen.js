@@ -84,23 +84,9 @@ useEffect(() => {
 }, [isFocused]);
 
 useEffect(() => {
-  const fetchData = async () => {
+  console.log("focused");
     // Fetch data again when the component is focused
-    if (isFocused && placesFetched ) {
-      console.log("selectedFilters: ", selectedFilters);
-      const response = await fetch(`${BASE_URL}/getEvents`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ filters: selectedFilters }),
-      });
-      const eventData = await response.json();
-      //handleGetEvents(eventData); // Update events state or handle the data as needed
-    }
-  };
-
-  fetchData(); // Initial fetch when component mounts
+    if (isFocused && placesFetched ) {handleGetEvents(selectedFilters);}
 
   // Cleanup function
   return () => {
@@ -185,8 +171,8 @@ useEffect(() => {
 //   };
 
   const handleGetEvents = async (eventFilters) => {
-    console.log("event filters: ", eventFilters);
     setSelectedFilters(eventFilters);
+
     try {
       const response = await axios.post(`${BASE_URL}/getEvents`, {
         latitude: latitude,
@@ -196,10 +182,10 @@ useEffect(() => {
       });
 
       const eventsRetrieved = response.data.events;
+      console.log('eventsretriece: ', eventsRetrieved);
       setEvents(eventsRetrieved);
       setPlacesByAddress(eventsRetrieved);
       // Combine events with existing places data
-      console.log("Events retrieved: ", eventsRetrieved);
       if (eventsRetrieved && typeof eventsRetrieved === 'object') {
       } else {
         console.log('No events retrieved or eventsRetrieved is not an array');
