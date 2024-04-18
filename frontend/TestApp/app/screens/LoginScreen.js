@@ -41,7 +41,17 @@ const LoginScreen = ({navigation}) => {
       .then((response) => {
         console.log("Made it here");
         if (response.data.message === 'User successfully created' || response.data.message === "Login successful") {
+            console.log("userinfo signup: ", response.data.userInfo.Items);
+            if (mode === 'signup'){
+              
+              navigation.navigate('AppScreen', { userInfo: response.data.userInfo.Items[0] });
+
+            }
+            else{
+              console.log("userinfo signup: ", response.data.userInfo);
+
             navigation.navigate('AppScreen', { userInfo: response.data.userInfo });
+            }
         } else {
           setErrorMessage(response.data.message || 'Login failed');
           console.log(response.data);

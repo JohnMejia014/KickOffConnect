@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
 import os
+file_path = os.path.abspath('backend/pic.jpg')
 
 
 app = Flask(__name__)
@@ -94,15 +95,13 @@ def signup():
         if userSignup == False:
             return jsonify({'message': _err})
         else:
-
-
             s3.upload_file(
-                'PP sample.jpg',
+                file_path,
                 bucket,
                 username + '/profile/profile.jpg',
                 ExtraArgs={'Metadata': {'User': username}}
             )
-
+            print('userinfo signup: ', user_info)
             return jsonify({'message': 'User successfully created', 'userInfo': user_info})
     else:
         return jsonify({'message': 'Invalid request' })
@@ -244,17 +243,30 @@ def getEventInfo():
 def getFriends():
     data = request.get_json()
     userID = data.get('userID')
-    print("userID: ", userID)
         # Get the list of event IDs from the request data
         
         # Query the events collection for the events with the given IDs
     friends, error = userHandler.getFriends(userID)
-    print("friends: ", friends)
         # Prepare the response JSON
     if error:
         return jsonify({"error":  error})
     else:
         return jsonify({"friends":  friends})
+@app.route('/unaddFriend', methods=['POST'])
+def unaddFriend():
+    data = request.get_json()
+    userID = data.get('userID')
+    friendID = data.get('friendID')
+    print(data)
+        # Get the list of event IDs from the request data
+        
+        # Query the events collection for the events with the given IDs
+    success, error = userHandler.unFriend(userID, friendID)
+        # Prepare the response JSON
+    if error:
+        return jsonify({"error":  error})
+    else:
+        return jsonify({"success":  success})
 
 @app.route('/VidDownload', methods=['POST'])
 def VidDownload():

@@ -5,6 +5,7 @@ import {StyleSheet} from "react-native";
 import axios from 'axios';
 import {Video} from "expo-av";
 import { LinearGradient } from 'expo-linear-gradient';
+import { AntDesign } from '@expo/vector-icons'; // Import AntDesign icon from expo/vector-icons
 
 const FeedList = ({navigation, route}) => {
     const baseUrl = 'http://192.168.1.119:5000'; // Define your base URL here
@@ -55,7 +56,14 @@ const FeedList = ({navigation, route}) => {
             })
     }, [load]);
 
-
+    const CustomHeader = () => {
+        return (
+            <TouchableOpacity style={styles.postButton} onPress={() => navigation.navigate("Create", { source: user })}>
+                <AntDesign name="upload" size={24} color="white" style={styles.uploadIcon} />
+                <Text style={styles.uploadText}>Post</Text>
+            </TouchableOpacity>
+        );
+    };
     const FindUsers = () => {
 
         axios.post(`${baseUrl}/SearchUsers`, {
@@ -68,13 +76,12 @@ const FeedList = ({navigation, route}) => {
 
     return(
         <LinearGradient colors={['#0d47a1', '#1565c0']} style={styles.gradientContainer}>
-
-        <View>
-
-
-            <Button title={"load feed"} onPress={Increment} />
+        <View style={styles.container}>
+            <CustomHeader />
 
             <View style={styles.search}>
+                
+
                 <TextInput value={searchQuery} onChangeText={(val) => setSearchQuery(val)}
                            placeholder={"Enter user or hashtag"} style={styles.TextInput}/>
                 {searchQuery === ''?
@@ -122,10 +129,10 @@ const FeedList = ({navigation, route}) => {
                                 </View>
                             )}
                             />
-            <Button title={"Post Creation"} onPress={() => navigation.navigate("Create", {source: user})} />
 
                         {/* <Button title={"load more"} load more/> */}
                     </View>
+
 
                 }
 
@@ -149,17 +156,38 @@ const styles = StyleSheet.create({
         marginLeft:15,
         fontWeight:'bold',
     },
-    TextInput:{
-        height:40,
-        width:"85%",
+
+    postButton: {
+        
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#2196F3',
+        borderRadius: 10,
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        marginTop: 10,
+        marginBottom: 10,
+        marginHorizontal: 10,
+    },
+    uploadIcon: {
+        marginRight: 10,
+    },
+    uploadText: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    TextInput: {
+        height: 40,
+        width: "85%",
         backgroundColor: '#EBEBEB',
-        borderRadius:20,
-        paddingLeft:15,
-        marginTop:20
+        borderRadius: 20,
+        paddingLeft: 15,
+        marginTop: 20
     },
     mainPostView: {
         width: "100%",
-        marginBottom:500,
 
     },
     titleView:{
@@ -173,6 +201,9 @@ const styles = StyleSheet.create({
         borderStyle: "solid",
         borderWidth: 10,
         borderColor: "black",
+    },
+    gradientContainer: {
+        flex: 1,
     },
     postView:{
         width:'100%',
@@ -200,7 +231,7 @@ const styles = StyleSheet.create({
         display: "flex",
         flexDirection: "row",
         justifyContent: "flex-end",
-
+        
     },
     searchButton: {
 
@@ -210,6 +241,7 @@ const styles = StyleSheet.create({
         width: "15%",
         textAlign: "auto",
         paddingVertical: 10,
+        borderRadius: 20,
 
 
 
@@ -220,7 +252,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#2196F3",
         borderRadius: 2,
         color: 'white',
-        fontWeight: '200',
+        fontWeight: 'bold',
         elevation: 4,
         marginVertical: 10,
         textAlignVertical: "center",

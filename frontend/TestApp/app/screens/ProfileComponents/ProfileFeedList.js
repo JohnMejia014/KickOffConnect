@@ -27,7 +27,9 @@ const ProfileFeedList = ({ feed, type, imageL, desc, handleMediaPress }) => {
 
 const styles = StyleSheet.create({
   postContainer: {
-    backgroundColor: '#ADD8E6', // Light background color for the post container
+    backgroundColor: '#1565c0', // Example background color
+    borderWidth: 0.5, // Add a border
+    borderColor: 'lightblue', // Customize border color
     borderRadius: 10,
     padding: 10,
     marginVertical: 10,

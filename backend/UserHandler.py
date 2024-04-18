@@ -33,6 +33,60 @@ class UserHandler:
         self.__dynamoDB_client = boto3.client('dynamodb', region_name= 'us-east-2')
         self.__dynamodb = boto3.resource('dynamodb')
         self.__table = self.__dynamodb.Table('Users')
+    def unFriend(self, userID: str, friendID: str):
+        try:
+            # Remove friendID from userID's friends list
+            user_item = self.__table.get_item(Key={'userID': userID})
+            if 'Item' not in user_item:
+                return False, f"User with ID {userID} not found"
+
+            friends_set = user_item['Item'].get('friends', set())
+
+            # Remove friendID from the friends set
+            if friendID in friends_set:
+                friends_set.remove(friendID)
+            else:
+                return False, f"Friend with ID {friendID} not found in the user's friends list"
+
+            # Update user's friends list in DynamoDB
+            update_response_user = self.__table.update_item(
+                Key={'userID': userID},
+                UpdateExpression='SET friends = :new_friends',
+                ExpressionAttributeValues={':new_friends': friends_set},
+                ReturnValues='UPDATED_NEW'
+            )
+
+            # Remove userID from friendID's friends list
+            friend_item = self.__table.get_item(Key={'userID': friendID})
+            if 'Item' not in friend_item:
+                return False, f"User with ID {friendID} not found"
+
+            friends_set2 = friend_item['Item'].get('friends', set())
+
+            # Remove userID from the friends set
+            if userID in friends_set2:
+                friends_set2.remove(userID)
+            else:
+                return False, f"User with ID {userID} not found in the friend's friends list"
+
+            # Update friend's friends list in DynamoDB
+            update_response_friend = self.__table.update_item(
+                Key={'userID': friendID},
+                UpdateExpression='SET friends = :new_friends',
+                ExpressionAttributeValues={':new_friends': friends_set2},
+                ReturnValues='UPDATED_NEW'
+            )
+
+            if 'Attributes' in update_response_user and 'Attributes' in update_response_friend:
+                # Both updates were successful
+                return True, "Friendship successfully removed"
+            else:
+                return False, "Error removing friendship"
+
+        except Exception as e:
+            # Handle any unexpected exceptions
+            error_message = f"Error: {str(e)}"
+            return False, error_message
 
     def signupUser(self, criteria: dict):
         _err = "User already exists with that username or email"
@@ -49,6 +103,7 @@ class UserHandler:
                 "password": {'S':password},
                 "email": {'S':criteria['email']},
                 "friends": {'L':[]},
+                "friendRequests": {'L':[]},
                 #might have to use another database for posts
                 #"posts": {},
                 "eventsJoined": {'L':[]},

@@ -196,7 +196,8 @@ const ProfileScreen = ({route }) => {
         throw new Error('Failed to join the event');
       }
     };
-  
+    const getLabelColor = () => (friendPage ? 'black' : '#fff');
+
     const leaveEvent = async (eventID) => {
       console.log("eventID: ", eventID, "userID", userInfo.userID);
 
@@ -220,7 +221,25 @@ const ProfileScreen = ({route }) => {
     const handleFriendRequestsPress = () => {
         setFriendRequestsModalVisible(true); // Set friendRequestsModalVisible to true to open the modal
       };
-      
+    const removeFriend = async (friend) => {
+      console.log("unadd friend: ", friend);
+      try {    
+        const response = await fetch(`${BASE_URL}/unaddFriend`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userID: userInfo.userID, friendID: friend.userID }), // Use userInformation.userID in the request body
+        });
+        const data = await response.json();
+       console.log("succes or not", data.success);
+        fetchUserInfo();
+        fetchFriends();
+
+      } catch (error) {
+        console.error('Error removing friend:', error);
+      }
+    };
     const fetchUserInfo = async () => {
       try {    
         const response = await fetch(`${BASE_URL}/getUserInfo`, {
@@ -228,7 +247,8 @@ const ProfileScreen = ({route }) => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ userID: userInfo.userID }), // Use userInformation.userID in the request body
+          body: JSON.stringify({ 
+            userID: userInfo.userID,           }), // Use userInformation.userID in the request body
         });
         const data = await response.json();
        
@@ -403,24 +423,25 @@ const ProfileScreen = ({route }) => {
     
               {/* User Information */}
               <View style={styles.header}>
-                <Text style={styles.username}>{userInfo.userID}</Text>
+                <Text style={[styles.username, { color: getLabelColor() }]}>{userInfo.userID}</Text>
     
                 {/* Number of Posts and Friends in the same horizontal line */}
                 <View style={styles.userStatsContainer}>
                   {/* Number of Posts */}
-                  <View style={styles.userStats}>
-                    <Text style={styles.statsLabel}>Posts </Text>
-                    <Text style={styles.statsValue}>{postsCount}</Text>
+                  <View style={styles.userStatsItem}>
+                    <Text style={styles.userStatsLabel}>Posts </Text>
+                    <Text style={styles.userStatsValue}>{postsCount}</Text>
                   </View>
 
                   {/* Number of Friends */}
-                    <View style ={styles.userStats}>
-                <TouchableOpacity onPress={handleFriendsPress}>
-                  <Text style={styles.statsLabel}>Friends</Text>
-                  <Text style={styles.statsValue}>{userInfo.friends.length}</Text>
-                </TouchableOpacity>
+                  <View style={styles.userStatsItem}>
+                    <TouchableOpacity onPress={handleFriendsPress}>
+                      <Text style={styles.userStatsLabel}>Friends</Text>
+                      <Text style={styles.userStatsValue}>{userInfo.friends.length}</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
+
               {/* Friend Requests */}
               {!friendPage && (
                 <TouchableOpacity onPress={handleFriendRequestsPress} style={styles.friendRequestsButton}>
@@ -454,7 +475,7 @@ const ProfileScreen = ({route }) => {
                   </View>
                 </Modal>
               {/* Label for Posts */}
-              <Text style={styles.eventsLabel}>Posts</Text>
+              <Text style={[styles.eventsLabel, { color: getLabelColor() }]}>Posts</Text>
 
 
 
@@ -476,7 +497,7 @@ const ProfileScreen = ({route }) => {
 
 
                   {/* Label for Events */}
-                  <Text style={styles.eventsLabel}>Events</Text>
+                  <Text style={[styles.eventsLabel, { color: getLabelColor() }]}>Events</Text>
 
                  {/* Tab Buttons */}
             <View style={styles.tabButtonContainer}>
@@ -524,6 +545,8 @@ const ProfileScreen = ({route }) => {
               friendsList={friendsList}
               handleFriendPress={handleFriendPress}
               closeModal={() => setModalVisible(false)}
+              handleRemovePress={removeFriend}
+              friendPage={friendPage}
       />
           </View>
           </SafeAreaView>
@@ -554,6 +577,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     backgroundColor: '#ccc', // Placeholder color for the circle
     overflow: 'hidden',
+    borderWidth: 1, // Add a border
+    borderColor: 'lightblue', // Customize border color
+
   },
   placeholderCircle: {
     width: '100%',
@@ -569,12 +595,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   username: {
-    paddingTop: 20,
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     textAlign: 'center',
+    marginBottom: 10,
+    paddingTop: 20,
   },
+  
   section: {
     marginVertical: 10,
     width: '80%',
@@ -609,26 +637,50 @@ const styles = StyleSheet.create({
   },
   userStatsContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-around', // Align items on opposite ends of the row
+    marginTop: 20,
+    borderRadius:12,
+marginBottom: 30,
+paddingTop: 10,
+  },
+  userStatsItem: {
+    flexDirection: 'column',
     justifyContent: 'space-around',
     marginTop: 10,
-    
+    marginHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: '#1565c0', // Blue background color for the button
+    marginBottom: 30,
+    paddingVertical: 15, // Adjust vertical padding
+    paddingHorizontal: 20, // Adjust horizontal padding
+    borderWidth: 0.5, // Add a border
+    borderColor: 'lightblue', // Customize border color
+
+    elevation: 3, // For Android elevation
   },
-  userStats: {
-        flexDirection: 'column',
-        justifyContent: 'space-around',
-        marginTop: 10,
-        marginHorizontal: 10,
-        paddingBottom: 30,
-      },
-      statsLabel: {
-        fontSize: 16,
-        color: '#333',
-      },
-      statsValue: {
+  
+      userStatsLabel: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
+        color: 'white',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 10,
+        backgroundColor: '#1565c0', // Blue background color for the button
+        textAlign: 'center',
+        overflow: 'hidden', // Hide overflow content if any
       },
+      
+      userStatsValue: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        color: 'black',
+        padding: 8, // Add padding around the text
+        borderRadius: 8, // Add rounded corners
+        
+      },
+      
       eventItem: {
         padding: 10,
         borderBottomWidth: 1,
@@ -708,9 +760,12 @@ const styles = StyleSheet.create({
       friendRequestsButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#e3f2fd', // Example background color
+        backgroundColor: '#1565c0', // Example background color
+        borderWidth: 0.5, // Add a border
+        borderColor: 'lightblue', // Customize border color
+    
         padding: 10,
-        borderRadius: 10,
+        borderRadius: 15,
         marginBottom: 10,
       },
       mailIcon: {
@@ -750,7 +805,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        borderBottomColor: 'lightblue',
         paddingVertical: 10,
       },
       friendRequestText: {
@@ -811,7 +866,7 @@ const styles = StyleSheet.create({
         resizeMode: 'contain',
     },
     postContainer: {
-      backgroundColor: '#ADD8E6', // Light background color for the post container
+      backgroundColor: 'lightblue', // Light background color for the post container
       borderRadius: 10,
       padding: 10,
       marginVertical: 10,

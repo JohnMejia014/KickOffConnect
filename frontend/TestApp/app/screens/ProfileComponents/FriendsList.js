@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const FriendsList = ({ modalVisible, friendsList, handleFriendPress, closeModal }) => {
+const FriendsList = ({ modalVisible, friendsList, handleFriendPress, handleRemovePress, closeModal, friendPage }) => {
     
   if (!modalVisible) {
     return null;
@@ -15,9 +15,16 @@ const FriendsList = ({ modalVisible, friendsList, handleFriendPress, closeModal 
           <Text style={styles.modalTitle}>Friends:</Text>
           <ScrollView style={styles.modalContent}>
             {friendsList.map((friend, index) => (
-              <TouchableOpacity key={index} onPress={() => handleFriendPress(friend)}>
-                <Text style={styles.friendName}>{friend.userID}</Text>
-              </TouchableOpacity>
+              <View key={index} style={styles.friendContainer}>
+                <TouchableOpacity onPress={() => handleFriendPress(friend)}>
+                  <Text style={styles.friendName}>{friend.userID}</Text>
+                </TouchableOpacity>
+                {!friendPage && (
+                  <TouchableOpacity onPress={() => handleRemovePress(friend)} style={styles.unaddButton}>
+                    <Text style={styles.unaddButtonText}>remove</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             ))}
           </ScrollView>
           <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
@@ -52,9 +59,23 @@ const styles = {
   modalContent: {
     maxHeight: '50%',
   },
+  friendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   friendName: {
     fontSize: 16,
-    marginBottom: 10,
+  },
+  unaddButton: {
+    backgroundColor: 'red',
+    padding: 5,
+    borderRadius: 5,
+  },
+  unaddButtonText: {
+    color: '#fff',
+    fontSize: 14,
   },
   closeButton: {
     marginTop: 20,
