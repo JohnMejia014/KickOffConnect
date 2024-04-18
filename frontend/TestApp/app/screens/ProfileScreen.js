@@ -12,7 +12,7 @@ import ProfileFeedList from './ProfileComponents/ProfileFeedList';
 import ChangeProfilePictureModal from './ProfileComponents/ChangeProfilePictureModal';
 import { Feather } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
-const ProfileScreen = ({route }) => {
+const ProfileScreen = ({route, friendPageVar }) => {
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
   const [activeTab, setActiveTab] = useState('joined'); // State for the active tab
@@ -20,7 +20,7 @@ const ProfileScreen = ({route }) => {
   const BASE_URL = 'http://192.168.1.119:5000';
   const [userInfo, setUserInfo] = useState(route.params?.userInfo || {});
   const [RealuserInfo, setRealUserInfo] = useState(route.params?.userInfo || {});
-  const [friendPage, setFriendPage] = useState(false)
+  const [friendPage, setFriendPage] = useState(route.params?.friendPageVar || false);
   const [eventsJoined, setEventsJoined] = useState(null);
   const [eventsHosted, setEventsHosted] = useState(null);
   const [eventsInvited, setEventsInvited] = useState(null);
