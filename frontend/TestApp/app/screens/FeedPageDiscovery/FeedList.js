@@ -121,8 +121,31 @@ const FeedList = ({navigation, route}) => {
 
     }
 
+    const commentPost1 = () => {
+
+        setEdit(true)
+
+    }
+
     const moreComment = () => {
         setCommentRender(commentRender + 5);
+    }
+
+    const uploadComment1 = (index) => {
+
+
+        axios.post(`${baseUrl}/uploadComment`, {
+            userID: user,
+            friendID: friendL[index],
+            post: feed[index],
+            comment: userComment,
+
+
+        }).then((response) => {
+            Increment()
+            setEdit(false)
+            setComment('');
+        })
     }
 
     const uploadComment = (index) => {
