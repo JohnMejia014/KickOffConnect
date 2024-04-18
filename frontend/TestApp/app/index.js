@@ -2,11 +2,11 @@
 import  Welcome  from "./screens/Welcome";  // Correct import statement
 import  LoginScreen  from "./screens/LoginScreen";  // Correct import statement
 import  FeedScreen  from "./screens/FeedScreen";  // Correct import statement
-import  ProfileScreen  from "./screens/UserProfileScreen";  // Correct import statement
+import  ProfileScreen  from "./screens/ProfileScreen";  // Correct import statement
 import  DiscoveryScreen  from "./screens/DiscoveryScreen";  // Correct import statement
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import { useRoute } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
@@ -16,7 +16,24 @@ const Tab = createBottomTabNavigator();
 
 function AppScreen() {
   const route = useRoute();
-  const { userInfo } = route.params || {};
+  let { userInfo } = route.params  || {};
+  const friendInfo = route.params?.source?.friendInfo || {};
+  const friendStatus = route.params?.source?.friendStatus || {};
+
+
+
+  console.log(route)
+
+  if( friendStatus === true) {
+      userInfo = route.params.source.userInfo;
+
+      console.log("true branch")
+      console.log(userInfo)
+      console.log(friendInfo)
+      console.log(friendStatus)
+
+  }
+
  
   return(
     <Tab.Navigator
@@ -42,7 +59,7 @@ function AppScreen() {
       <Feather name="user" size={size} color={color} />
     ),
   }}>
-        {() => <ProfileScreen route={{ params: { userInfo } }} />}
+        {() => <ProfileScreen route={{ params: { userInfo, friendInfo, friendStatus  } }} />}
       </Tab.Screen>
          </Tab.Navigator>
   )

@@ -8,14 +8,19 @@ import axios from 'axios';
 import { useScrollToTop} from "@react-navigation/native";
 import {Video} from "expo-av";
 const UserProfileScreen = ({ navigation, route }) => {
+
+
+  console.log(route)
+
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
   const [activeTab, setActiveTab] = useState('joined'); // State for the active tab
   const [postsCount, setPostsCount] = useState(0);
   const BASE_URL = 'http://192.168.1.119:5000';
-  const [userInfo, setUserInfo] = useState(route.params?.userInfo || {});
+
+  const [userInfo, setUserInfo] = useState(route.params?.friendInfo || route.params?.userInfo || {});
   const [RealuserInfo, setRealUserInfo] = useState(route.params?.userInfo || {});
-  const [friendPage, setFriendPage] = useState(false)
+  const [friendPage, setFriendPage] = useState(route.params?.friendStatus || false)
   const [eventsJoined, setEventsJoined] = useState(null);
   const [eventsHosted, setEventsHosted] = useState(null);
   const [eventsInvited, setEventsInvited] = useState(null);
@@ -23,6 +28,9 @@ const UserProfileScreen = ({ navigation, route }) => {
   const [friendsVisible, setFriendsVisible] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+
+
+
 
   const [friendsCount, setFriendsCount] = useState(userInfo.friends.length);
   const [feed, setFeed] = useState([]);
@@ -34,6 +42,7 @@ const UserProfileScreen = ({ navigation, route }) => {
   const ref = useRef(null);
   useScrollToTop(ref)
 
+  console.log(userInfo)
 
 
 
@@ -507,10 +516,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: 'red',
       },
-  errorText: {
-    fontSize: 18,
-    color: 'red',
-  },
   profilePictureContainer: {
     marginTop: 50,
     width: 100,
@@ -551,7 +556,6 @@ const styles = StyleSheet.create({
     borderRadius: 5, // Adjust border radius as needed
     backgroundColor: '#1565c0',
     padding: 5,
-    borderRadius: 50,
   },
   editButtonText: {
     color: '#fff',

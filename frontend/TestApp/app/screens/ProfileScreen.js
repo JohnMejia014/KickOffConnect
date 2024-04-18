@@ -9,14 +9,18 @@ import { useScrollToTop} from "@react-navigation/native";
 import {Video} from "expo-av";
 
 const ProfileScreen = ({route }) => {
+
+
+  console.log(route)
+
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
   const [activeTab, setActiveTab] = useState('joined'); // State for the active tab
   const [postsCount, setPostsCount] = useState(0);
-  const BASE_URL = 'http://192.168.1.119:5000';
-  const [userInfo, setUserInfo] = useState(route.params?.userInfo || {});
+  const BASE_URL = 'http://192.168.1.253:5000';
+  const [userInfo, setUserInfo] = useState(route.params?.friendInfo || route.params?.userInfo || {});
   const [RealuserInfo, setRealUserInfo] = useState(route.params?.userInfo || {});
-  const [friendPage, setFriendPage] = useState(false)
+  const [friendPage, setFriendPage] = useState(route.params?.friendStatus || false);
   const [eventsJoined, setEventsJoined] = useState(null);
   const [eventsHosted, setEventsHosted] = useState(null);
   const [eventsInvited, setEventsInvited] = useState(null);
@@ -34,6 +38,8 @@ const ProfileScreen = ({route }) => {
   const username = userInfo.userID
   const ref = useRef(null);
   useScrollToTop(ref)
+
+
 
 
 
@@ -512,10 +518,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: 'red',
       },
-  errorText: {
-    fontSize: 18,
-    color: 'red',
-  },
   profilePictureContainer: {
     marginTop: 50,
     width: 100,
@@ -556,7 +558,6 @@ const styles = StyleSheet.create({
     borderRadius: 5, // Adjust border radius as needed
     backgroundColor: '#1565c0',
     padding: 5,
-    borderRadius: 50,
   },
   editButtonText: {
     color: '#fff',

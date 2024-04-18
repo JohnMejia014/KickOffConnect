@@ -15,11 +15,12 @@ const PostObject=({navigation, route})=>{
     const [type, setType] = useState(null)
     const [user, setUser] = useState(route.params.source)
     const baseUrl = 'http://192.168.1.253:5000';// Define your base URL here
-    console.log(route.params.source)
+
 
 
 
     console.log(user)
+    console.log(type)
     const step = "image change"
     const imageChange = (event) => {
 

@@ -363,7 +363,7 @@ class MapHandler:
             if not isinstance(eventIDs, list):
                 eventIDs = [eventIDs]
 
-            # Initialize an empty list to store retrieved events
+            # Initialize an empty.txt list to store retrieved events
             events = []
 
             # Iterate through each event ID and retrieve the corresponding event from MongoDB

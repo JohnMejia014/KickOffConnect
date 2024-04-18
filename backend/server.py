@@ -5,6 +5,8 @@ import os, sys
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
+import json
+
 # Set the working directory to the root of the project
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -292,6 +294,15 @@ def S3Uploader():
             user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.jpg',
             ExtraArgs={'Metadata': {'User': user}}
         )
+
+        s3.upload_file(
+            'empty.txt',
+            bucket,
+            user + '/posts/' + str(postTitle) + '/comments.txt',
+
+            ExtraArgs={'Metadata': {'User': user}}
+        )
+
         s3.upload_file(
             'input.txt',
             bucket,
@@ -312,6 +323,14 @@ def S3Uploader():
             'input.txt',
             bucket,
             user + '/posts/' + str(postTitle) + '/' + str(postTitle) + '.txt',
+
+            ExtraArgs={'Metadata': {'User': user}}
+        )
+
+        s3.upload_file(
+            'empty.txt.txt',
+            bucket,
+            user + '/posts/' + str(postTitle) + '/comments.txt',
 
             ExtraArgs={'Metadata': {'User': user}}
         )
@@ -352,7 +371,7 @@ def S3DownloaderImg(key, count):
 def SearchUsers():
 
     data = request.get_json()
-    userID = data.get('query')
+    friend = data.get('query')
     user = data.get('user')
 
 
@@ -361,16 +380,17 @@ def SearchUsers():
     isFriend = False
 
     for i in friendList:
-        if i['S'] == userID:
+        if i['S'] == friend:
             isFriend = True
 
+    friendInfo, exists = userHandler.findUser(friend)
 
 
     table = dynamo_resource.Table('Users')
 
     try:
         resp = table.query(
-            KeyConditionExpression=Key('userID').eq(userID),
+            KeyConditionExpression=Key('userID').eq(friend),
         )
     except:
         response = {
@@ -388,8 +408,8 @@ def SearchUsers():
 
     imgResp = s3.list_objects(
         Bucket=bucket,
-        Prefix=userID + "/profile/",
-        Marker=userID + "/profile/",
+        Prefix=friend + "/profile/",
+        Marker=friend + "/profile/",
         MaxKeys=1,
     )
 
@@ -399,11 +419,13 @@ def SearchUsers():
                                     Params={'Bucket': bucket, 'Key': imgResp['Key']},
                                     ExpiresIn=3600)
 
-
+    print(friendInfo)
     response = {
         'success': True,
         'profile': url,
-        'friend': isFriend
+        'friend': isFriend,
+        'friendID': friend,
+        'friendInfo': friendInfo,
     }
 
     return jsonify(response)
@@ -604,6 +626,8 @@ def sendFriendRequest():
         return jsonify({'message': 'Friend request sent successfully.'}), 200
     else:
         return jsonify({'error': message}), 500  # Adjust the HTTP status code as needed for the error
+
+
 @app.route('/respondFriendRequest', methods=['POST'])
 def respondFriendRequest():
     data = request.get_json()
@@ -628,13 +652,14 @@ def S3FriendList():
     data = request.get_json()
     user = data.get('user')
 
+
     friends = dynamo.get_item(TableName='Users', Key={'userID': {'S': user}})
     friendList = friends['Item']['friends']['L']
     total = []
 
     friendPost = []
     timePost = []
-
+    CommentList = []
     for i in range(len(friendList)):
 
         friend = friendList[i]['S']
@@ -643,7 +668,7 @@ def S3FriendList():
             Bucket=bucket,
             Prefix=friend + "/posts",
             Marker=friend + "/posts/",
-            MaxKeys=10,
+            MaxKeys=12,
         )
 
         count1 = 0
@@ -687,6 +712,8 @@ def S3FriendList():
 
             type = key["Key"]
             type = type[type.find('.') + 1:]
+            comment = key["Key"]
+            comment = comment[-12:]
             count2 = 0
             row = 0
 
@@ -713,7 +740,12 @@ def S3FriendList():
                 response = object.get()
                 file_stream = response['Body']
                 text = file_stream.read().decode('utf-8')
+
+
                 total[row].append(text)
+
+
+
 
     for i in range(len(total)):
         feedResponse.append(total[i][0])
@@ -722,7 +754,9 @@ def S3FriendList():
         friendPost.append(total[i][3])
         timePost.append(total[i][4])
         TextList.append(total[i][5])
+        CommentList.append(total[i][6])
 
+    print(total)
     size = len(feedResponse)
 
     response = {'list': feedResponse,
@@ -732,8 +766,48 @@ def S3FriendList():
                 'type': typeList,
                 'time': timePost,
                 'friend': friendPost,
+                'comment': CommentList
                 }
+
+    print(response)
     return jsonify(response)
+
+
+
+
+@app.route('/uploadComment', methods=['POST'])
+def uploadComment():
+    data = request.get_json()
+    user = data.get('userID')
+    friend = data.get('friendID')
+    post = data.get('post')
+    comment = data.get('comment')
+
+
+
+    comments = s3.get_object(Bucket=bucket, Key=friend + "/posts/" + post + "/comments.txt")
+
+    jsonComment = {
+        "comment": comment,
+        "userID": user
+    }
+
+    comments = comments['Body'].read().decode('utf-8')
+
+    comments = json.loads(comments)
+
+
+    comments['Comments'].append(jsonComment)
+
+    open("comments.json", "w" ).write(json.dumps(comments))
+
+    try:
+        s3.upload_file("comments.json", bucket, friend + "/posts/" + post + "/comments.txt")
+    except:
+        return jsonify({'message': 'Error uploading comment.'})
+
+
+    return jsonify({'message': 'Comment uploaded successfully.'})
 
 
 

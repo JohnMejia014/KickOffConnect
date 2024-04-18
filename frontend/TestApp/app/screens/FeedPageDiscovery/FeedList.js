@@ -33,13 +33,20 @@ const FeedList = ({navigation, route}) => {
     const [queryResponse, setQueryResponse] = useState(false);
     const [profile, setProfile] = useState(null);
     const [stranger, setStranger] = useState(null);
+    const [friendID, setFriendID] = useState(null);
+    const [fRequest, setRequest] = useState(false);
+    const [userComment, setComment] = useState(null);
+    const [editComment,setEdit] = useState(false);
+    const [comments, setComments] = useState([]);
+    const [commentRender, setCommentRender] = useState(1);
+    const [friendInfo, setFriendInfo] = useState(null);
 
 
-
-
+    let list = []
     const user = userInfo.params.userID
 
     const ref = useRef(null);
+
     useScrollToTop(ref)
 
     const Increment = () => {
@@ -63,8 +70,13 @@ const FeedList = ({navigation, route}) => {
                 setType(response.data.type);
                 setFriend(response.data.friend);
                 setTime(response.data.time);
-                console.log(response.data.friend)
-                console.log(response.data.time)
+                for (let i = 0; i < length; i++) {
+                    list[i] = JSON.parse(response.data.comment[i]).Comments
+                }
+                setComments(list)
+                console.log(list)
+                console.log(comments)
+
 
             })
     }, [load]);
@@ -78,12 +90,62 @@ const FeedList = ({navigation, route}) => {
 
         }).then((response) => {
 
-            console.log(response.data)
             setQueryResponse(response.data.success)
             setProfile(response.data.profile)
             setStranger(response.data.friend)
+            setFriendID(response.data.friendID)
+            setFriendInfo(response.data.friendInfo)
         })
     }
+
+    const FriendRequest = () => {
+
+        axios.post(`${baseUrl}/sendFriendRequest`, {
+            userID: user,
+            friendID: friendID
+
+
+        }).then((response) => {
+
+            setQueryResponse(response.data.success)
+            setProfile(response.data.profile)
+            setStranger(response.data.friend)
+            setRequest(true)
+        })
+
+    }
+
+    const commentPost = () => {
+
+        setEdit(true)
+
+    }
+
+    const moreComment = () => {
+        setCommentRender(commentRender + 5);
+    }
+
+    const uploadComment = (index) => {
+
+
+        axios.post(`${baseUrl}/uploadComment`, {
+            userID: user,
+            friendID: friendL[index],
+            post: feed[index],
+            comment: userComment,
+
+
+        }).then((response) => {
+            Increment()
+            setEdit(false)
+            setComment('');
+        })
+    }
+
+    const requestMore = () => {
+
+    }
+
 
     return(
         <LinearGradient colors={['#0d47a1', '#1565c0']} style={styles.gradientContainer}>
@@ -121,10 +183,11 @@ const FeedList = ({navigation, route}) => {
                                     <View style={styles.searchView}>
                                         <Image style={styles.userPhoto} source={{uri: profile}}/>
                                         {!stranger &&
-                                        <TouchableOpacity >
+                                        <TouchableOpacity onPress={FriendRequest}>
                                             <Text style={styles.searchResults}> Add </Text>
                                         </TouchableOpacity> }
-                                        <TouchableOpacity >
+                                        {fRequest && <Text style={styles.searchResults}> Sent </Text>}
+                                        <TouchableOpacity onPress={() => navigation.navigate("AppScreen",{ screen: 'Profile', source: {userInfo: userInfo.params, friendStatus: true, friendInfo:friendInfo.Items[0]}})}>
                                             <Text style={styles.searchResults}>View Profile</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -141,15 +204,18 @@ const FeedList = ({navigation, route}) => {
                         {length < 1?
                             <ActivityIndicator size={"large"}/>
                             :
-                            <View style={{height: "85%"}}>
+                            <View style={{maxHeight: "85%"}}>
                                 <FlatList
                                     data = {feed}
                                     ref = {ref}
-                                    renderItem={({item, index})=>(
-                                        <View style = {styles.postView}>
-                                            <View style={styles.postTitle}>
 
-                                                <View style={styles.postFormat}>
+                                    onRefresh={() => Increment}
+                                    refreshing={false}
+
+                                    renderItem={({item, index})=>(
+                                        <TouchableWithoutFeedback>
+                                            <View style = {styles.postView}>
+                                                <View style={styles.postTitle}>
 
                                                     {type[index] === "mp4" ?
                                                         <TouchableOpacity onPress={() => navigation.navigate("Video", {source: imageL[index]})}>
@@ -160,9 +226,36 @@ const FeedList = ({navigation, route}) => {
                                                     }
                                                     <Text>by {friendL[index]} at {time[index]}</Text>
                                                     <Text>{desc[index]}</Text>
+                                                    <View>
+                                                        <View style={{flexDirection: "row", justifyContent:"space-evenly"}}>
+                                                            <TouchableOpacity><Text>Like</Text></TouchableOpacity>
+                                                            <TouchableOpacity onPress={commentPost}><Text>Comment</Text></TouchableOpacity>
+                                                        </View>
+                                                        {editComment &&
+                                                            <View>
+                                                                <TextInput value={userComment} onChangeText={setComment}></TextInput>
+                                                                <View style={{flexDirection: "row", justifyContent:"space-evenly"}}>
+                                                                    <TouchableOpacity onPress={() => {setEdit(false), setComment('')}}><Text>Cancel</Text></TouchableOpacity>
+                                                                    <TouchableOpacity onPress={() => uploadComment(index)} ><Text>Post</Text></TouchableOpacity>
+                                                                </View>
+                                                            </View>}
+                                                    </View>
+                                                    <View>
+
+                                                        <FlatList
+                                                        data={comments[index]}
+                                                        renderItem={({item, index2}) => (
+                                                            <View>
+                                                                <Text>{item.userID}</Text>
+                                                                <Text>{item.comment}</Text>
+                                                            </View>
+                                                        )}/>
+                                                        <TouchableOpacity ><Text>More Comments</Text></TouchableOpacity>
+
+                                                    </View>
                                                 </View>
                                             </View>
-                                        </View>
+                                        </TouchableWithoutFeedback>
                                     )}
                                 />
                                 <Button title={"load more"} load more/>
@@ -183,6 +276,8 @@ const FeedList = ({navigation, route}) => {
 
 export default FeedList;
 
+
+//for expandable try doing slicing for loading more of data flatlist is pulling
 
 const styles = StyleSheet.create({
 
@@ -212,9 +307,6 @@ const styles = StyleSheet.create({
     },
     postTitle:{
         width:"90%",
-        display:'flex',
-        justifyContent:'space-between',
-        flexDirection:'row',
         borderStyle: "solid",
         borderWidth: 10,
         borderColor: "black",
@@ -223,23 +315,15 @@ const styles = StyleSheet.create({
         width:'100%',
         alignItems: "center",
         marginTop: 10,
-        maxHeight: 300,
-
-    },
-    postFormat:{
-      width: "100%",
     },
     userPhoto:{
         width: 50,
         height: 50
     },
     imageView:{
-        display: "flex",
-        flexDirection: "row",
         maxWidth: "100%",
         height: 200,
         resizeMode: "contain"
-
     },
     search: {
         display: "flex",
@@ -304,25 +388,25 @@ const styles = StyleSheet.create({
 
 
     },
-    postTitle: {
-        width: "100%",
-        flexDirection: 'column',
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: "#ccc",
-      },
-      postView: {
-        width: '100%',
-        alignItems: "center",
-        marginTop: 10,
-        paddingBottom: 10,
-      },
-      imageView: {
-        width: "100%",
-        height: 300,
-        resizeMode: "cover",
-        marginBottom: 10,
-      },
+    // postTitle: {
+    //     width: "100%",
+    //     flexDirection: 'column',
+    //     padding: 10,
+    //     borderBottomWidth: 1,
+    //     borderBottomColor: "#ccc",
+    //   },
+    //   postView: {
+    //     width: '100%',
+    //     alignItems: "center",
+    //     marginTop: 10,
+    //     paddingBottom: 10,
+    //   },
+    //   imageView: {
+    //     width: "100%",
+    //     height: 300,
+    //     resizeMode: "cover",
+    //     marginBottom: 10,
+    //   },
       postContent: {
         paddingHorizontal: 10,
         marginBottom: 10,
