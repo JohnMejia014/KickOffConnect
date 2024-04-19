@@ -18,9 +18,9 @@ const ProfileScreen = ({route, friendPageVar }) => {
   const [activeTab, setActiveTab] = useState('joined'); // State for the active tab
   const [postsCount, setPostsCount] = useState(0);
   const BASE_URL = 'http://192.168.1.119:5000';
-  const [userInfo, setUserInfo] = useState(route.params?.userInfo || {});
+  const [userInfo, setUserInfo] = useState(route.params?.friendInfo || route.params?.userInfo || {});
   const [RealuserInfo, setRealUserInfo] = useState(route.params?.userInfo || {});
-  const [friendPage, setFriendPage] = useState(route.params?.friendPageVar || false);
+  const [friendPage, setFriendPage] = useState(route.params?.friendStatus || false);
   const [eventsJoined, setEventsJoined] = useState(null);
   const [eventsHosted, setEventsHosted] = useState(null);
   const [eventsInvited, setEventsInvited] = useState(null);
@@ -100,12 +100,9 @@ const ProfileScreen = ({route, friendPageVar }) => {
         friendID,
         action,
       });
-
       if (response.data.success) {
-        console.log(response.data.message);
         // Update the friend requests list based on the response
-        const updatedRequests = userInfo.friendRequests.filter((request) => request !== friendID);
-        setUserInfo((prevUserInfo) => ({ ...prevUserInfo, friendRequests: updatedRequests }));
+        fetchUserInfo();
       } else {
         throw new Error('Failed to respond to friend request');
       }
