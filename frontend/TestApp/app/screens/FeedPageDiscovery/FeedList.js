@@ -1,20 +1,21 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
-    View,
-    Text,
-    FlatList,
-    TouchableOpacity,
-    TextInput,
     ActivityIndicator,
-    Image,
     Button,
-    TouchableWithoutFeedback
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View
 } from 'react-native';
-import { useScrollToTop} from "@react-navigation/native";
-import {StyleSheet} from "react-native";
+import {useScrollToTop} from "@react-navigation/native";
 import axios from 'axios';
 import {Video} from "expo-av";
-import { LinearGradient } from 'expo-linear-gradient';
+import {LinearGradient} from 'expo-linear-gradient';
+import {max, min} from "lodash";
 
 
 const FeedList = ({navigation, route}) => {
@@ -38,10 +39,15 @@ const FeedList = ({navigation, route}) => {
     const [userComment, setComment] = useState(null);
     const [editComment,setEdit] = useState(false);
     const [comments, setComments] = useState([]);
-    const [commentRender, setCommentRender] = useState(1);
+    const [commentRender, setCommentRender] = useState([]);
     const [friendInfo, setFriendInfo] = useState(null);
+    const [noFriend, setNoFriend] = useState(true);
+    const [,forceRender] = useState(undefined);
+    const [y, setY] = useState(null);
 
 
+
+    console.log(userInfo)
     let list = []
     const user = userInfo.params.userID
 
@@ -59,7 +65,9 @@ const FeedList = ({navigation, route}) => {
     useEffect(() => {
 
         axios.post(`${baseUrl}/S3FriendList`, {
-            user: user
+            user: user,
+            friends: userInfo.params.friends,
+
         })
             .then((response) => {
 
@@ -74,8 +82,11 @@ const FeedList = ({navigation, route}) => {
                     list[i] = JSON.parse(response.data.comment[i]).Comments
                 }
                 setComments(list)
+                setNoFriend(response.data.empty)
                 console.log(list)
                 console.log(comments)
+                let list2 = new Array(length).fill(false);
+                setCommentRender(list2)
 
 
             })
@@ -121,32 +132,25 @@ const FeedList = ({navigation, route}) => {
 
     }
 
-    const commentPost1 = () => {
-
-        setEdit(true)
-
+    const viewComment = (index) => {
+        console.log(comments)
+        console.log(commentRender)
+        commentRender[index] = true
+        console.log(commentRender)
     }
 
     const moreComment = () => {
         setCommentRender(commentRender + 5);
     }
 
-    const uploadComment1 = (index) => {
+    const hideComment = (index) => {
 
-
-        axios.post(`${baseUrl}/uploadComment`, {
-            userID: user,
-            friendID: friendL[index],
-            post: feed[index],
-            comment: userComment,
-
-
-        }).then((response) => {
-            Increment()
-            setEdit(false)
-            setComment('');
-        })
+        console.log(comments)
+        console.log(commentRender)
+        commentRender[index] = false
+        console.log(commentRender)
     }
+
 
     const uploadComment = (index) => {
 
@@ -165,9 +169,48 @@ const FeedList = ({navigation, route}) => {
         })
     }
 
-    const requestMore = () => {
+
+
+    const handleRender = () => {
+
+        forceRender((prev) => !prev)
+        console.log(imageL)
 
     }
+
+    const scrollToIndex = (index) => {
+
+        ref?.current?.scrollToIndex({
+
+            index: index,
+            animated: true,
+            viewPosition: 0,
+
+        })
+        console.log("scroll")
+
+    }
+
+    const scrollToEnd = (index) => {
+
+        ref?.current?.scrollToIndex({
+
+            index: index,
+            animated: true,
+            viewPosition: 1,
+
+        })
+        console.log("scroll")
+
+
+    }
+
+    const handleScroll = () => {
+
+        console.log(y)
+
+    }
+
 
 
     return(
@@ -216,24 +259,22 @@ const FeedList = ({navigation, route}) => {
                                     </View>
                             </View>
                             :
-                            <View>
-
-                            </View>
+                            <View></View>
 
                         }
                     </View>
-
                     <View style={styles.mainPostView}>
-                        {length < 1?
-                            <ActivityIndicator size={"large"}/>
+                        {(length < 1)?
+                            <ActivityIndicator collapsable={true} size={"large"}/>
                             :
                             <View style={{maxHeight: "85%"}}>
                                 <FlatList
                                     data = {feed}
                                     ref = {ref}
-
+                                    onScroll={(r) => setY(r.nativeEvent.contentOffset.y)}
                                     onRefresh={() => Increment}
                                     refreshing={false}
+                                    extraData={commentRender}
 
                                     renderItem={({item, index})=>(
                                         <TouchableWithoutFeedback>
@@ -265,16 +306,28 @@ const FeedList = ({navigation, route}) => {
                                                     </View>
                                                     <View>
 
-                                                        <FlatList
-                                                        data={comments[index]}
-                                                        renderItem={({item, index2}) => (
-                                                            <View>
-                                                                <Text>{item.userID}</Text>
-                                                                <Text>{item.comment}</Text>
+                                                        {!commentRender[index] === true?
+                                                            <TouchableOpacity onPress={() => {viewComment(index), handleRender() }} ><Text>View Comment</Text></TouchableOpacity>
+                                                            :
+                                                            <View style={styles.commentLayout}>
+                                                                <FlatList
+                                                                    data={comments[index]}
+                                                                    extraData={commentRender[index]}
+                                                                    style={{width: "90%"}}
+                                                                    ListFooterComponent={() =>
+                                                                        <TouchableOpacity onPress={() => {hideComment(index), handleRender()}}><Text>Hide Comments</Text></TouchableOpacity>
+                                                                }
+                                                                    renderItem={({item, index2}) => (
+                                                                        <View>
+                                                                            <Text>{item.userID}: {item.comment}</Text>
+                                                                        </View>
+                                                                    )}/>
+                                                                <View>
+                                                                    <TouchableOpacity style={{height: "inherit", backgroundColor: '#EBEBEB',  top: min([max([0, y- 132]), y]),right: 20, position: "absolute", zIndex: 0}}  onPress={() => scrollToIndex(index)}><Text >UP</Text></TouchableOpacity>
+                                                                    <TouchableOpacity style={{height: "inherit", backgroundColor: '#EBEBEB',  top: min([max([0, y- 132]), y]) , position: "absolute", zIndex: 0}}  onPress={() => scrollToEnd(index)}><Text>Down</Text></TouchableOpacity>
+                                                                </View>
                                                             </View>
-                                                        )}/>
-                                                        <TouchableOpacity ><Text>More Comments</Text></TouchableOpacity>
-
+                                                        }
                                                     </View>
                                                 </View>
                                             </View>
@@ -282,6 +335,7 @@ const FeedList = ({navigation, route}) => {
                                     )}
                                 />
                                 <Button title={"load more"} load more/>
+                                <Button title={"view y"} onPress={() => handleScroll()}/>
                             </View>
 
                         }
@@ -346,7 +400,8 @@ const styles = StyleSheet.create({
     imageView:{
         maxWidth: "100%",
         height: 200,
-        resizeMode: "contain"
+        resizeMode: "contain",
+        zIndex: 3
     },
     search: {
         display: "flex",
@@ -408,6 +463,10 @@ const styles = StyleSheet.create({
         textAlignVertical: "center",
         paddingHorizontal: 5,
         paddingVertical: 10
+
+
+    },commentLayout:{
+        flexDirection: "row",
 
 
     },
