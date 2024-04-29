@@ -17,7 +17,7 @@ const ProfileScreen = ({route }) => {
 
   const [userInfo, setUserInfo] = useState(route.params?.userInfo || {});
   const [friendInfo, setFriendInfo] = useState(route.params?.friendInfo || {});
-  console.log("friendInfo", friendInfo);
+  console.log("userinfo", userInfo);
   // Now setUserInfo will update userInfo based on the initialUserInfo value
   const [RealuserInfo, setRealUserInfo] = useState(route.params?.userInfo || {});
   const [friendSelected, setFriendSelected] = useState(null);
@@ -534,47 +534,53 @@ const ProfileScreen = ({route }) => {
                 <TouchableOpacity onPress={handleFriendRequestsPress} style={styles.friendRequestsButton}>
                 <Feather name="mail" size={24} color="black" style={styles.mailIcon} />
                 <Text style={styles.friendRequestsText}>Friend Requests</Text>
-                <Text style={styles.friendRequestsCount}>{userInfo.friendRequests.length}</Text>
+                <Text style={styles.friendRequestsCount}>
+                {userInfo.friendRequests ? userInfo.friendRequests.length : 0}
+              </Text>              
               </TouchableOpacity>
                )}
                {/* Modal for Friend Requests */}
                <Modal visible={friendRequestsModalVisible} animationType="slide" transparent={true}>
-                <View style={styles.modalBackground}>
-                  <LinearGradient colors={['#e3f2fd', '#bbdefb']} style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Friend Requests:</Text>
-                    <ScrollView style={styles.modalContent}>
-                      {userInfo.friendRequests.map((request, index) => (
-                        <View key={index} style={styles.friendRequestItem}>
-                        <View style={styles.friendRequestItemLeft}>
-                          <Image
-                            source={{ uri: friendRequestProfilePicList[request] || 'default-profile.png' }}
-                            style={styles.friendRequestProfilePic}
-                          />
-                          <Text style={styles.friendRequestName}>{request}</Text>
-                        </View>
-                        <View style={styles.friendRequestItemRight}>
-                          <TouchableOpacity
-                            style={[styles.friendRequestButton, styles.acceptButton]}
-                            onPress={() => handleRespondFriendRequest(request, 'accept')}
-                          >
-                            <FontAwesome name="check" size={20} color="green" />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.friendRequestButton, styles.declineButton]}
-                            onPress={() => handleRespondFriendRequest(request, 'decline')}
-                          >
-                            <FontAwesome name="times" size={20} color="red" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                      ))}
-                    </ScrollView>
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setFriendRequestsModalVisible(false)}>
-                      <Text style={styles.closeButtonText}>Close</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                </View>
-              </Modal>
+  <View style={styles.modalBackground}>
+    <LinearGradient colors={['#e3f2fd', '#bbdefb']} style={styles.modalContainer}>
+      <Text style={styles.modalTitle}>Friend Requests:</Text>
+      <ScrollView style={styles.modalContent}>
+        {userInfo.friendRequests ? (
+          userInfo.friendRequests.map((request, index) => (
+            <View key={index} style={styles.friendRequestItem}>
+              <View style={styles.friendRequestItemLeft}>
+                <Image
+                  source={{ uri: friendRequestProfilePicList[request] || 'default-profile.png' }}
+                  style={styles.friendRequestProfilePic}
+                />
+                <Text style={styles.friendRequestName}>{request}</Text>
+              </View>
+              <View style={styles.friendRequestItemRight}>
+                <TouchableOpacity
+                  style={[styles.friendRequestButton, styles.acceptButton]}
+                  onPress={() => handleRespondFriendRequest(request, 'accept')}
+                >
+                  <FontAwesome name="check" size={20} color="green" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.friendRequestButton, styles.declineButton]}
+                  onPress={() => handleRespondFriendRequest(request, 'decline')}
+                >
+                  <FontAwesome name="times" size={20} color="red" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        ) : (
+          <Text>No friend requests</Text>
+        )}
+      </ScrollView>
+      <TouchableOpacity style={styles.closeButton} onPress={() => setFriendRequestsModalVisible(false)}>
+        <Text style={styles.closeButtonText}>Close</Text>
+      </TouchableOpacity>
+    </LinearGradient>
+  </View>
+</Modal>
               {/* Label for Posts */}
               <Text style={[styles.eventsLabel, { color: getLabelColor() }]}>Posts</Text>
 

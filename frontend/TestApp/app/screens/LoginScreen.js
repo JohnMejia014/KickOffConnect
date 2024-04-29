@@ -37,21 +37,31 @@ const LoginScreen = ({navigation}) => {
     console.log("logging in");
     const endpoint = mode === 'signup' ? 'signup' : 'login';
     axios
-      .post(`http://10.155.229.89:5000/${endpoint}`, requestData)
-      .then((response) => {
-        console.log("Made it here");
-        if (response.data.message === 'User successfully created' || response.data.message === "Login successful") {
-            navigation.navigate('AppScreen', { userInfo: response.data.userInfo });
-        } else {
-          setErrorMessage(response.data.message || 'Login failed');
-          console.log(response.data);
-        }
-      })
-      .catch((error) => {
-        setErrorMessage('An error occurred while communicating with the server');
-        console.error(error);
-      });
-  };
+    .post(`http://10.155.229.89:5000/${endpoint}`, requestData)
+    .then((response) => {
+      console.log("Made it here");
+      if (response.data.message === 'User successfully created' || response.data.message === "Login successful") {
+          console.log("userinfo signup: ", response.data.userInfo.Items);
+          if (mode === 'signup'){
+            
+            navigation.navigate('AppScreen', { userInfo: response.data.userInfo.Items[0] });
+
+          }
+          else{
+            console.log("userinfo signup: ", response.data.userInfo);
+
+          navigation.navigate('AppScreen', { userInfo: response.data.userInfo });
+          }
+      } else {
+        setErrorMessage(response.data.message || 'Login failed');
+        console.log(response.data);
+      }
+    })
+    .catch((error) => {
+      setErrorMessage('An error occurred while communicating with the server');
+      console.error(error);
+    });
+};
 
   return (
     <LinearGradient
