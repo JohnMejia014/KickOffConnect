@@ -208,7 +208,7 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit, initialEventData, onB
                 setModalDimensions({ width, height });
               }}
             >
-            <View style={styles.modalContent}>
+            <ScrollView contentContainerStyle={styles.modalContent}>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <FontAwesome name="times" size={20} color="black" />
             </TouchableOpacity>
@@ -333,10 +333,13 @@ const AddEventComponent = ({ isVisible, onClose, onSubmit, initialEventData, onB
                     onConfirm={handleEndTimeConfirm}
                     onCancel={hideEndTimePicker}
                   />
+              </ScrollView>
+          {/* Buttons in a row */}
+          <View style={styles.buttonContainer}>
               <Button style={styles.ContinueButton} title="Continue" onPress={handleAddEvent} />
-              <Button style={styles.ContinueButton} title="Back" onPress={handleBackToChooseLocation} />
-              <ErrorMessageModal message={errorMessage} onClose={() => setErrorMessage(null)} />
+              <Button style={styles.BackButton} title="Back" onPress={handleBackToChooseLocation} />
             </View>
+            <ErrorMessageModal message={errorMessage} onClose={() => setErrorMessage(null)} />
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -413,8 +416,17 @@ const styles = StyleSheet.create({
     minHeight: 80, // Set a minimum height for the multiline input
     textAlignVertical: 'top', // Start input from the top
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
   ContinueButton: {
-    marginBottom: 10,
+    flex: 1, // Equal flex for both buttons
+    marginRight: 10, // Add margin between buttons
+  },
+  BackButton: {
+    flex: 1, // Equal flex for both buttons
   },
   closeButton: {
     position: 'absolute',
