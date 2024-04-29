@@ -6,6 +6,7 @@ import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
 import json
+import requests
 
 # Set the working directory to the root of the project
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -32,6 +33,11 @@ import numpy as np
 import urllib.parse
 import random
 from boto3.dynamodb.conditions import Key, Attr
+
+header = {"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiN2Y4YjhkNGMtNWNiMS00OTQ0LThmZjAtZjM2MWIxNzdhMTVjIiwidHlwZSI6ImFwaV90b2tlbiJ9.Tq3yP2-V6JBeSgVYb2MwrKK5567zsth9kdafU3R8KRc"}
+text = "I love this movie"
+url = "https://api.edenai.run/v2/text/moderation"
+badLabels = ["Hate Symbols", "Violence", "Explicit", "Drugs & Tabacco"]
 
 aws_mag_con = boto3.session.Session(profile_name="default")
 
@@ -276,8 +282,21 @@ def S3Uploader():
 
     user = data.get('user')
 
+    rekognition = aws_mag_con.client('rekognition')
+
+
+
     if text == '':
         text = 'No text'
+
+    payload = {"providers": "microsoft,openai", "language": "en", "text": text}
+    response = requests.post(url, json=payload, headers=header)
+    result = json.loads(response.text)
+    if result['microsoft']['nsfw_likelihood'] > 3:
+        return jsonify({
+            'success': False,
+            'text': "Message contains Inappropriate Content",
+        })
 
     try:
         check = s3.list_objects_v2(Bucket=bucket, Prefix='posts/' + user + str(postTitle) + "/")
@@ -293,8 +312,24 @@ def S3Uploader():
 
     if type == 'image':
         image = BytesIO(base64.b64decode(image))
+        safety = rekognition.detect_moderation_labels(Image={'Bytes': image.read()})
+
+        for label in safety['ModerationLabels']:
+
+            if label['ParentName'] in badLabels:
+
+                if label['Confidence'] > 20:
+                    response = {
+                        'success': False,
+                        'text': "Image violates Guidelines",
+                    }
+                    return jsonify(response)
+
+        print(safety)
         image_file = Image.open(image)
         image_file.save("image.jpg")
+
+
 
         s3.upload_file(
             'image.jpg',
@@ -794,6 +829,12 @@ def uploadComment():
     post = data.get('post')
     comment = data.get('comment')
 
+    payload = {"providers": "microsoft,openai", "language": "en", "text": comment}
+    response = requests.post(url, json=payload, headers=header)
+    result = json.loads(response.text)
+    if result['microsoft']['nsfw_likelihood'] > 3:
+        return jsonify({'message': 'Comment contains inappropriate content.'})
+
     comments = s3.get_object(Bucket=bucket, Key=friend + "/posts/" + post + "/comments.txt")
 
     jsonComment = {
@@ -815,6 +856,8 @@ def uploadComment():
         return jsonify({'message': 'Error uploading comment.'})
 
     return jsonify({'message': 'Comment uploaded successfully.'})
+
+
 
 
 # Running app
