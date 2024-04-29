@@ -180,6 +180,7 @@ def leave_event():
 @app.route('/getEvents', methods=['POST'])
 def getEvents():
     data = request.get_json()
+    user = data.get('userID')
     user_lat = data.get('latitude')
     user_long = data.get('longitude')
     filters = data.get('filters')
@@ -192,7 +193,7 @@ def getEvents():
         radius = float(radius)
 
         # Retrieve events within the specified radius
-        events, error = mapHandler.get_events_within_radius(user_lat, user_long, radius, filters, places)
+        events, error = mapHandler.get_events_within_radius(user, user_lat, user_long, radius, filters, places)
         if error:
             return jsonify({'error': error}), 500
         else:

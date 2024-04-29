@@ -175,6 +175,7 @@ useEffect(() => {
 
     try {
       const response = await axios.post(`${BASE_URL}/getEvents`, {
+        userID: userInfo.userID,
         latitude: latitude,
         longitude: longitude,
         filters: eventFilters,

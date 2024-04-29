@@ -35,7 +35,7 @@ class MapHandler:
         self.__tableUsers = self.__dynamodb.Table('Users')
     
     
-    def get_events_within_radius(self, user_lat, user_long, radius_meters, filters, places):
+    def get_events_within_radius(self, user, user_lat, user_long, radius_meters, filters, places):
         _err = None
         events_within_radius = {}  # Dictionary to hold events and places by address
         events_without_places = {}  # Dictionary to hold events without associated places
@@ -70,6 +70,26 @@ class MapHandler:
                 start_date = filters['selectedStartDate']
                 end_date = filters['selectedEndDate']
                 filter_expression &= Attr("eventDate").between(start_date, end_date)
+
+            if filters and 'visibility' in filters:
+                visibility_option = filters['visibility']
+                if visibility_option == 'both':
+                    # Include both public and private events
+                    visibility_condition = (
+                Attr("eventVisibility").is_in(['public', 'private']) |
+                (Attr("eventVisibility").eq('private') & Attr("usersInvited").contains(user))
+            )            
+                elif visibility_option == 'public':
+                    # Include only public events
+                    visibility_condition = Attr("eventVisibility").eq('public')
+                elif visibility_option == 'private':
+                    # Include only private events where the user is invited
+                    visibility_condition = Attr("eventVisibility").eq('private') & Attr("usersInvited").contains(user)
+                else:
+                    # Invalid visibility option, default to 'both'
+                    visibility_condition = Attr("eventVisibility").is_in(['public', 'private'])
+                # Add visibility condition to the filter expression
+                filter_expression &= visibility_condition
 
             # Use the DynamoDB Table resource with the constructed filter expression
             events = self.__table.scan(FilterExpression=filter_expression)['Items']

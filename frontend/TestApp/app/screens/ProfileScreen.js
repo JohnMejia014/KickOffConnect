@@ -46,7 +46,6 @@ const ProfileScreen = ({route }) => {
   const [length, setLength] = useState(0)
   const [desc, setDesc] = useState([]);
   const [type, setType] = useState([]);
-  const username = userInfo.userID
   const ref = useRef(null);
   const [changePictureModalVisible, setChangePictureModalVisible] = useState(false);
 
@@ -60,7 +59,7 @@ const ProfileScreen = ({route }) => {
  
   useEffect(() => {
         
-    axios.post(`${BASE_URL}/S3ProfileList`, { user: username })
+    axios.post(`${BASE_URL}/S3ProfileList`, { user: userInfo.userID })
         .then((response) => {
               
               setFeed(response.data.list);
@@ -206,17 +205,20 @@ const ProfileScreen = ({route }) => {
     if (friend.userID === RealuserInfo.userID) {
       // If the selected friend is the real user, reset to default view
       setUserInfo(RealuserInfo);
+      setFriendPage(false);
       console.log("making user id friend: ", userInfo.userID);
       fetchFeedData(friend);
-      setFriendPage(false);
 
     } else {
       // Otherwise, set the selected friend's info and navigate to their page\      
 
       setUserInfo(friend);
       console.log("making user id friend: ", userInfo.userID);
-      fetchFeedData(friend);
       setFriendPage(true);
+      fetchFeedData(friend);
+      fetchUserProfile();
+
+
 
       // Fetch the selected friend's posts and events
     }
@@ -230,6 +232,8 @@ const ProfileScreen = ({route }) => {
         setLength(response.data.size);
         setDesc(response.data.text);
         setImageL(response.data.image);
+        setPostsCount(response.data.size);
+        if(!response.data.size){setPostsCount(0);}
         setType(response.data.type);
       })
 

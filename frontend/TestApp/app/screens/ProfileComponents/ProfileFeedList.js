@@ -3,10 +3,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from 'react-native';
 
 const ProfileFeedList = ({ feed, type, imageL, desc, handleMediaPress }) => {
-  if (!feed || feed.length === 0) {
+  if (!feed || feed.length === 0 || typeof type === 'undefined' ) {
     return null;
   }
-
+  console.log("Feed Items: ", feed, type, imageL);
   return (
     <View>
       {feed.map((item, index) => (
