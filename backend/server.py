@@ -53,6 +53,7 @@ container = s3_resource.Bucket(bucket)
 dynamo = aws_mag_con.client('dynamodb')
 dynamo_resource = aws_mag_con.resource('dynamodb')
 file_path = os.path.abspath('backend/pic.jpg')
+file_path2 = os.path.abspath('backend/empty.txt')
 
 
 
@@ -350,28 +351,9 @@ def S3Uploader():
     type = data.get('type')
 
     user = data.get('user')
-    print(image)
-    # image = compress_image(image, quality=75)  # Adjust quality as needed
-
-    rekognition = aws_mag_con.client('rekognition')
-
-
 
     if text == '':
         text = 'No text'
-
-        # Send image data to Rekognition for moderation label detection
-    image_bytes = base64.b64decode(image)
-    # safety = rekognition.detect_moderation_labels(Image={'Bytes': image_bytes})
-
-    # payload = {"providers": "microsoft,openai", "language": "en", "text": text}
-    # response = requests.post(url, json=payload, headers=header)
-    # result = json.loads(response.text)
-    # if result['microsoft']['nsfw_likelihood'] > 3:
-    #     return jsonify({
-    #         'success': False,
-    #         'text': "Message contains Inappropriate Content",
-    #     })
 
     try:
         check = s3.list_objects_v2(Bucket=bucket, Prefix='posts/' + user + str(postTitle) + "/")
@@ -386,25 +368,9 @@ def S3Uploader():
     text_file.close()
 
     if type == 'image':
-        # image = BytesIO(base64.b64decode(image))
-        # safety = rekognition.detect_moderation_labels(Image={'Bytes': image.read()})
-
-        # for label in safety['ModerationLabels']:
-
-        #     if label['ParentName'] in badLabels:
-
-        #         if label['Confidence'] > 20:
-        #             response = {
-        #                 'success': False,
-        #                 'text': "Image violates Guidelines",
-        #             }
-        #             return jsonify(response)
-
-        # print(safety)
-        image_file = Image.open(image_bytes)
+        image = BytesIO(base64.b64decode(image))
+        image_file = Image.open(image)
         image_file.save("image.jpg")
-
-
 
         s3.upload_file(
             'image.jpg',
@@ -414,7 +380,7 @@ def S3Uploader():
         )
 
         s3.upload_file(
-            'empty.txt',
+            file_path2,
             bucket,
             user + '/posts/' + str(postTitle) + '/comments.txt',
 
