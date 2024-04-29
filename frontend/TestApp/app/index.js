@@ -16,8 +16,20 @@ const Tab = createBottomTabNavigator();
 
 function AppScreen() {
   const route = useRoute();
-  const { userInfo } = route.params || {};
+  let { userInfo } = route.params || {};
+  const friendInfo = route.params?.source?.friendInfo || {};
+  const friendStatus = route.params?.source?.friendStatus || false;
  
+
+  if( friendStatus === true) {
+      userInfo = route.params.source.userInfo;
+
+      console.log("true branch")
+      console.log(userInfo)
+      console.log(friendInfo)
+      console.log(friendStatus)
+
+  }
   return(
     <Tab.Navigator
     initialRouteName = "Feed"
@@ -42,7 +54,7 @@ function AppScreen() {
       <Feather name="user" size={size} color={color} />
     ),
   }}>
-        {() => <ProfileScreen route={{ params: { userInfo } }} />}
+        {() => <ProfileScreen route={{ params: { params: { userInfo, friendInfo, friendStatus  } } }} />}
       </Tab.Screen>
          </Tab.Navigator>
   )

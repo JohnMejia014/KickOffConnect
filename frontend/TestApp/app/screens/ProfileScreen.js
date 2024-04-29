@@ -12,16 +12,24 @@ import ProfileFeedList from './ProfileComponents/ProfileFeedList';
 import ChangeProfilePictureModal from './ProfileComponents/ChangeProfilePictureModal';
 import { Feather } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
-const ProfileScreen = ({route, friendPageVar }) => {
+const ProfileScreen = ({route }) => {
+  console.log("profilepage route: ", route.params);
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
   const [activeTab, setActiveTab] = useState('joined'); // State for the active tab
   const [postsCount, setPostsCount] = useState(0);
   const BASE_URL = 'http://192.168.1.119:5000';
-  const [userInfo, setUserInfo] = useState(route.params?.friendInfo || route.params?.userInfo || {});
-  const [RealuserInfo, setRealUserInfo] = useState(route.params?.userInfo || {});
-  const [friendPage, setFriendPage] = useState(route.params?.friendStatus || false);
-  const [eventsJoined, setEventsJoined] = useState(null);
+  console.log(route.params.params.friendStatus);
+  if(route.params.params.friendStatus){const initFriend = true}else{ const initFriend = false}
+  const [friendPage, setFriendPage] = useState(false);
+
+  const [userInfo, setUserInfo] = useState(
+    route.params?.params?.friendInfo !== undefined && Object.keys(route.params?.params?.friendInfo).length !== 0
+      ? route.params?.params?.friendInfo
+      : route.params?.params?.userInfo || {}
+  );  
+  const [RealuserInfo, setRealUserInfo] = useState(route.params?.params?.userInfo || {});
+   const [eventsJoined, setEventsJoined] = useState(null);
   const [eventsHosted, setEventsHosted] = useState(null);
   const [eventsInvited, setEventsInvited] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,10 +38,8 @@ const ProfileScreen = ({route, friendPageVar }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [friendRequests, setFriendRequests] = useState(userInfo.friendRequests);
   const [friendRequestsModalVisible, setFriendRequestsModalVisible] = useState(false);
-  const [profilePicUrl, setProfilePicUrl] = useState(null);
   const [loading2, setLoading2] = useState(false);
 
-  const [friendsCount, setFriendsCount] = useState(userInfo.friends.length);
   const [feed, setFeed] = useState([]);
   const [imageL, setImageL] = useState([]);
   const [length, setLength] = useState(0)
@@ -45,31 +51,12 @@ const ProfileScreen = ({route, friendPageVar }) => {
 
   // Function to toggle the visibility of the change picture modal
   const toggleChangePictureModal = () => {
-    fetchProfilePicture();
+    fetchUserInfo();
     setChangePictureModalVisible(!changePictureModalVisible);
   };
   useScrollToTop(ref)
- const fetchProfilePicture = () => {
-        setLoading(true);
-        axios
-            .post(`${BASE_URL}/getProfilePic`, { user: userInfo.userID })
-            .then((response) => {
-                const { success, profile_url } = response.data;
-                if (success) {
-                    setProfilePicUrl(profile_url);
-                } else {
-                    // Handle error or display default profile picture
-                    console.log('Failed to fetch profile picture');
-                }
-            })
-            .catch((error) => {
-                // Handle error or display default profile picture
-                console.error('Error fetching profile picture:', error);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    };
+  
+ 
   useEffect(() => {
         
     axios.post(`${BASE_URL}/S3ProfileList`, { user: username })
@@ -80,13 +67,13 @@ const ProfileScreen = ({route, friendPageVar }) => {
               setDesc(response.data.text);
               setImageL(response.data.image);
               setPostsCount(response.data.size);
+              if(!response.data.size){setPostsCount(0);}
               setType(response.data.type);
 
           })
   }, []);
   useEffect(() => {
     fetchUserInfo();
-    fetchProfilePicture();
     fetchEventsHosted();
     fetchEventsJoined();
     fetchEventsInvited(); 
@@ -335,7 +322,10 @@ const ProfileScreen = ({route, friendPageVar }) => {
   // Use useFocusEffect to refetch user info when the screen is focused
   useFocusEffect(
     React.useCallback(() => {
-      handlePageReset();
+      setUserInfo(RealuserInfo);
+    setFriendPage(false);
+    setModalVisible(false);
+    console.log("page reset")
       fetchUserInfo(); // Fetch user info when screen is focused
     }, [])
   );
@@ -406,9 +396,9 @@ const ProfileScreen = ({route, friendPageVar }) => {
               {/* Profile Picture */}
               <TouchableOpacity onPress={toggleChangePictureModal}>
               <View style={styles.profilePictureContainer}>
-                {profilePicUrl ? (
+                {userInfo.profilePic ? (
                   <Image
-                    source={{ uri: profilePicUrl }}
+                    source={{ uri: userInfo.profilePic }}
                     style={styles.profilePicture}
                   />
                 ) : (
@@ -449,13 +439,18 @@ const ProfileScreen = ({route, friendPageVar }) => {
                )}
                {/* Modal for Friend Requests */}
                <Modal visible={friendRequestsModalVisible} animationType="slide" transparent={true}>
-                  <View style={styles.modalBackground}>
-                    <View style={styles.modalContainer}>
-                      <Text style={styles.modalTitle}>Friend Requests:</Text>
-                      <ScrollView style={styles.modalContent}>
-                        {userInfo.friendRequests.map((request, index) => (
-                          <View key={index} style={styles.friendRequestItem}>
-                          <Text style={styles.friendRequestText}>{request}</Text>
+                <View style={styles.modalBackground}>
+                  <LinearGradient colors={['#e3f2fd', '#bbdefb']} style={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>Friend Requests:</Text>
+                    <ScrollView style={styles.modalContent}>
+                      {userInfo.friendRequests.map((request, index) => (
+                        <View key={index} style={styles.friendContainer}>
+                          <TouchableOpacity onPress={() => handleFriendPress(request)}>
+                            <View style={styles.friendInfo}>
+                              <Image source={{ uri: request.profilePic }} style={styles.profilePic} />
+                              <Text style={styles.friendName}>{request}</Text>
+                            </View>
+                          </TouchableOpacity>
                           <TouchableOpacity onPress={() => handleRespondFriendRequest(request, 'accept')}>
                             <FontAwesome name="check" size={24} color="green" />
                           </TouchableOpacity>
@@ -463,14 +458,14 @@ const ProfileScreen = ({route, friendPageVar }) => {
                             <FontAwesome name="times" size={24} color="red" />
                           </TouchableOpacity>
                         </View>
-                        ))}
-                      </ScrollView>
-                      <TouchableOpacity style={styles.closeButton} onPress={() => setFriendRequestsModalVisible(false)}>
-                        <Text style={styles.closeButtonText}>Close</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </Modal>
+                      ))}
+                    </ScrollView>
+                    <TouchableOpacity style={styles.closeButton} onPress={() => setFriendRequestsModalVisible(false)}>
+                      <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                </View>
+              </Modal>
               {/* Label for Posts */}
               <Text style={[styles.eventsLabel, { color: getLabelColor() }]}>Posts</Text>
 
@@ -869,7 +864,20 @@ paddingTop: 10,
       marginVertical: 10,
       alignItems: 'center', // Center the content horizontally
     },
-    
+    friendContainer: {
+      flexDirection: 'row',
+      justifyContent: 'right',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    friendInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingEnd: 220,
+    },
+    friendName: {
+      fontSize: 16,
+    },
     
     });
 export default ProfileScreen;

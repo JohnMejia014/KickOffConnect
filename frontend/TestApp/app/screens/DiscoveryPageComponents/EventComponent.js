@@ -52,7 +52,6 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
   };
   
   
-  
   const toggleParticipantsModal = () => {
     setShowParticipantsModal(!showParticipantsModal);
   };
@@ -129,7 +128,7 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
               {/* User Profile Picture (Placeholder) */}
               <View style={styles.profilePictureContainer}>
                 <Image
-                  source={{ uri: 'https://via.placeholder.com/50' }}
+                  source={{ uri: userInfo.profilePic }}
                   style={styles.profilePicture}
                 />
               </View>
@@ -151,7 +150,7 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
               style={[styles.button, isUserJoined ? styles.leaveButton : styles.joinButton]}
               onPress={handleJoinLeave}
             >
-              <Ionicons name={isUserJoined ? 'md-exit' : 'md-log-in'} size={20} color="white" />
+              <Ionicons name={isUserJoined ? 'exit-outline' : 'md-log-in'} size={20} color="white" />
               <Text style={styles.buttonText}>{isUserJoined ? 'Leave' : 'Join'}</Text>
             </TouchableOpacity>
           )}

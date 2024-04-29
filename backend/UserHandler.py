@@ -112,6 +112,7 @@ class UserHandler:
                 "totalRatingStars": {'N':'0'},
                 "eventsHosted": {'L':[]},
                 "eventsInvited": {'L':[]},
+                "profilePic" : {'S': ''},
             }
 
             # add user to the database
@@ -180,6 +181,22 @@ class UserHandler:
         if(count > 0):
             doesUserExist = True
         return value, doesUserExist
+    def setProfilePic(self, userID, url):
+        try: 
+            self.__table.update_item(
+                Key={'userID': userID},
+                UpdateExpression='SET profilePic = :profileUrl',
+                ExpressionAttributeValues={
+                    ':profileUrl': url,
+                },
+                ReturnValues='UPDATED_NEW'
+            )
+            return True, "Profile picture URL updated successfully."
+        except Exception as e:
+            # Handle any unexpected exceptions
+            error_message = f"Error: {str(e)}"
+            return False, error_message
+
     def sendFriendRequest(self, userID: str, friendID: str):
         try:
             # Check if the friendID exists in the database

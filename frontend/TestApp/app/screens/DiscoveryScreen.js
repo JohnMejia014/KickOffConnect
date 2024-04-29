@@ -213,8 +213,6 @@ useEffect(() => {
         setLocation(currentLocation);
         setLatitude(currentLocation.coords.latitude);
         setLongitude(currentLocation.coords.longitude);
-        setLatitude1(currentLocation.coords.latitude);
-        setLongitude1(currentLocation.coords.longitude);
       } catch (error) {
         console.error('Error getting location: ', error);
         setErrorMsg('Error getting location: ' + error.message);
@@ -258,6 +256,7 @@ useEffect(() => {
           })
         );
         setPlaces(placesWithPhotos);
+        console.log("placesWithPhotos", placesWithPhotos);
         setPlacesFetched(true);
         setFilterModalVisible(true);
 
@@ -273,7 +272,7 @@ useEffect(() => {
 
     fetchData();
     console.log("Finished fetching places");
-  }, [latitude, longitude]);
+  }, [latitude, longitude, isFocused]);
   
   const handleAddEventButtonPress = () => {
     setTempSelectedPlaceLocation(null);
@@ -443,7 +442,7 @@ useEffect(() => {
             style={styles.plusButton}
             onPress={handleAddEventButtonPress}
           >
-            <Text style={{ color: 'white', fontSize: 24 }}>+</Text>
+            <Text style={{ color: 'black', fontSize: 24 }}>+</Text>
           </TouchableOpacity>
         </>
       )}

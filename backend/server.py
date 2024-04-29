@@ -50,6 +50,7 @@ container = s3_resource.Bucket(bucket)
 
 dynamo = aws_mag_con.client('dynamodb')
 dynamo_resource = aws_mag_con.resource('dynamodb')
+file_path = os.path.abspath('backend/pic.jpg')
 
 
 
@@ -68,9 +69,8 @@ def signup():
             return jsonify({'message': _err})
         else:
 
-
             s3.upload_file(
-                'PP sample.jpg',
+                file_path,
                 bucket,
                 username + '/profile/profile.jpg',
                 ExtraArgs={'Metadata': {'User': username}}
@@ -305,8 +305,9 @@ def updateProfilePic():
 
         # Generate a presigned URL for the updated profile picture
         profile_url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': f'{user}/profile/profile.jpg'}, ExpiresIn=3600)
-
-        # You can update the user's profile URL in your database here
+        success, error = userHandler.setProfilePic(user, profile_url)
+        if not success:
+            return jsonify({'error': error}), 500
 
         response = {'success': True, 'profile_url': profile_url}
         return jsonify(response)

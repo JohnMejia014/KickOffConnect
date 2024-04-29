@@ -4,7 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient from expo
 
 const ChangeProfilePictureModal = ({ isVisible, onClose, userID }) => {
-    const [image, setImage] = useState(null);
+    const [image, setImage] = useState(userID.profilePic);
     const BASE_URL = 'http://192.168.1.119:5000';
 
     const pickImage = async () => {
@@ -15,7 +15,7 @@ const ChangeProfilePictureModal = ({ isVisible, onClose, userID }) => {
             quality: 1,
         });
 
-        if (!result.cancelled) {
+        if (!result.canceled) {
             setImage(result.assets[0].uri);
         }
     };
