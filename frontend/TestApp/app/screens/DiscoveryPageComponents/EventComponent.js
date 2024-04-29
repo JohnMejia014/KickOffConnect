@@ -5,7 +5,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { Rating } from 'react-native-ratings';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ErrorMessageModal from './ErrorMessageModal';
-
+import EventParticipantList from './EventParticipantList';
 const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveEvent, isProfilePage, isFriend }) => {
    const [showParticipantsModal, setShowParticipantsModal] = useState(false);
    const [isUserJoined, setIsUserJoined] = useState(initialEventInfo?.usersJoined?.includes(userInfo.userID));
@@ -15,9 +15,37 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
   const eventHost = eventInfo?.eventHost || 'Unknown Host';
   const eventDescription = eventInfo?.eventDescription || 'No Description';
   const eventAddress = eventInfo?.eventAddress || 'No Address';
+  const BASE_URL = 'http://192.168.1.119:5000';
+
   const [eventInfo, setEventInfo] = useState(initialEventInfo);
-  console.log("isUserJoined: ",isUserJoined);
- 
+  const [profilePic, setProfilePic] = useState(null);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/GetProfileURL`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userID: userInfo.userID,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile');
+        }
+
+        const data = await response.json();
+        setProfilePic(data.url);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+      fetchProfile();
+    }, []); // Only run the effect when modalVisible or participants change
+
   const [errorMessage, setErrorMessage] = useState(null);
   useEffect(() => {
     // This effect will run whenever eventInfo changes
@@ -50,7 +78,6 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
       }
     }
   };
-  
   
   
   const toggleParticipantsModal = () => {
@@ -129,7 +156,7 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
               {/* User Profile Picture (Placeholder) */}
               <View style={styles.profilePictureContainer}>
                 <Image
-                  source={{ uri: 'https://via.placeholder.com/50' }}
+                  source={{ uri: profilePic }}
                   style={styles.profilePicture}
                 />
               </View>
@@ -151,32 +178,17 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
               style={[styles.button, isUserJoined ? styles.leaveButton : styles.joinButton]}
               onPress={handleJoinLeave}
             >
-              <Ionicons name={isUserJoined ? 'md-exit' : 'md-log-in'} size={20} color="white" />
+              <Ionicons name={isUserJoined ? 'exit-outline' : 'md-log-in'} size={20} color="white" />
               <Text style={styles.buttonText}>{isUserJoined ? 'Leave' : 'Join'}</Text>
             </TouchableOpacity>
           )}
   
-          {/* Participants Modal */}
-          <Modal transparent={true} animationType="slide" visible={showParticipantsModal}>
-            <View style={styles.popupContainer}>
-              <View style={styles.popupContent}>
-                <TouchableOpacity style={styles.closeButton} onPress={toggleParticipantsModal}>
-                  <FontAwesome name="times" size={20} color="black" />
-                </TouchableOpacity>
-                <Text style={styles.modalHeaderText}>Participants</Text>
-                {/* Display the list of participants using FlatList */}
-                <FlatList
-                  data={eventInfo?.usersJoined || []}
-                  keyExtractor={(item, index) => index.toString()}  // Ensure each item has a unique key
-                  renderItem={({ item }) => (
-                    <View style={styles.participantItem}>
-                      <Text>{item}</Text>
-                    </View>
-                  )}
-                />
-              </View>
-            </View>
-          </Modal>
+          {/* Add EventParticipantList modal */}
+          <EventParticipantList
+            participants={eventInfo.usersJoined}
+            modalVisible={showParticipantsModal}
+            closeModal={() => setShowParticipantsModal(false)}
+          />
           <ErrorMessageModal
             message={errorMessage}
             onClose={() => setErrorMessage(null)}

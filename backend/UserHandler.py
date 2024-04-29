@@ -57,6 +57,7 @@ class UserHandler:
                 "totalRatingStars": {'N':'0'},
                 "eventsHosted": {'L':[]},
                 "eventsInvited": {'L':[]},
+                "profilePic" : {'S': ''},
             }
 
             # add user to the database
@@ -125,6 +126,22 @@ class UserHandler:
         if(count > 0):
             doesUserExist = True
         return value, doesUserExist
+    def setProfilePic(self, userID, url):
+        try: 
+            self.__table.update_item(
+                Key={'userID': userID},
+                UpdateExpression='SET profilePic = :profileUrl',
+                ExpressionAttributeValues={
+                    ':profileUrl': url,
+                },
+                ReturnValues='UPDATED_NEW'
+            )
+            return True, "Profile picture URL updated successfully."
+        except Exception as e:
+            # Handle any unexpected exceptions
+            error_message = f"Error: {str(e)}"
+            return False, error_message
+
     def sendFriendRequest(self, userID: str, friendID: str):
         try:
             # Check if the friendID exists in the database
@@ -158,32 +175,79 @@ class UserHandler:
         try:
             # Check if the friend request exists and is pending
             response = self.__table.query(
-                KeyConditionExpression=Key('sender').eq(friendID) & Key('receiver').eq(userID) & Key('status').eq('pending')
+                KeyConditionExpression=Key('userID').eq(userID)
+            )
+            responsefriend = self.__table.query(
+                KeyConditionExpression=Key('userID').eq(userID)
             )
             items = response['Items']
             if not items:
                 return False, "No pending friend request found."
+            user_item = response['Items'][0]            
+            friend_item = responsefriend['Items'][0]
 
+            friend_requests = user_item.get('friendRequests', [])
+            friendList = user_item.get('friends', [])
+            friend_friendList = friend_item.get('friends', [])
+            print(friend_requests)
+           
             # Assuming 'action' is either 'accept' or 'reject'
             if action == 'accept':
-                # Update the friend request to 'accepted'
-                for item in items:
-                    self.__table.update_item(
-                        Key={'sender': item['sender'], 'receiver': item['receiver']},
-                        UpdateExpression='SET #s = :status',
-                        ExpressionAttributeNames={'#s': 'status'},
-                        ExpressionAttributeValues={':status': 'accepted'}
-                    )
-                return True, "Friend requests accepted successfully."
+                # Remove friendID from friendRequests list
+                 # Remove friendID from friend_requests list if it exists
+                if friendID in friend_requests:
+                    friend_requests.remove(friendID)
+                    friendList.append(friendID)
+                    friend_friendList.append(userID)
+                else:
+                    return False, "Friend ID not found in friendRequests list."
+
+                # Update the user item with the modified friendRequests list
+                self.__table.update_item(
+                    Key={'userID': userID},
+                    UpdateExpression='SET friendRequests = :friend_requests',
+                    ExpressionAttributeValues={':friend_requests': friend_requests},
+                    ReturnValues='UPDATED_NEW'
+                )
+                print(1)
+                # Add friendID to the friends list of userID
+                self.__table.update_item(
+                    Key={'userID': userID},
+                    UpdateExpression='SET friends = :friendList',
+                    ExpressionAttributeValues={':friendList': friendList},
+                    ReturnValues='UPDATED_NEW'
+                )
+                print(2)
+                # Add userID to the friends list of friendID
+                self.__table.update_item(
+                    Key={'userID': friendID},
+                    UpdateExpression='SET friends = :friend_friendList',
+                    ExpressionAttributeValues={':friend_friendList': friend_friendList},
+                    ReturnValues='UPDATED_NEW'
+                )
+                print(3)
+                
+                return True, "Friend request accepted successfully."
+            
             elif action == 'reject':
                 # Remove the friend request
-                for item in items:
-                    self.__table.delete_item(Key={'sender': item['sender'], 'receiver': item['receiver']})
-                return True, "Friend requests rejected."
+                friend_requests.remove(friendID)
+
+                self.__table.update_item(
+                    Key={'userID': userID},
+                    UpdateExpression='SET friendRequests = :friend_requests',
+                    ExpressionAttributeValues={':friend_requests': friend_requests},
+                    ReturnValues='UPDATED_NEW'
+                )
+                print(4)
+                return True, "Friend request rejected."
+            
             else:
                 return False, "Invalid action."
+
         except Exception as e:
             return False, f"Error: {str(e)}"
+
 
     def getFriends(self, userID: str):
         try:

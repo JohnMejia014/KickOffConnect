@@ -7,60 +7,178 @@ import ProfileEventList from './DiscoveryPageComponents/ProfileEventList';
 import axios from 'axios';
 import { useScrollToTop} from "@react-navigation/native";
 import {Video} from "expo-av";
-
+import FriendsList from './ProfileComponents/FriendsList';
+import ProfileFeedList from './ProfileComponents/ProfileFeedList';
+import ChangeProfilePictureModal from './ProfileComponents/ChangeProfilePictureModal';
+import { Feather } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 const ProfileScreen = ({route }) => {
-
-
-  console.log(route)
-
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
   const [activeTab, setActiveTab] = useState('joined'); // State for the active tab
   const [postsCount, setPostsCount] = useState(0);
-  const BASE_URL = 'http://192.168.1.253:5000';
-  const [userInfo, setUserInfo] = useState(route.params?.friendInfo || route.params?.userInfo || {});
-  const [RealuserInfo, setRealUserInfo] = useState(route.params?.userInfo || {});
-  const [friendPage, setFriendPage] = useState(route.params?.friendStatus || false);
-  const [eventsJoined, setEventsJoined] = useState(null);
+  const BASE_URL = 'http://192.168.1.119:5000';
+  if(route.params.params.friendStatus){const initFriend = true}else{ const initFriend = false}
+  const [friendPage, setFriendPage] = useState(false);
+
+  const [userInfo, setUserInfo] = useState(
+    route.params?.params?.friendInfo !== undefined && Object.keys(route.params?.params?.friendInfo).length !== 0
+      ? route.params?.params?.friendInfo
+      : route.params?.params?.userInfo || {}
+  );  
+  const [RealuserInfo, setRealUserInfo] = useState(route.params?.params?.userInfo || {});
+   const [eventsJoined, setEventsJoined] = useState(null);
   const [eventsHosted, setEventsHosted] = useState(null);
   const [eventsInvited, setEventsInvited] = useState(null);
   const [loading, setLoading] = useState(true);
   const [friendsVisible, setFriendsVisible] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [friendRequests, setFriendRequests] = useState(userInfo.friendRequests);
+  const [friendRequestsModalVisible, setFriendRequestsModalVisible] = useState(false);
+  const [loading2, setLoading2] = useState(false);
+  const [friendProfilePicList, setFriendProfilePicList] = useState({});
+  const [friendRequestProfilePicList, setFriendRequestProfilePicList] = useState({});
 
-  const [friendsCount, setFriendsCount] = useState(userInfo.friends.length);
+  const [profilePic, setProfilePic] = useState(null);
   const [feed, setFeed] = useState([]);
   const [imageL, setImageL] = useState([]);
   const [length, setLength] = useState(0)
   const [desc, setDesc] = useState([]);
   const [type, setType] = useState([]);
-  const username = userInfo.userID
   const ref = useRef(null);
+  const [changePictureModalVisible, setChangePictureModalVisible] = useState(false);
+
+  // Function to toggle the visibility of the change picture modal
+  const toggleChangePictureModal = () => {
+    fetchUserInfo();
+    setChangePictureModalVisible(!changePictureModalVisible);
+  };
   useScrollToTop(ref)
-
-
-
-
-
-
-
-
+  
+ 
   useEffect(() => {
-
-    axios.post(`${BASE_URL}/S3ProfileList`, { user: username })
+        
+    axios.post(`${BASE_URL}/S3ProfileList`, { user: userInfo.userID })
         .then((response) => {
               
               setFeed(response.data.list);
               setLength(response.data.size);
               setDesc(response.data.text);
               setImageL(response.data.image);
+              setPostsCount(response.data.size);
+              if(!response.data.size){setPostsCount(0);}
               setType(response.data.type);
 
           })
   }, []);
+  useEffect(() => {
+    fetchUserInfo();
+    fetchEventsHosted();
+    fetchEventsJoined();
+    fetchEventsInvited(); 
+  
+  }, [modalVisible]);
+  
+  const handleRespondFriendRequest = async (friendID, action) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/respondFriendRequest`, {
+        userID: userInfo.userID,
+        friendID,
+        action,
+      });
+      if (response.data.success) {
+        // Update the friend requests list based on the response
+        fetchUserInfo();
+      } else {
+        throw new Error('Failed to respond to friend request');
+      }
+    } catch (error) {
+      console.error('Error responding to friend request:', error);
+      // Handle error if needed
+    }
+  };
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/GetProfileURL`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userID: userInfo.userID,  // Use 'userID' instead of 'user' to match the Flask route
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+  
+      const data = await response.json();
+      // Assuming data.friend_urls is the object containing friend IDs and profile URLs
+      // You can use Object.entries() to iterate over the object
+      setProfilePic(data.url);
 
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+  const fetchFriendRequestProfile = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/GetFriendsProfileURLs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          friendList: userInfo.friendRequests
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+  
+      const data = await response.json();
+      // Assuming data.friend_urls is the object containing friend IDs and profile URLs
+      // You can use Object.entries() to iterate over the object
+      setFriendRequestProfilePicList(data.friend_urls);
 
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+  const fetchProfiles = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/GetFriendsProfileURLs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userID: userInfo.userID,  // Use 'userID' instead of 'user' to match the Flask route
+          friendList: userInfo.friends
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch profiles');
+      }
+  
+      const data = await response.json();
+      // Assuming data.friend_urls is the object containing friend IDs and profile URLs
+      // You can use Object.entries() to iterate over the object
+      setFriendProfilePicList(data.friend_urls);
+
+    } catch (error) {
+      console.error('Error fetching profiles:', error);
+    }
+  };
+  // Call the fetchProfiles function
+
+  const handleMediaPress = async =>{
+
+  }
   const fetchFriends = async () => {
     try {
       const response = await fetch(`${BASE_URL}/getFriends`, {
@@ -71,7 +189,6 @@ const ProfileScreen = ({route }) => {
         body: JSON.stringify({ userID: userInfo.userID }), // Send userID to fetch friends
       });
       const data = await response.json();
-      console.log("friend data: ",data.friends);
       setFriendsList(data.friends); // Update friendsList state
       setLoading(false);
     } catch (error) {
@@ -85,28 +202,29 @@ const ProfileScreen = ({route }) => {
   };
 
   const handleFriendPress = async (friend) => {
-    console.log("Friend :", friend);
     if (friend.userID === RealuserInfo.userID) {
       // If the selected friend is the real user, reset to default view
       setUserInfo(RealuserInfo);
+      setFriendPage(false);
       console.log("making user id friend: ", userInfo.userID);
       fetchFeedData(friend);
-      setFriendPage(false);
 
     } else {
       // Otherwise, set the selected friend's info and navigate to their page\      
 
       setUserInfo(friend);
       console.log("making user id friend: ", userInfo.userID);
-      fetchFeedData(friend);
       setFriendPage(true);
+      fetchFeedData(friend);
+      fetchUserProfile();
+
+
 
       // Fetch the selected friend's posts and events
     }
     setModalVisible(false);
   };
   const fetchFeedData = (friend) => {
-    console.log("username: ", friend.userID);
     axios
       .post(`${BASE_URL}/S3ProfileList`, { user: friend.userID })
       .then((response) => {
@@ -114,12 +232,13 @@ const ProfileScreen = ({route }) => {
         setLength(response.data.size);
         setDesc(response.data.text);
         setImageL(response.data.image);
+        setPostsCount(response.data.size);
+        if(!response.data.size){setPostsCount(0);}
         setType(response.data.type);
-        console.log("response");
       })
 
       .catch((error) => {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching datas:', error);
         // Handle error if needed
       });
   };
@@ -128,40 +247,8 @@ const ProfileScreen = ({route }) => {
     setFriendPage(false);
     setModalVisible(false);
   };
-  
-  
 
-  const renderFriendsList = () => {
-    if (!modalVisible) {
-      return null;
-    }
-    return (
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Friends:</Text>
-            <ScrollView style={styles.modalContent}>
-              {friendsList.map((friend, index) => (
-                <TouchableOpacity key={index} onPress={() => handleFriendPress(friend)}>
-                  <Text style={styles.friendName}>
-                    {friend.userID}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-  
-    const [bio, setBio] = useState(userInfo.bio || '');
-    const [isEditingBio, setIsEditingBio] = useState(false);
     const joinEvent = async (eventID) => {
-      console.log("eventID: ", eventID, "userID", userInfo.userID);
       try {
         const response = await axios.post(`${BASE_URL}/joinEvent`, {
           eventID: eventID,
@@ -178,7 +265,8 @@ const ProfileScreen = ({route }) => {
         throw new Error('Failed to join the event');
       }
     };
-  
+    const getLabelColor = () => (friendPage ? 'black' : '#fff');
+
     const leaveEvent = async (eventID) => {
       console.log("eventID: ", eventID, "userID", userInfo.userID);
 
@@ -199,7 +287,28 @@ const ProfileScreen = ({route }) => {
         throw new Error('Failed to leave the event');
       }
     };
-  
+    const handleFriendRequestsPress = () => {
+        setFriendRequestsModalVisible(true); // Set friendRequestsModalVisible to true to open the modal
+      };
+    const removeFriend = async (friend) => {
+      console.log("unadd friend: ", friend);
+      try {    
+        const response = await fetch(`${BASE_URL}/unaddFriend`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userID: userInfo.userID, friendID: friend.userID }), // Use userInformation.userID in the request body
+        });
+        const data = await response.json();
+       console.log("succes or not", data.success);
+        fetchUserInfo();
+        fetchFriends();
+
+      } catch (error) {
+        console.error('Error removing friend:', error);
+      }
+    };
     const fetchUserInfo = async () => {
       try {    
         const response = await fetch(`${BASE_URL}/getUserInfo`, {
@@ -207,11 +316,11 @@ const ProfileScreen = ({route }) => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ userID: userInfo.userID }), // Use userInformation.userID in the request body
+          body: JSON.stringify({ 
+            userID: userInfo.userID,           }), // Use userInformation.userID in the request body
         });
         const data = await response.json();
        
-        console.log("data: ", data);
         setUserInfo(data.userInfo); // Update userInfo state
 
       } catch (error) {
@@ -293,65 +402,30 @@ const ProfileScreen = ({route }) => {
     fetchEventsHosted();
     fetchEventsJoined();
     fetchEventsInvited();
+    fetchProfiles();
+    fetchFriendRequestProfile();
+    fetchUserProfile();
   }, []);
 
   // Use useFocusEffect to refetch user info when the screen is focused
   useFocusEffect(
     React.useCallback(() => {
-      handlePageReset();
+      setUserInfo(RealuserInfo);
+    setFriendPage(false);
+    setModalVisible(false);
+    console.log("page reset")
       fetchUserInfo(); // Fetch user info when screen is focused
+      fetchProfiles();
+    fetchUserProfile();
+    fetchFriendRequestProfile();
     }, [])
   );
  
-
   const [routes] = useState([
     { key: 'hosted', title: 'Events Hosted' },
     { key: 'joined', title: 'Events Joined' },
     { key: 'invited', title: 'Events Invited' },
-  ]);
-  const renderFeedItems = () => {
-    if (!feed || feed.length === 0) {
-      return null; // Return null if feed is empty or undefined
-  }
-    const rows = [];
-    let currentRow = [];
-    console.log("type: ", type);
-    feed.forEach((item, index) => {
-      // Assuming type[index] is either 'mp4' or 'image' based on your existing code
-      const mediaType = type[index];
-      const mediaSource = imageL[index];
-      const mediaDescription = desc[index];
-  
-      currentRow.push(
-        <View key={index} style={styles.postContainer}>
-          <TouchableOpacity onPress={() => handleMediaPress(mediaSource, mediaType)}>
-            {mediaType === 'mp4' ? (
-              <Video style={styles.imageView} source={{ uri: mediaSource }} />
-            ) : (
-              <Image style={styles.imageView} source={{ uri: mediaSource }} />
-            )}
-          </TouchableOpacity>
-          <Text>{mediaDescription}</Text>
-        </View>
-      );
-  
-      // If the current row is filled (reached 3 items) or we've reached the end of the feed items
-      if (currentRow.length === 3 || index === feed.length - 1) {
-        rows.push(
-          <View key={rows.length} style={styles.gridRow}>
-            {currentRow}
-          </View>
-        );
-        currentRow = []; // Reset currentRow for the next row
-      }
-    });
-  
-    return rows;
-  };
-  
-  
-  
-  
+  ]);  
   const renderContent = () => {
     switch (activeTab) {
       case 'joined':
@@ -384,8 +458,6 @@ const ProfileScreen = ({route }) => {
     if(events === null){
       return null;
     }
-    console.log("events: ", events);
-    console.log("friendsPage: ", friendPage);
     return (
       <View>
         <ProfileEventList
@@ -402,69 +474,122 @@ const ProfileScreen = ({route }) => {
       </View>
     );
   };
-  const renderContentWithFriendsLabel = () => {
-    if (friendPage) {
-      return (
-        <View style={styles.contentContainer}>
-          <Text style={styles.friendsPageLabel}>Friends Page</Text>
-          {renderContent()}
-        </View>
-      );
-    } else {
-      return renderContent();
-    }
-  };
-    const handleEditButtonPress = () => {
-      setIsEditingBio(!isEditingBio);
-    };
+
+   
     return (
         <LinearGradient colors={friendPage ? ['#e3f2fd', '#bbdefb'] : ['#0d47a1', '#1565c0']}
          style={styles.container}>
         <ScrollView contentContainerStyle={[styles.scrollViewContent, { paddingBottom: 100 }]}>
 
-          <SafeAreaView style={styles.container}>
+          
+        <SafeAreaView style={styles.container}>
             <View style={styles.profileContainer}>
               {/* Profile Picture */}
+              <TouchableOpacity onPress={toggleChangePictureModal}>
               <View style={styles.profilePictureContainer}>
-                {/* Placeholder circle */}
-                <View style={styles.placeholderCircle}></View>
+                {profilePic ? (
+                  <Image
+                    source={{ uri: profilePic }}
+                    style={styles.profilePicture}
+                  />
+                ) : (
+                  <View style={styles.placeholderCircle} />
+                )}
               </View>
+            </TouchableOpacity>
+
     
               {/* User Information */}
               <View style={styles.header}>
-                <Text style={styles.username}>{userInfo.userID}</Text>
+                <Text style={[styles.username, { color: getLabelColor() }]}>{userInfo.userID}</Text>
     
                 {/* Number of Posts and Friends in the same horizontal line */}
                 <View style={styles.userStatsContainer}>
                   {/* Number of Posts */}
-                  <View style={styles.userStats}>
-                    <Text style={styles.statsLabel}>Posts </Text>
-                    <Text style={styles.statsValue}>{postsCount}</Text>
+                  <View style={styles.userStatsItem}>
+                    <Text style={styles.userStatsLabel}>Posts </Text>
+                    <Text style={styles.userStatsValue}>{postsCount}</Text>
                   </View>
-    
+
                   {/* Number of Friends */}
-                <TouchableOpacity onPress={handleFriendsPress}>
-                  <Text style={styles.statsLabel}>Friends</Text>
-                  <Text style={styles.statsValue}>{userInfo.friends.length}</Text>
-                </TouchableOpacity>
+                  <View style={styles.userStatsItem}>
+                    <TouchableOpacity onPress={handleFriendsPress}>
+                      <Text style={styles.userStatsLabel}>Friends</Text>
+                      <Text style={styles.userStatsValue}>{userInfo.friends.length}</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
+
+              {/* Friend Requests */}
+              {!friendPage && (
+                <TouchableOpacity onPress={handleFriendRequestsPress} style={styles.friendRequestsButton}>
+                <Feather name="mail" size={24} color="black" style={styles.mailIcon} />
+                <Text style={styles.friendRequestsText}>Friend Requests</Text>
+                <Text style={styles.friendRequestsCount}>{userInfo.friendRequests.length}</Text>
+              </TouchableOpacity>
+               )}
+               {/* Modal for Friend Requests */}
+               <Modal visible={friendRequestsModalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalBackground}>
+                  <LinearGradient colors={['#e3f2fd', '#bbdefb']} style={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>Friend Requests:</Text>
+                    <ScrollView style={styles.modalContent}>
+                      {userInfo.friendRequests.map((request, index) => (
+                        <View key={index} style={styles.friendRequestItem}>
+                        <View style={styles.friendRequestItemLeft}>
+                          <Image
+                            source={{ uri: friendRequestProfilePicList[request] || 'default-profile.png' }}
+                            style={styles.friendRequestProfilePic}
+                          />
+                          <Text style={styles.friendRequestName}>{request}</Text>
+                        </View>
+                        <View style={styles.friendRequestItemRight}>
+                          <TouchableOpacity
+                            style={[styles.friendRequestButton, styles.acceptButton]}
+                            onPress={() => handleRespondFriendRequest(request, 'accept')}
+                          >
+                            <FontAwesome name="check" size={20} color="green" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.friendRequestButton, styles.declineButton]}
+                            onPress={() => handleRespondFriendRequest(request, 'decline')}
+                          >
+                            <FontAwesome name="times" size={20} color="red" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      ))}
+                    </ScrollView>
+                    <TouchableOpacity style={styles.closeButton} onPress={() => setFriendRequestsModalVisible(false)}>
+                      <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                </View>
+              </Modal>
               {/* Label for Posts */}
-              <Text style={styles.eventsLabel}>Posts</Text>
+              <Text style={[styles.eventsLabel, { color: getLabelColor() }]}>Posts</Text>
 
 
 
-                    {/* Display feed items */}
+                  {/* Display feed items */}
                   <View style={styles.feedContainer}>
                     {loading ? (
                       <ActivityIndicator size="large" />
                     ) : (
-                      renderFeedItems()
+                      <ProfileFeedList
+                        feed={feed}
+                        type={type}
+                        imageL={imageL}
+                        desc={desc}
+                        handleMediaPress={(mediaSource, mediaType) => handleMediaPress(mediaSource, mediaType)}
+                      />
                     )}
                   </View>
 
 
+
                   {/* Label for Events */}
-                  <Text style={styles.eventsLabel}>Events</Text>
+                  <Text style={[styles.eventsLabel, { color: getLabelColor() }]}>Events</Text>
 
                  {/* Tab Buttons */}
             <View style={styles.tabButtonContainer}>
@@ -496,12 +621,26 @@ const ProfileScreen = ({route }) => {
           </View>
 
                 {/* Render Content */}
-                {renderContentWithFriendsLabel()}
+                {renderContent()}
                 {/* View for EventListComponent */}
-                {renderFriendsList()}
-
+              {/* Change Profile Picture Modal */}
+              {!friendPage && (
+              <ChangeProfilePictureModal
+                      isVisible={changePictureModalVisible}
+                      onClose={toggleChangePictureModal}
+                      userID={userInfo.userID}
+                    />
+              )}
                 {/* {renderEventList()} */}
-
+                <FriendsList
+              modalVisible={modalVisible}
+              friendsList={friendsList}
+              handleFriendPress={handleFriendPress}
+              closeModal={() => setModalVisible(false)}
+              handleRemovePress={removeFriend}
+              friendPage={friendPage}
+              friendPPs={friendProfilePicList}
+      />
           </View>
           </SafeAreaView>
           </ScrollView>
@@ -520,6 +659,11 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: 'red',
       },
+  errorText: {
+    fontSize: 18,
+    color: 'red',
+  },
+  
   profilePictureContainer: {
     marginTop: 50,
     width: 100,
@@ -527,23 +671,32 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     backgroundColor: '#ccc', // Placeholder color for the circle
     overflow: 'hidden',
+    borderWidth: 1, // Add a border
+    borderColor: 'lightblue', // Customize border color
+
   },
   placeholderCircle: {
     width: '100%',
     height: '100%',
     borderRadius: 50,
-    backgroundColor: 'gray', // Color for the placeholder circle
+  },
+  profilePicture: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
   },
   header: {
     marginBottom: 20,
   },
   username: {
-    paddingTop: 20,
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     textAlign: 'center',
+    marginBottom: 10,
+    paddingTop: 20,
   },
+  
   section: {
     marginVertical: 10,
     width: '80%',
@@ -560,6 +713,7 @@ const styles = StyleSheet.create({
     borderRadius: 5, // Adjust border radius as needed
     backgroundColor: '#1565c0',
     padding: 5,
+    borderRadius: 50,
   },
   editButtonText: {
     color: '#fff',
@@ -577,25 +731,50 @@ const styles = StyleSheet.create({
   },
   userStatsContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-around', // Align items on opposite ends of the row
+    marginTop: 20,
+    borderRadius:12,
+marginBottom: 30,
+paddingTop: 10,
+  },
+  userStatsItem: {
+    flexDirection: 'column',
     justifyContent: 'space-around',
     marginTop: 10,
-    
+    marginHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: '#1565c0', // Blue background color for the button
+    marginBottom: 30,
+    paddingVertical: 15, // Adjust vertical padding
+    paddingHorizontal: 20, // Adjust horizontal padding
+    borderWidth: 0.5, // Add a border
+    borderColor: 'lightblue', // Customize border color
+
+    elevation: 3, // For Android elevation
   },
-  userStats: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: 10,
-        marginHorizontal: 10,
-      },
-      statsLabel: {
-        fontSize: 16,
-        color: '#333',
-      },
-      statsValue: {
+  
+      userStatsLabel: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
+        color: 'white',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 10,
+        backgroundColor: '#1565c0', // Blue background color for the button
+        textAlign: 'center',
+        overflow: 'hidden', // Hide overflow content if any
       },
+      
+      userStatsValue: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        color: 'black',
+        padding: 8, // Add padding around the text
+        borderRadius: 8, // Add rounded corners
+        
+      },
+      
       eventItem: {
         padding: 10,
         borderBottomWidth: 1,
@@ -672,49 +851,63 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3,
       },
-      friendsContainer: {
-        marginTop: 20,
+      friendRequestsButton: {
+        flexDirection: 'row',
         alignItems: 'center',
-      },
-      friendsTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        backgroundColor: '#1565c0', // Example background color
+        borderWidth: 0.5, // Add a border
+        borderColor: 'lightblue', // Customize border color
+    
+        padding: 10,
+        borderRadius: 15,
         marginBottom: 10,
       },
-      friendName: {
-        fontSize: 16,
-        marginBottom: 5,
+      mailIcon: {
+        marginRight: 10,
+      },
+      friendRequestsText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'black',
+      },
+      friendRequestsCount: {
+        marginLeft: 'auto', // Push the count to the right
+        fontWeight: 'bold',
       },
       modalBackground: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0)',
-        //justifyContent: 'flex-end', // Modal will appear at the bottom
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Green background color with some transparency
+        justifyContent: 'center',
+        alignItems: 'center',
       },
       modalContainer: {
         backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingTop: 100,
-        paddingHorizontal: 20,
-        paddingBottom: 10,
+        borderRadius: 10,
+        padding: 20,
+        width: '80%',
         maxHeight: '80%', // Adjust as needed
       },
       modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
+        textAlign: 'center',
       },
-      modalContent: {
-       // minHeight: 20, // Example height, adjust as needed
+  
+    
+      friendRequestText: {
+        fontSize: 16,
+        flex: 1, // Take up remaining space in the row
       },
       closeButton: {
-        marginTop: 10,
+        marginTop: 20,
         alignSelf: 'flex-end',
       },
       closeButtonText: {
         fontSize: 16,
         color: '#333',
       },
+  
       Heading:{
         fontSize:32,
         marginTop:60,
@@ -760,11 +953,60 @@ const styles = StyleSheet.create({
         resizeMode: 'contain',
     },
     postContainer: {
-      backgroundColor: '#ADD8E6', // Light background color for the post container
+      backgroundColor: 'lightblue', // Light background color for the post container
       borderRadius: 10,
       padding: 10,
       marginVertical: 10,
       alignItems: 'center', // Center the content horizontally
+    },
+    profilePic: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 10,
+    },
+    friendContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    friendRequestItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderBottomWidth: 1,
+      borderBottomColor: 'lightblue',
+      paddingVertical: 10,
+    },
+    friendRequestItemLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    friendRequestProfilePic: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 10,
+    },
+    friendRequestName: {
+      fontSize: 16,
+    },
+    friendRequestItemRight: {
+      flexDirection: 'row',
+    },
+    friendRequestButton: {
+      padding: 5,
+      marginHorizontal: 5,
+      borderRadius: 5,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    acceptButton: {
+      backgroundColor: 'lightgreen',
+    },
+    declineButton: {
+      backgroundColor: 'salmon',
     },
     
     });

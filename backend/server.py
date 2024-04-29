@@ -51,6 +51,9 @@ container = s3_resource.Bucket(bucket)
 
 dynamo = aws_mag_con.client('dynamodb')
 dynamo_resource = aws_mag_con.resource('dynamodb')
+file_path = os.path.abspath('backend/pic.jpg')
+
+
 
 
 @app.route('/signup', methods=['POST'])
@@ -62,27 +65,26 @@ def signup():
     print(data)
     if 1:
         # Call the signup function from the Database class
-        userSignup, user_info, _err = userHandler.signupUser(
-            {"username": username, "email": email, "password": password})
+        userSignup, user_info, _err = userHandler.signupUser({"username":username, "email":email, "password":password})
         if userSignup == False:
             return jsonify({'message': _err})
         else:
 
             s3.upload_file(
-                'PP sample.jpg',
+                file_path,
                 bucket,
                 username + '/profile/profile.jpg',
                 ExtraArgs={'Metadata': {'User': username}}
             )
-
+            print('userinfo signup: ', user_info)
             return jsonify({'message': 'User successfully created', 'userInfo': user_info})
     else:
-        return jsonify({'message': 'Invalid request'})
+        return jsonify({'message': 'Invalid request' })
 
 
 @app.route('/login', methods=['POST'])
 def login():
-    # username will be used as input to login, can be username or email
+    #username will be used as input to login, can be username or email
     data = request.get_json()
     username = data.get('email')
     password = data.get('password')
@@ -97,8 +99,7 @@ def login():
             return jsonify({'message': _err})
     else:
         return jsonify({'message': 'Invalid request'})
-
-
+    
 @app.route('/addEvent', methods=['POST'])
 def addEvent():
     data = request.get_json()
@@ -115,13 +116,9 @@ def addEvent():
     eventVisibility = data.get('eventVisibility')
     usersInvited = data.get('usersInvited')
     usersJoined = data.get('usersJoined')
-
-    if eventAddress and eventName and eventSports:
-        addedEvent, _err = mapHandler.createEvent(
-            {"eventID": eventID, "eventName": eventName, "eventDescription": eventDescription,
-             "eventAddress": eventAddress, "eventLat": eventLat, "eventLong": eventLong, "eventTime": eventTime,
-             "eventDate": eventDate, "eventSports": eventSports, "eventHost": eventHost,
-             "eventVisibility": eventVisibility, "usersInvited": usersInvited, "usersJoined": usersJoined})
+    
+    if  eventAddress and eventName and eventSports:
+        addedEvent, _err = mapHandler.createEvent({"eventID": eventID, "eventName": eventName,"eventDescription": eventDescription, "eventAddress": eventAddress, "eventLat": eventLat, "eventLong": eventLong, "eventTime": eventTime, "eventDate": eventDate, "eventSports": eventSports, "eventHost": eventHost, "eventVisibility": eventVisibility, "usersInvited": usersInvited, "usersJoined": usersJoined })
         if addedEvent:
             return jsonify({'message': 'Event successfully created'})
         else:
@@ -129,11 +126,10 @@ def addEvent():
     else:
         return jsonify({'message': 'Invalid request'})
 
-
 @app.route('/inviteFriends', methods=['POST'])
 def inviteFriends():
     data = request.get_json()
-    print("Data in invite friends: ", data)
+    print("Data in invite friends: ",data)
     selectedFriends = data.get('selectedFriends')
     event_id = data.get('eventID')
 
@@ -148,6 +144,7 @@ def inviteFriends():
         return jsonify({'error': error}), 500  # Return appropriate error status code
 
 
+
 @app.route('/joinEvent', methods=['POST'])
 def joinEvent():
     data = request.get_json()
@@ -158,13 +155,11 @@ def joinEvent():
         success, updated_event, error = mapHandler.joinEvent(userID, eventID)
         if success:
             print("Returning User joined the event successfully to front end")
-            return jsonify(
-                {'message': 'User joined the event successfully', 'event': updated_event, 'success': success}), 200
+            return jsonify({'message': 'User joined the event successfully', 'event': updated_event, 'success':success}), 200
         else:
             return jsonify({'error': error}), 400
     else:
         return jsonify({'error': 'Invalid request'}), 400
-
 
 # New route for leaving an event
 @app.route('/leaveEvent', methods=['POST'])
@@ -177,21 +172,21 @@ def leave_event():
         success, updated_event, error = mapHandler.leaveEvent(userID, eventID)
 
         if success:
-            return jsonify(
-                {'message': 'User left the event successfully', 'event': updated_event, 'success': success}), 200
+            return jsonify({'message': 'User left the event successfully', 'event': updated_event, 'success':success}), 200
         else:
             return jsonify({'error': error}), 400
     else:
         return jsonify({'error': 'Invalid request'}), 400
 
-
 @app.route('/getEvents', methods=['POST'])
 def getEvents():
     data = request.get_json()
+    user = data.get('userID')
     user_lat = data.get('latitude')
     user_long = data.get('longitude')
     filters = data.get('filters')
     places = data.get('places')
+    print(user_lat,user_long)
     radius = 1000  # You might want to include a radius in the request data
     if user_lat and user_long and radius:
         # Convert latitude, longitude, and radius to float
@@ -200,7 +195,7 @@ def getEvents():
         radius = float(radius)
 
         # Retrieve events within the specified radius
-        events, error = mapHandler.get_events_within_radius(user_lat, user_long, radius, filters, places)
+        events, error = mapHandler.get_events_within_radius(user, user_lat, user_long, radius, filters, places)
         if error:
             return jsonify({'error': error}), 500
         else:
@@ -235,27 +230,39 @@ def getEventInfo():
     # Query the events collection for the events with the given IDs
     events, error = mapHandler.getEventsList(event_ids)
     if error:
-        return jsonify({"error": error})
+        return jsonify({"error":  error})
     else:
-        return jsonify({"events": events})
-
-
+        return jsonify({"events":  events})
 @app.route('/getFriends', methods=['POST'])
 def getFriends():
     data = request.get_json()
     userID = data.get('userID')
     print("userID: ", userID)
-    # Get the list of event IDs from the request data
-
-    # Query the events collection for the events with the given IDs
+        # Get the list of event IDs from the request data
+        
+        # Query the events collection for the events with the given IDs
     friends, error = userHandler.getFriends(userID)
     print("friends: ", friends)
-    # Prepare the response JSON
+        # Prepare the response JSON
     if error:
-        return jsonify({"error": error})
+        return jsonify({"error":  error})
     else:
-        return jsonify({"friends": friends})
-
+        return jsonify({"friends":  friends})
+@app.route('/unaddFriend', methods=['POST'])
+def unaddFriend():
+    data = request.get_json()
+    userID = data.get('userID')
+    friendID = data.get('friendID')
+    print(data)
+        # Get the list of event IDs from the request data
+        
+        # Query the events collection for the events with the given IDs
+    success, error = userHandler.unFriend(userID, friendID)
+        # Prepare the response JSON
+    if error:
+        return jsonify({"error":  error})
+    else:
+        return jsonify({"success":  success})
 
 @app.route('/VidDownload', methods=['POST'])
 def VidDownload():
@@ -270,9 +277,56 @@ def VidDownload():
 
     return jsonify(response)
 
+@app.route('/getProfilePic', methods=['POST'])
+def getProfilePic():
+    data = request.get_json()
+    user = data.get('user')
+
+    if not user:
+        return jsonify({'error': 'Missing user information'}), 400
+
+    try:
+        # Check if the user's profile image exists in the S3 bucket
+        s3.head_object(Bucket=bucket, Key=user + '/profile/profile.jpg')
+        # If it exists, generate a presigned URL to access the image
+        profile_url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': user + '/profile/profile.jpg'}, ExpiresIn=3600)
+        response = {'success': True, 'profile_url': profile_url}
+        return jsonify(response)
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'User profile not found'}), 404
+
+@app.route('/updateProfilePic', methods=['POST'])
+def updateProfilePic():
+    try:
+        # Get user ID and image file from the request
+        user = request.form.get('user')
+        image_file = request.files['file']
+        print(user, image_file)
+        if not user or not image_file:
+            return jsonify({'error': 'Missing user or image information'}), 400
+
+        # Upload the new image to the S3 bucket without specifying ACL
+        s3.upload_fileobj(image_file, bucket, f'{user}/profile/profile.jpg')
+
+        # Generate a presigned URL for the updated profile picture
+        profile_url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': f'{user}/profile/profile.jpg'}, ExpiresIn=3600)
+        success, error = userHandler.setProfilePic(user, profile_url)
+        if not success:
+            return jsonify({'error': error}), 500
+
+        # You can update the user's profile URL in your database here
+
+        response = {'success': True, 'profile_url': profile_url}
+        return jsonify(response)
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'Failed to update profile picture'}), 500
+
 
 @app.route('/S3Uploader', methods=['POST'])
 def S3Uploader():
+
     data = request.get_json()
     image = data.get('image')
     text = data.get('text')
@@ -398,7 +452,6 @@ def S3Uploader():
         }
         return jsonify(response)
 
-
 def S3DownloaderImg(key, count):
     folder = key
     location = appPath + '/Navigation/FeedPageDiscovery/Posts/post' + str(
@@ -413,9 +466,11 @@ def S3DownloaderImg(key, count):
 
 @app.route('/SearchUsers', methods=['POST'])
 def SearchUsers():
+
     data = request.get_json()
     friend = data.get('query')
     user = data.get('user')
+
 
     friends = dynamo.get_item(TableName='Users', Key={'userID': {'S': user}})
     friendList = friends['Item']['friends']['L']
@@ -425,7 +480,7 @@ def SearchUsers():
         if i['S'] == friend:
             isFriend = True
 
-    friendInfo, exists = userHandler.findUser(friend)
+
 
     table = dynamo_resource.Table('Users')
 
@@ -470,6 +525,75 @@ def SearchUsers():
     }
 
     return jsonify(response)
+
+@app.route('/GetFriendsProfileURLs', methods=['POST'])
+def GetFriendsProfileURLs():
+    data = request.get_json()
+    friendList = data.get('friendList')
+
+    # Initialize a dictionary to store friend IDs and profile URLs
+    friend_urls = {}
+
+    for friend_id in friendList:
+        # Query S3 to get the profile image URL for each friend
+        imgResp = s3.list_objects(
+            Bucket=bucket,
+            Prefix=friend_id + "/profile/",
+            Marker=friend_id + "/profile/",
+            MaxKeys=1,
+        )
+
+        # Check if the friend has a profile image
+        if 'Contents' in imgResp and len(imgResp['Contents']) > 0:
+            imgKey = imgResp['Contents'][0]['Key']
+            # Generate a presigned URL for the profile image
+            url = s3.generate_presigned_url('get_object',
+                                            Params={'Bucket': bucket, 'Key': imgKey},
+                                            ExpiresIn=3600)
+            # Add the friend ID and profile URL to the dictionary
+            friend_urls[friend_id] = url
+
+    response = {
+        'success': True,
+        'friend_urls': friend_urls,
+    }
+
+    return jsonify(response)
+
+
+@app.route('/GetProfileURL', methods=['POST'])
+def GetProfileURL():
+    data = request.get_json()
+    user = data.get('userID')
+
+    # Initialize a dictionary to store friend IDs and profile URLs
+
+        # Query S3 to get the profile image URL for each friend
+    imgResp = s3.list_objects(
+            Bucket=bucket,
+            Prefix=user + "/profile/",
+            Marker=user + "/profile/",
+            MaxKeys=1,
+        )
+    print(imgResp)
+        # Check if the friend has a profile image
+    if 'Contents' in imgResp and len(imgResp['Contents']) > 0:
+        imgKey = imgResp['Contents'][0]['Key']
+            # Generate a presigned URL for the profile image
+        url = s3.generate_presigned_url('get_object',
+                                            Params={'Bucket': bucket, 'Key': imgKey},
+                                            ExpiresIn=3600)
+            # Add the friend ID and profile URL to the dictionary
+
+    response = {
+        'success': True,
+        'url': url,
+    }
+
+    return jsonify(response)
+
+
+
 
 
 def S3DownloaderText(key, count):
@@ -557,6 +681,7 @@ def S3ProfileList():
     print("user:", user)
     total = []
     dirLen = len(str(user + "/posts/"))
+    print("DirLen: ", dirLen)
     userResp = s3.list_objects(
         Bucket=bucket,
         Prefix=user + "/posts",
@@ -649,8 +774,6 @@ def S3ProfileList():
                 }
     print("response: ", response)
     return jsonify(response)
-
-
 @app.route('/sendFriendRequest', methods=['POST'])
 def sendFriendRequest():
     data = request.get_json()
@@ -670,22 +793,19 @@ def respondFriendRequest():
     data = request.get_json()
     userID = data.get('userID')
     friendID = data.get('friendID')
+    if userID == friendID:
+        return jsonify({'error': 'userID and friendID are the same'}), 400  # Adjust the HTTP status code as needed
+
     action = data.get('action')  # 'accept' or 'reject'
 
-    data = request.get_json()
-    userID = data.get('userID')
-    friendID = data.get('friendID')
-    action = data.get('action')  # 'accept' or 'reject'
-
+    print("respondfriendrequest data: ", data)
     # Call the respondFriendRequest method from the UserHandler instance
     success, message = userHandler.respondFriendRequest(userID, friendID, action)
-
+    print(success, message)
     if success:
-        return jsonify({'message': message}), 200
+        return jsonify({'success': success}), 200
     else:
         return jsonify({'error': message}), 400  # Adjust the HTTP status code as needed
-
-
 @app.route('/S3FriendList', methods=['POST'])
 def S3FriendList():
     data = request.get_json()
@@ -694,31 +814,23 @@ def S3FriendList():
 
     friendList = friends
 
-    if friendList == []:
-        response = {'list': [],
-                    'text': [],
-                    'size': 0,
-                    'image': [],
-                    'type': [],
-                    'time': [],
-                    'friend': [],
-                    'comment': [],
-                    'empty': True,
-                    }
 
+    friends = dynamo.get_item(TableName='Users', Key={'userID': {'S': user}})
+    friendList = friends['Item']['friends']['L']
     total = []
+
     friendPost = []
     timePost = []
     CommentList = []
     for i in range(len(friendList)):
 
-        friend = friendList[i]
+        friend = friendList[i]['S']
         dirLen = len(str(friend + "/posts/"))
         friendResp = s3.list_objects(
             Bucket=bucket,
             Prefix=friend + "/posts",
             Marker=friend + "/posts/",
-            MaxKeys=12,
+            MaxKeys=18,
         )
 
         count1 = 0
@@ -789,7 +901,6 @@ def S3FriendList():
                 response = object.get()
                 file_stream = response['Body']
                 text = file_stream.read().decode('utf-8')
-
                 total[row].append(text)
     print(total)
     total.sort(key=lambda x: x[4], reverse=True)
@@ -816,8 +927,6 @@ def S3FriendList():
                 'comment': CommentList,
                 'empty': False,
                 }
-
-    print(response)
     return jsonify(response)
 
 
@@ -862,4 +971,4 @@ def uploadComment():
 
 # Running app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=5000)
+    app.run(host='0.0.0.0', debug=True , port=5000)
