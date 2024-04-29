@@ -12,7 +12,7 @@ const CommentView = ({navigation, route}) => {
 
 
 
-    const baseUrl = 'http://192.168.1.253:5000'; // Define your base URL here
+    const baseUrl = 'http://10.155.229.89:5000'; // Define your base URL here
 
 
 
@@ -129,31 +129,48 @@ const CommentView = ({navigation, route}) => {
 
         <View style={styles.container}>
             <View style={styles.exit}>
-                <Button title={"X"} onPress={() => navigation.navigate('Root')} />
+                <Button title={"X"} color='black' onPress={() => navigation.navigate('Root')} />
             </View>
             <View style={styles.postView}>
                 <Image style={styles.imageView} source={{ uri: route.params.source}} />
-                <Text>by {route.params.friend} at {route.params.time}</Text>
-                <Text>{route.params.desc}</Text>
-                <TouchableOpacity onPress={commentPost} style={{flexDirection:"row",justifyContent: "flex-end"}}><Text>Comment</Text></TouchableOpacity>
-                {editComment &&
+                <Text style={styles.postInfo}>by {route.params.friend} at {route.params.time}</Text>
+                <Text style={styles.postDescription}>{route.params.desc}</Text>
+                <TouchableOpacity style={styles.buttonContainer} onPress={commentPost}>
+                    <Text style={styles.buttonText}>Comment</Text>
+                </TouchableOpacity>             
+                    {editComment &&
                     <View>
-                        <TextInput value={userComment} onChangeText={setComment}></TextInput>
-                        <View style={{flexDirection: "row", justifyContent:"space-evenly"}}>
-                            <TouchableOpacity onPress={() => {setEdit(false), setComment('')}}><Text>Cancel</Text></TouchableOpacity>
-                            <TouchableOpacity onPress={() => uploadComment()} ><Text>Post</Text></TouchableOpacity>
-                        </View>
+                    <View style={styles.commentInput}>
+                        <TextInput
+                            value={userComment}
+                            onChangeText={setComment}
+                            placeholder="Add a comment..."
+                            placeholderTextColor="#888"
+                        />
+                    </View>                       
+                    <View style={styles.commentActions}>
+                    <TouchableOpacity style={styles.buttonContainer} onPress={() => { setEdit(false); setComment(''); }}>
+                        <Text style={styles.buttonText}>Cancel</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.buttonContainer} onPress={uploadComment}>
+                        <Text style={styles.buttonText}>Post</Text>
+                    </TouchableOpacity>
+                    </View>
                     </View>}
-                <View style={{borderStyle: "solid",borderWidth: 2, maxHeight:"30%"}}>
+                <View style={{ maxHeight:"30%"}}>
                     <FlatList
                         data={commList}
                         extraData={load}
-                        style={{width: "100%", }}
+                        style={styles.commentList}
                         renderItem={({item, index2}) => (
-                            <View>
-                                <Text>{item.userID}: {item.comment}</Text>
+                            <View style={styles.commentItem}>
+                                 <Text>{item.userID}: {item.comment}</Text>
                             </View>
-                        )}/>
+                            
+                        )}
+                        
+                        />
                 </View>
             </View>
         </View>
@@ -166,36 +183,114 @@ const CommentView = ({navigation, route}) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ecf0f1',
-        marginStart: 0,
-        flexDirection: "column"
+        backgroundColor: '#2193b0',
+        padding: 10,
     },
-    postView:{
-        marginTop: 5,
-        backgroundColor: '#2196F3'
+
+    commentList: {
+        borderStyle: "solid",
+        borderWidth: 2,
+        marginTop: 10,
+        borderColor: "#ccc",
+        borderRadius: 5,
+        padding: 5,
 
     },
-    imageView:{
-        maxWidth: "100%",
-        height: "55%",
-        marginBottom: 5,
-        resizeMode: "contain",
-        alignItems: "center",
+    commentItem: {
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: "#2193b0", // Match the background color of the container
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    fontSize: 16,
+    lineHeight: 20, // Adjust as needed
+},
+    postView: {
+        marginTop: 10,
+        backgroundColor: '#fff',
+        paddingHorizontal: 10,
+        paddingVertical: 15,
+        borderRadius: 10,
+        backgroundColor: '#2196F3',
 
-        borderWidth: 3,
-        zIndex: 3
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    imageView: {
+        width: '100%',
+        height: 300,
+        marginBottom: 10,
+        resizeMode: 'cover',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
     },
     buttons: {
         flexDirection: 'row',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        marginTop: 10,
     },
     exit: {
-        justifyContent : "flex-start",
-        flexWrap: 'wrap',
-
-    }
+        alignSelf: 'flex-end',
+        marginBottom: 10,
+        color: 'red',
+        
+    },
+    commentInput: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 5,
+        padding: 8,
+        marginBottom: 10,
+    },
+    commentActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    commentButton: {
+        backgroundColor: '#fff',
+        padding: 10,
+        borderRadius: 5,
+    },
+    commentButtonText: {
+        color: '#2193b0',
+        fontWeight: 'bold',
+    },
+    postInfo: {
+        fontSize: 14,
+        color: '#777',
+        marginBottom: 5,
+    },
+    postDescription: {
+        fontSize: 16,
+        lineHeight: 22,
+        color: '#333',
+    },
+    buttonContainer: {
+        backgroundColor: '#fff',
+        padding: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 10,
+    },
+    buttonText: {
+        color: '#2193b0',
+        fontWeight: 'bold',
+    },
+    
 });
+
 
 
 export default CommentView;

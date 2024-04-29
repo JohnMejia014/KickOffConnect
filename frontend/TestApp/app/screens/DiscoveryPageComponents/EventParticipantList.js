@@ -3,7 +3,7 @@ import { Modal, View, Text, TouchableOpacity, ScrollView, Image } from 'react-na
 import { LinearGradient } from 'expo-linear-gradient';
 
 const EventParticipantList = ({ participants, modalVisible, closeModal }) => {
-  const BASE_URL = 'http://192.168.1.119:5000';
+  const BASE_URL = 'http://10.155.229.89:5000';
   const [participantsProfilePic, setParticipantsProfilePic] = useState([])
   useEffect(() => {
     const fetchParticipantsProfile = async () => {

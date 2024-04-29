@@ -14,7 +14,7 @@ import EventParkMarkers from './DiscoveryPageComponents/EventParkMarkers';
 import { useIsFocused } from '@react-navigation/native'; // Import useIsFocused hook
 
 const DiscoveryScreen = ({route}) => {
-  const BASE_URL = 'http://192.168.1.119:5000';
+  const BASE_URL = 'http://10.155.229.89:5000';
   const [userInfo, setUserInfo] = useState(route.params?.userInfo || {});
   const [location, setLocation] = useState(null);
   const [longitude, setLongitude] = useState(null);

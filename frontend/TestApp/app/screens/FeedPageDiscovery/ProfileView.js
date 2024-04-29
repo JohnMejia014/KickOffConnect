@@ -3,23 +3,25 @@ import React,{useState, useEffect, useRef} from 'react';
 import {Modal, Button, View, Text, StyleSheet, Image,  TextInput, SafeAreaView, TouchableOpacity, FlatList,  ScrollView, ActivityIndicator} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect from React Navigation
-import ProfileEventList from './DiscoveryPageComponents/ProfileEventList';
+import ProfileEventList from '../DiscoveryPageComponents/ProfileEventList';
+
 import axios from 'axios';
 import { useScrollToTop} from "@react-navigation/native";
 import {Video} from "expo-av";
-import FriendsList from './ProfileComponents/FriendsList';
-import ProfileFeedList from './ProfileComponents/ProfileFeedList';
-import ChangeProfilePictureModal from './ProfileComponents/ChangeProfilePictureModal';
+import FriendsList from '../ProfileComponents/FriendsList';
+import ProfileFeedList from '../ProfileComponents/ProfileFeedList';
+import ChangeProfilePictureModal from '../ProfileComponents/ChangeProfilePictureModal';
 import { Feather } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
-const ProfileScreen = ({route }) => {
-  const [friendPage, setFriendPage] = useState(false);
+const ProfileView = ({route }) => {
+    console.log("route", route);
+  const [friendPage, setFriendPage] = useState(true);
 
-  const [userInfo, setUserInfo] = useState(route.params?.userInfo || {});
-  const [friendInfo, setFriendInfo] = useState(route.params?.friendInfo || {});
-  console.log("friendInfo", friendInfo);
+  const [userInfo, setUserInfo] = useState(route.params?.params?.friendInfo || {});
+  const [friendInfo, setFriendInfo] = useState(route.params?.params?.friendInfo || {});
+  console.log("friendInfo", userInfo);
   // Now setUserInfo will update userInfo based on the initialUserInfo value
-  const [RealuserInfo, setRealUserInfo] = useState(route.params?.userInfo || {});
+  const [RealuserInfo, setRealUserInfo] = useState(route.params?.params?.friendInfo || {});
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
   const [activeTab, setActiveTab] = useState('joined'); // State for the active tab
@@ -529,52 +531,7 @@ const ProfileScreen = ({route }) => {
                   </View>
                 </View>
 
-              {/* Friend Requests */}
-              {!friendPage && (
-                <TouchableOpacity onPress={handleFriendRequestsPress} style={styles.friendRequestsButton}>
-                <Feather name="mail" size={24} color="black" style={styles.mailIcon} />
-                <Text style={styles.friendRequestsText}>Friend Requests</Text>
-                <Text style={styles.friendRequestsCount}>{userInfo.friendRequests.length}</Text>
-              </TouchableOpacity>
-               )}
-               {/* Modal for Friend Requests */}
-               <Modal visible={friendRequestsModalVisible} animationType="slide" transparent={true}>
-                <View style={styles.modalBackground}>
-                  <LinearGradient colors={['#e3f2fd', '#bbdefb']} style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Friend Requests:</Text>
-                    <ScrollView style={styles.modalContent}>
-                      {userInfo.friendRequests.map((request, index) => (
-                        <View key={index} style={styles.friendRequestItem}>
-                        <View style={styles.friendRequestItemLeft}>
-                          <Image
-                            source={{ uri: friendRequestProfilePicList[request] || 'default-profile.png' }}
-                            style={styles.friendRequestProfilePic}
-                          />
-                          <Text style={styles.friendRequestName}>{request}</Text>
-                        </View>
-                        <View style={styles.friendRequestItemRight}>
-                          <TouchableOpacity
-                            style={[styles.friendRequestButton, styles.acceptButton]}
-                            onPress={() => handleRespondFriendRequest(request, 'accept')}
-                          >
-                            <FontAwesome name="check" size={20} color="green" />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.friendRequestButton, styles.declineButton]}
-                            onPress={() => handleRespondFriendRequest(request, 'decline')}
-                          >
-                            <FontAwesome name="times" size={20} color="red" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                      ))}
-                    </ScrollView>
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setFriendRequestsModalVisible(false)}>
-                      <Text style={styles.closeButtonText}>Close</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                </View>
-              </Modal>
+
               {/* Label for Posts */}
               <Text style={[styles.eventsLabel, { color: getLabelColor() }]}>Posts</Text>
 
@@ -647,7 +604,7 @@ const ProfileScreen = ({route }) => {
               handleFriendPress={handleFriendPress}
               closeModal={() => setModalVisible(false)}
               handleRemovePress={removeFriend}
-              friendPage={friendPage}
+              friendPage={true}
               friendPPs={friendProfilePicList}
       />
           </View>
@@ -1019,4 +976,4 @@ paddingTop: 10,
     },
     
     });
-export default ProfileScreen;
+export default ProfileView;

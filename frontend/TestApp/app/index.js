@@ -18,16 +18,16 @@ function AppScreen() {
   const route = useRoute();
   let { userInfo } = route.params  || {};
   const friendInfo = route.params?.source?.friendInfo || {};
-  const friendStatus = route.params?.source?.friendStatus || {};
+  const friendStatus = route.params?.source?.friendStatus;
 
 
 
-  console.log(route)
+  console.log("friendstatus == ", friendStatus);
 
   if( friendStatus === true) {
       userInfo = route.params.source.userInfo;
 
-      console.log("true branch")
+      console.log("************true branch*************")
       console.log(userInfo)
       console.log(friendInfo)
       console.log(friendStatus)

@@ -61,7 +61,7 @@ export default function ImageUpload(props) {
     const toServer = async (mediaFile) => {
         let type = mediaFile.type;
         let schema = "http://";
-        let host = "http://192.168.1.119:5000";
+        let host = "http://10.155.229.89:5000";
         let route = "";
         let port = "5000";
         let url = "";

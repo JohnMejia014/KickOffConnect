@@ -14,7 +14,7 @@ const PostObject=({navigation, route})=>{
     const [base, setBase] = useState(null)
     const [type, setType] = useState(null)
     const [user, setUser] = useState(route.params.source)
-    const baseUrl = 'http://192.168.1.253:5000';// Define your base URL here
+    const baseUrl = 'http://10.155.229.89:5000';// Define your base URL here
 
 
 

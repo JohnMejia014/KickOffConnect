@@ -15,7 +15,7 @@ const EventComponent = ({ initialEventInfo, onClose, userInfo, joinEvent, leaveE
   const eventHost = eventInfo?.eventHost || 'Unknown Host';
   const eventDescription = eventInfo?.eventDescription || 'No Description';
   const eventAddress = eventInfo?.eventAddress || 'No Address';
-  const BASE_URL = 'http://192.168.1.119:5000';
+  const BASE_URL = 'http://10.155.229.89:5000';
 
   const [eventInfo, setEventInfo] = useState(initialEventInfo);
   const [profilePic, setProfilePic] = useState(null);

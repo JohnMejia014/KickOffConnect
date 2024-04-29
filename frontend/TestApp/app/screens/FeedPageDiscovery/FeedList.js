@@ -19,7 +19,7 @@ import {max, min} from "lodash";
 
 
 const FeedList = ({navigation, route}) => {
-    const baseUrl = 'http://192.168.1.253:5000'; // Define your base URL here
+    const baseUrl = 'http://10.155.229.89:5000'; // Define your base URL here
     const [searchQuery, setSearchQuery] = useState('');
     const [feed, setFeed] = useState([]);
     const [imageL, setImageL] = useState([]);
@@ -166,7 +166,7 @@ const FeedList = ({navigation, route}) => {
                                             <Text style={styles.searchResults}> Add </Text>
                                         </TouchableOpacity> }
                                         {fRequest && <Text style={styles.searchResults}> Sent </Text>}
-                                        <TouchableOpacity onPress={() => navigation.navigate("AppScreen",{ screen: 'Profile', source: {userInfo: userInfo.params, friendStatus: true, friendInfo:friendInfo.Items[0]}})}>
+                                        <TouchableOpacity onPress={() => navigation.navigate("ProfileView",{params: {userInfo: userInfo.params, friendStatus: true, friendInfo:friendInfo.Items[0]}})}>
                                             <Text style={styles.searchResults}>View Profile</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -176,7 +176,7 @@ const FeedList = ({navigation, route}) => {
 
                         }
                     </View>
-                    <View style={styles.mainPostView}>
+                    <View style={styles.postView}>
                         {(length < 1)?
                             <ActivityIndicator collapsable={true} size={"large"}/>
                             :
@@ -203,8 +203,13 @@ const FeedList = ({navigation, route}) => {
                                                             <Image style={styles.imageView} source={{uri: imageL[index]}}/>
                                                         </TouchableOpacity>
                                                     }
-                                                    <Text>by {friendL[index]} at {time[index]}</Text>
-                                                    <Text>{desc[index]}</Text>
+                                                   <View style={styles.postTitle}>
+                                                    <Text style={styles.postMeta}>
+                                                        by <Text style={styles.friendName}>{friendL[index]}</Text> at <Text style={styles.postTime}>{time[index]}</Text>
+                                                    </Text>
+                                                    <Text style={styles.postDescription}>{desc[index]}</Text>
+                                                </View>
+
                                                 </View>
                                             </View>
                                         </TouchableWithoutFeedback>
@@ -233,159 +238,92 @@ export default FeedList;
 //for expandable try doing slicing for loading more of data flatlist is pulling
 
 const styles = StyleSheet.create({
-
-    Heading:{
-        fontSize:32,
-        marginTop:60,
-        marginLeft:15,
-        fontWeight:'bold',
-    },
-    TextInput:{
-        height:40,
-        width:"85%",
-        backgroundColor: '#EBEBEB',
-        borderRadius:20,
-        paddingLeft:15,
-        marginTop:20
-    },
-    mainPostView: {
-        width: "100%",
-        zIndex: 1,
+    gradientContainer: {
+        flex: 1,
     },
     mainSearch: {
-        zIndex: 2,
-    },
-    titleView:{
-        marginLeft:15,
-    },
-    postTitle:{
-        width:"90%",
-        borderStyle: "solid",
-        borderWidth: 10,
-        borderColor: "black",
-    },
-    postView:{
-        width:'100%',
-        alignItems: "center",
-        marginTop: 10,
-    },
-    userPhoto:{
-        width: 50,
-        height: 50
-    },
-    imageView:{
-        maxWidth: "100%",
-        height: 200,
-        resizeMode: "contain",
-        zIndex: 3
+        paddingHorizontal: 10,
+        paddingTop: 10,
+        paddingBottom: 5,
+        backgroundColor: '#aed9e0', // Light blue background for search bar
+        borderBottomWidth: 1,
+        borderBottomColor: '#7fadb5',
     },
     search: {
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        zIndex: 2,
-
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#d6eaf8', // Lighter blue background for search input area
+        borderRadius: 20,
+        paddingHorizontal: 10,
     },
-    searchResponse: {
-        width: "90%",
-        zIndex: 2,
-    },
-    searchView: {
-        display:"flex",
-        flexDirection:"row",
-        justifyContent:"space-evenly",
-        zIndex: 2,
-
-    },
-    searchResults: {
-        display: "flex",
-        justifyContent:"space-evenly",
-        flexDirection: "row",
-        textAlign:"center",
-        zIndex: 2,
+    TextInput: {
+        flex: 1,
+        height: 40,
+        marginLeft: 10,
+        color: '#3498db', // Dark blue text color for search input
     },
     searchButton: {
-
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        width: "15%",
-        textAlign: "auto",
-        paddingVertical: 10,
+        paddingHorizontal: 10,
     },
     queryText: {
-
         fontSize: 14,
-        backgroundColor: "#2196F3",
+        color: '#fff',
+        backgroundColor: '#3498db', // Dark blue background for search button
         borderRadius: 2,
-        color: 'white',
-        fontWeight: '200',
-        elevation: 4,
-        marginVertical: 10,
-        textAlignVertical: "center",
-        paddingHorizontal: 5,
-        paddingVertical: 10
-
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        fontWeight: 'bold', // Bold text for search button
     },
     clearText: {
-
-        elevation: 4,
         fontSize: 14,
-        backgroundColor: "red",
+        color: '#fff',
+        backgroundColor: '#2980b9', // Slightly lighter blue background for clear button
         borderRadius: 2,
-        color: 'white',
-        fontWeight: '200',
-        marginVertical: 10,
-        textAlignVertical: "center",
-        paddingHorizontal: 5,
-        paddingVertical: 10
-
-
-    },commentLayout:{
-        flexDirection: "row",
-
-
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        marginLeft: 5,
     },
-    // postTitle: {
-    //     width: "100%",
-    //     flexDirection: 'column',
-    //     padding: 10,
-    //     borderBottomWidth: 1,
-    //     borderBottomColor: "#ccc",
-    //   },
-    //   postView: {
-    //     width: '100%',
-    //     alignItems: "center",
-    //     marginTop: 10,
-    //     paddingBottom: 10,
-    //   },
-    //   imageView: {
-    //     width: "100%",
-    //     height: 300,
-    //     resizeMode: "cover",
-    //     marginBottom: 10,
-    //   },
-      postContent: {
-        paddingHorizontal: 10,
-        marginBottom: 10,
-      },
-      postHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 5,
-      },
-      friendName: {
+    postView: {
+        backgroundColor: '#aed9e0', // Light gray-blue background for posts
+        marginVertical: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#bdc3c7', // Lighter gray-blue border color
+        overflow: 'hidden',
+    },
+    imageView: {
+        width: '100%',
+        height: 200,
+        resizeMode: 'cover',
+    },
+    userPhoto: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 10,
+    },
+   
+    postTitle: {
+        paddingHorizontal: 15,
+        paddingTop: 10,
+    },
+    friendName: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginRight: 10,
-      },
-      postTime: {
+        color: '#3498db', // Dark blue color for friend name
+    },
+    postTime: {
         fontSize: 12,
-        color: "#888",
-      },
-      postDescription: {
+        color: '#2980b9', // Slightly lighter blue color for post times
+        marginBottom: 5,
+    },
+    postDescription: {
         fontSize: 14,
         lineHeight: 20,
-      },
-
-})
+        color: '#154360', // Deep blue color for post descriptions
+    },
+    postMeta: {
+        marginBottom: 5,
+    },
+});

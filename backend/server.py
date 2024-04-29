@@ -7,7 +7,8 @@ from boto3.dynamodb.conditions import Key, Attr
 
 import json
 import requests
-
+from PIL import Image
+import io
 # Set the working directory to the root of the project
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -323,6 +324,20 @@ def updateProfilePic():
         print(e)
         return jsonify({'error': 'Failed to update profile picture'}), 500
 
+def compress_image(image_data, quality=75):
+    # Decode base64 image data
+    img = Image.open(BytesIO(base64.b64decode(image_data)))
+
+    # Resize the image (adjust dimensions as needed)
+    resized_img = img.resize((800, 600))  # You can adjust the dimensions here
+
+    # Compress and convert the resized image to bytes
+    output = BytesIO()
+    resized_img.save(output, format='JPEG', quality=quality)
+    compressed_image = output.getvalue()
+    
+    return compressed_image
+
 
 @app.route('/S3Uploader', methods=['POST'])
 def S3Uploader():
@@ -335,6 +350,8 @@ def S3Uploader():
     type = data.get('type')
 
     user = data.get('user')
+    print(image)
+    # image = compress_image(image, quality=75)  # Adjust quality as needed
 
     rekognition = aws_mag_con.client('rekognition')
 
@@ -343,14 +360,18 @@ def S3Uploader():
     if text == '':
         text = 'No text'
 
-    payload = {"providers": "microsoft,openai", "language": "en", "text": text}
-    response = requests.post(url, json=payload, headers=header)
-    result = json.loads(response.text)
-    if result['microsoft']['nsfw_likelihood'] > 3:
-        return jsonify({
-            'success': False,
-            'text': "Message contains Inappropriate Content",
-        })
+        # Send image data to Rekognition for moderation label detection
+    image_bytes = base64.b64decode(image)
+    # safety = rekognition.detect_moderation_labels(Image={'Bytes': image_bytes})
+
+    # payload = {"providers": "microsoft,openai", "language": "en", "text": text}
+    # response = requests.post(url, json=payload, headers=header)
+    # result = json.loads(response.text)
+    # if result['microsoft']['nsfw_likelihood'] > 3:
+    #     return jsonify({
+    #         'success': False,
+    #         'text': "Message contains Inappropriate Content",
+    #     })
 
     try:
         check = s3.list_objects_v2(Bucket=bucket, Prefix='posts/' + user + str(postTitle) + "/")
@@ -365,21 +386,21 @@ def S3Uploader():
     text_file.close()
 
     if type == 'image':
-        image = BytesIO(base64.b64decode(image))
-        safety = rekognition.detect_moderation_labels(Image={'Bytes': image.read()})
+        # image = BytesIO(base64.b64decode(image))
+        # safety = rekognition.detect_moderation_labels(Image={'Bytes': image.read()})
 
-        for label in safety['ModerationLabels']:
+        # for label in safety['ModerationLabels']:
 
-            if label['ParentName'] in badLabels:
+        #     if label['ParentName'] in badLabels:
 
-                if label['Confidence'] > 20:
-                    response = {
-                        'success': False,
-                        'text': "Image violates Guidelines",
-                    }
-                    return jsonify(response)
+        #         if label['Confidence'] > 20:
+        #             response = {
+        #                 'success': False,
+        #                 'text': "Image violates Guidelines",
+        #             }
+        #             return jsonify(response)
 
-        print(safety)
+        # print(safety)
         image_file = Image.open(image)
         image_file.save("image.jpg")
 
