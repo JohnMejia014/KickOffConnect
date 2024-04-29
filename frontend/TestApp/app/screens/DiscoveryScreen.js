@@ -12,6 +12,8 @@ import axios from 'axios';
 import EventFilterModal from './DiscoveryPageComponents/EventFilterModal';
 import EventParkMarkers from './DiscoveryPageComponents/EventParkMarkers';
 import { useIsFocused } from '@react-navigation/native'; // Import useIsFocused hook
+import CustomIcon from './DiscoveryPageComponents/CustomIcon'; // Import your custom icon component
+
 
 const DiscoveryScreen = ({route}) => {
   const BASE_URL = 'http://10.155.229.89:5000';
@@ -82,23 +84,9 @@ useEffect(() => {
 }, [isFocused]);
 
 useEffect(() => {
-  const fetchData = async () => {
+  console.log("focused");
     // Fetch data again when the component is focused
-    if (isFocused && placesFetched ) {
-      console.log("selectedFilters: ", selectedFilters);
-      const response = await fetch(`${BASE_URL}/getEvents`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ filters: selectedFilters }),
-      });
-      const eventData = await response.json();
-      //handleGetEvents(eventData); // Update events state or handle the data as needed
-    }
-  };
-
-  fetchData(); // Initial fetch when component mounts
+    if (isFocused && placesFetched ) {handleGetEvents(selectedFilters);}
 
   // Cleanup function
   return () => {
@@ -183,8 +171,8 @@ useEffect(() => {
 //   };
 
   const handleGetEvents = async (eventFilters) => {
-    console.log("event filters: ", eventFilters);
     setSelectedFilters(eventFilters);
+
     try {
       const response = await axios.post(`${BASE_URL}/getEvents`, {
         userID: userInfo.userID,
@@ -195,10 +183,10 @@ useEffect(() => {
       });
 
       const eventsRetrieved = response.data.events;
+      console.log('eventsretriece: ', eventsRetrieved);
       setEvents(eventsRetrieved);
       setPlacesByAddress(eventsRetrieved);
       // Combine events with existing places data
-      console.log("Events retrieved: ", eventsRetrieved);
       if (eventsRetrieved && typeof eventsRetrieved === 'object') {
       } else {
         console.log('No events retrieved or eventsRetrieved is not an array');
@@ -379,22 +367,23 @@ useEffect(() => {
                {/* Render EventMarkers component */}
                {Object.keys(placesByAddress).map((address) => (
             <Marker
-              key={address}
-              coordinate={{
-                latitude:
-                  placesByAddress[address].places[0]?.geometry?.location.lat ||
-                  placesByAddress[address].events[0]?.eventLat ||
-                  0,
-                longitude:
-                  placesByAddress[address].places[0]?.geometry?.location.lng ||
-                  placesByAddress[address].events[0]?.eventLong ||
-                  0,
-              }}
-              title={address}
-              onPress={() => handleMarkerPress(placesByAddress[address])}
-              // Set marker color based on the condition
-              pinColor={placesByAddress[address].places.length > 0 ? 'red' : 'blue'}
-            />
+            key={address}
+            coordinate={{
+              latitude:
+                placesByAddress[address]?.places[0]?.geometry?.location.lat ||
+                placesByAddress[address]?.events[0]?.eventLat ||
+                0,
+              longitude:
+                placesByAddress[address]?.places[0]?.geometry?.location.lng ||
+                placesByAddress[address]?.events[0]?.eventLong ||
+                0,
+            }}
+            title={address}
+            onPress={() => handleMarkerPress(placesByAddress[address])}
+          >
+            {/* Use your CustomIcon component as the marker's icon */}
+            <CustomIcon markerInfo={placesByAddress[address].places.length > 0 ? { park: true } : { sport: placesByAddress[address].events[0]?.eventSports[0]}} />
+          </Marker>
           ))}
 
               </MapView>
@@ -473,7 +462,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: 'blue',
+    backgroundColor: 'lightgreen',
     borderRadius: 25,
     padding: 16,
     zIndex: 1,
@@ -488,7 +477,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     left: 16,
-    backgroundColor: 'green',
+    backgroundColor: 'lightgreen',
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 20,
