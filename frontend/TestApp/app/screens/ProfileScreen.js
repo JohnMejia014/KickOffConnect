@@ -13,13 +13,11 @@ import ChangeProfilePictureModal from './ProfileComponents/ChangeProfilePictureM
 import { Feather } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 const ProfileScreen = ({route }) => {
-  console.log("profilepage route: ", route.params);
   const [friendSelected, setFriendSelected] = useState(null);
   const [index, setIndex] = useState(0); // State for the selected tab index
   const [activeTab, setActiveTab] = useState('joined'); // State for the active tab
   const [postsCount, setPostsCount] = useState(0);
   const BASE_URL = 'http://192.168.1.119:5000';
-  console.log(route.params.params.friendStatus);
   if(route.params.params.friendStatus){const initFriend = true}else{ const initFriend = false}
   const [friendPage, setFriendPage] = useState(false);
 
@@ -39,7 +37,10 @@ const ProfileScreen = ({route }) => {
   const [friendRequests, setFriendRequests] = useState(userInfo.friendRequests);
   const [friendRequestsModalVisible, setFriendRequestsModalVisible] = useState(false);
   const [loading2, setLoading2] = useState(false);
+  const [friendProfilePicList, setFriendProfilePicList] = useState({});
+  const [friendRequestProfilePicList, setFriendRequestProfilePicList] = useState({});
 
+  const [profilePic, setProfilePic] = useState(null);
   const [feed, setFeed] = useState([]);
   const [imageL, setImageL] = useState([]);
   const [length, setLength] = useState(0)
@@ -98,7 +99,87 @@ const ProfileScreen = ({route }) => {
       // Handle error if needed
     }
   };
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/GetProfileURL`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userID: userInfo.userID,  // Use 'userID' instead of 'user' to match the Flask route
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+  
+      const data = await response.json();
+      // Assuming data.friend_urls is the object containing friend IDs and profile URLs
+      // You can use Object.entries() to iterate over the object
+      setProfilePic(data.url);
 
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+  const fetchFriendRequestProfile = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/GetFriendsProfileURLs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          friendList: userInfo.friendRequests
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+  
+      const data = await response.json();
+      // Assuming data.friend_urls is the object containing friend IDs and profile URLs
+      // You can use Object.entries() to iterate over the object
+      setFriendRequestProfilePicList(data.friend_urls);
+
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+  const fetchProfiles = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/GetFriendsProfileURLs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userID: userInfo.userID,  // Use 'userID' instead of 'user' to match the Flask route
+          friendList: userInfo.friends
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch profiles');
+      }
+  
+      const data = await response.json();
+      // Assuming data.friend_urls is the object containing friend IDs and profile URLs
+      // You can use Object.entries() to iterate over the object
+      setFriendProfilePicList(data.friend_urls);
+
+    } catch (error) {
+      console.error('Error fetching profiles:', error);
+    }
+  };
+  // Call the fetchProfiles function
+
+  const handleMediaPress = async =>{
+
+  }
   const fetchFriends = async () => {
     try {
       const response = await fetch(`${BASE_URL}/getFriends`, {
@@ -317,6 +398,9 @@ const ProfileScreen = ({route }) => {
     fetchEventsHosted();
     fetchEventsJoined();
     fetchEventsInvited();
+    fetchProfiles();
+    fetchFriendRequestProfile();
+    fetchUserProfile();
   }, []);
 
   // Use useFocusEffect to refetch user info when the screen is focused
@@ -327,6 +411,9 @@ const ProfileScreen = ({route }) => {
     setModalVisible(false);
     console.log("page reset")
       fetchUserInfo(); // Fetch user info when screen is focused
+      fetchProfiles();
+    fetchUserProfile();
+    fetchFriendRequestProfile();
     }, [])
   );
  
@@ -396,9 +483,9 @@ const ProfileScreen = ({route }) => {
               {/* Profile Picture */}
               <TouchableOpacity onPress={toggleChangePictureModal}>
               <View style={styles.profilePictureContainer}>
-                {userInfo.profilePic ? (
+                {profilePic ? (
                   <Image
-                    source={{ uri: userInfo.profilePic }}
+                    source={{ uri: profilePic }}
                     style={styles.profilePicture}
                   />
                 ) : (
@@ -444,20 +531,29 @@ const ProfileScreen = ({route }) => {
                     <Text style={styles.modalTitle}>Friend Requests:</Text>
                     <ScrollView style={styles.modalContent}>
                       {userInfo.friendRequests.map((request, index) => (
-                        <View key={index} style={styles.friendContainer}>
-                          <TouchableOpacity onPress={() => handleFriendPress(request)}>
-                            <View style={styles.friendInfo}>
-                              <Image source={{ uri: request.profilePic }} style={styles.profilePic} />
-                              <Text style={styles.friendName}>{request}</Text>
-                            </View>
+                        <View key={index} style={styles.friendRequestItem}>
+                        <View style={styles.friendRequestItemLeft}>
+                          <Image
+                            source={{ uri: friendRequestProfilePicList[request] || 'default-profile.png' }}
+                            style={styles.friendRequestProfilePic}
+                          />
+                          <Text style={styles.friendRequestName}>{request}</Text>
+                        </View>
+                        <View style={styles.friendRequestItemRight}>
+                          <TouchableOpacity
+                            style={[styles.friendRequestButton, styles.acceptButton]}
+                            onPress={() => handleRespondFriendRequest(request, 'accept')}
+                          >
+                            <FontAwesome name="check" size={20} color="green" />
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => handleRespondFriendRequest(request, 'accept')}>
-                            <FontAwesome name="check" size={24} color="green" />
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={() => handleRespondFriendRequest(request, 'reject')}>
-                            <FontAwesome name="times" size={24} color="red" />
+                          <TouchableOpacity
+                            style={[styles.friendRequestButton, styles.declineButton]}
+                            onPress={() => handleRespondFriendRequest(request, 'decline')}
+                          >
+                            <FontAwesome name="times" size={20} color="red" />
                           </TouchableOpacity>
                         </View>
+                      </View>
                       ))}
                     </ScrollView>
                     <TouchableOpacity style={styles.closeButton} onPress={() => setFriendRequestsModalVisible(false)}>
@@ -539,6 +635,7 @@ const ProfileScreen = ({route }) => {
               closeModal={() => setModalVisible(false)}
               handleRemovePress={removeFriend}
               friendPage={friendPage}
+              friendPPs={friendProfilePicList}
       />
           </View>
           </SafeAreaView>
@@ -562,6 +659,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'red',
   },
+  
   profilePictureContainer: {
     marginTop: 50,
     width: 100,
@@ -792,14 +890,7 @@ paddingTop: 10,
         textAlign: 'center',
       },
   
-      friendRequestItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottomWidth: 1,
-        borderBottomColor: 'lightblue',
-        paddingVertical: 10,
-      },
+    
       friendRequestText: {
         fontSize: 16,
         flex: 1, // Take up remaining space in the row
@@ -864,19 +955,54 @@ paddingTop: 10,
       marginVertical: 10,
       alignItems: 'center', // Center the content horizontally
     },
+    profilePic: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 10,
+    },
     friendContainer: {
       flexDirection: 'row',
-      justifyContent: 'right',
+      justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 10,
     },
-    friendInfo: {
+    friendRequestItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingEnd: 220,
+      justifyContent: 'space-between',
+      borderBottomWidth: 1,
+      borderBottomColor: 'lightblue',
+      paddingVertical: 10,
     },
-    friendName: {
+    friendRequestItemLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    friendRequestProfilePic: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 10,
+    },
+    friendRequestName: {
       fontSize: 16,
+    },
+    friendRequestItemRight: {
+      flexDirection: 'row',
+    },
+    friendRequestButton: {
+      padding: 5,
+      marginHorizontal: 5,
+      borderRadius: 5,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    acceptButton: {
+      backgroundColor: 'lightgreen',
+    },
+    declineButton: {
+      backgroundColor: 'salmon',
     },
     
     });

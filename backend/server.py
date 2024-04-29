@@ -433,7 +433,6 @@ def SearchUsers():
     friend = data.get('query')
     user = data.get('user')
 
-
     friends = dynamo.get_item(TableName='Users', Key={'userID': {'S': user}})
     friendList = friends['Item']['friends']['L']
     isFriend = False
@@ -489,8 +488,71 @@ def SearchUsers():
 
     return jsonify(response)
 
+@app.route('/GetFriendsProfileURLs', methods=['POST'])
+def GetFriendsProfileURLs():
+    data = request.get_json()
+    friendList = data.get('friendList')
+
+    # Initialize a dictionary to store friend IDs and profile URLs
+    friend_urls = {}
+
+    for friend_id in friendList:
+        # Query S3 to get the profile image URL for each friend
+        imgResp = s3.list_objects(
+            Bucket=bucket,
+            Prefix=friend_id + "/profile/",
+            Marker=friend_id + "/profile/",
+            MaxKeys=1,
+        )
+
+        # Check if the friend has a profile image
+        if 'Contents' in imgResp and len(imgResp['Contents']) > 0:
+            imgKey = imgResp['Contents'][0]['Key']
+            # Generate a presigned URL for the profile image
+            url = s3.generate_presigned_url('get_object',
+                                            Params={'Bucket': bucket, 'Key': imgKey},
+                                            ExpiresIn=3600)
+            # Add the friend ID and profile URL to the dictionary
+            friend_urls[friend_id] = url
+
+    response = {
+        'success': True,
+        'friend_urls': friend_urls,
+    }
+
+    return jsonify(response)
 
 
+@app.route('/GetProfileURL', methods=['POST'])
+def GetProfileURL():
+    data = request.get_json()
+    user = data.get('userID')
+
+    # Initialize a dictionary to store friend IDs and profile URLs
+
+        # Query S3 to get the profile image URL for each friend
+    imgResp = s3.list_objects(
+            Bucket=bucket,
+            Prefix=user + "/profile/",
+            Marker=user + "/profile/",
+            MaxKeys=1,
+        )
+    print(imgResp)
+        # Check if the friend has a profile image
+    if 'Contents' in imgResp and len(imgResp['Contents']) > 0:
+        imgKey = imgResp['Contents'][0]['Key']
+            # Generate a presigned URL for the profile image
+        url = s3.generate_presigned_url('get_object',
+                                            Params={'Bucket': bucket, 'Key': imgKey},
+                                            ExpiresIn=3600)
+            # Add the friend ID and profile URL to the dictionary
+        
+    response = {
+        'success': True,
+        'url': url,
+    }
+
+    return jsonify(response)
 
 
 

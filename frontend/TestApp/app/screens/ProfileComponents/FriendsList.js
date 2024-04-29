@@ -2,35 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const FriendsList = ({ modalVisible, friendsList, handleFriendPress, handleRemovePress, closeModal, friendPage }) => {
-    useEffect(() => {
-        fetchProfiles();
-      }, []);
-    
-      const fetchProfiles = async () => {
-        try {
-          const response = await fetch('http://192.168.1.119:5000/SearchUsers', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              user: 'your_user_id_here',
-              query: 'friend_id_or_username_here',
-            }),
-          });
-    
-          if (!response.ok) {
-            throw new Error('Failed to fetch profiles');
-          }
-    
-          const data = await response.json();
-          setFriendProfiles(data.profile);
-        } catch (error) {
-          console.error('Error fetching profiles:', error);
-        }
-      };
-
+const FriendsList = ({ modalVisible, friendsList, handleFriendPress, handleRemovePress, closeModal, friendPage, friendPPs }) => {
   if (!modalVisible) {
     return null;
   }
@@ -45,7 +17,7 @@ const FriendsList = ({ modalVisible, friendsList, handleFriendPress, handleRemov
               <View key={index} style={styles.friendContainer}>
                 <TouchableOpacity onPress={() => handleFriendPress(friend)}>
                   <View style={styles.friendInfo}>
-                    <Image source={{ uri: friendProfiles[friend.userID] || 'default_profile_image_url_here' }} style={styles.profilePic} />
+                  <Image source={{ uri: friendPPs[friend.userID] || 'default_profile_image_url_here' }} style={styles.profilePic} />
                     <Text style={styles.friendName}>{friend.userID}</Text>
                   </View>
                 </TouchableOpacity>
