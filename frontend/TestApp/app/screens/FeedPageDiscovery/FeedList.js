@@ -180,7 +180,7 @@ const FeedList = ({navigation, route}) => {
                         {(length < 1)?
                             <ActivityIndicator collapsable={true} size={"large"}/>
                             :
-                            <View style={{maxHeight: "100%"}}>
+                            <View style={{maxHeight: "90%"}}>
                                 <FlatList
                                     data = {feed}
                                     ref = {ref}

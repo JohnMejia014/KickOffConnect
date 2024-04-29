@@ -401,7 +401,7 @@ def S3Uploader():
         #             return jsonify(response)
 
         # print(safety)
-        image_file = Image.open(image)
+        image_file = Image.open(image_bytes)
         image_file.save("image.jpg")
 
 
@@ -555,6 +555,12 @@ def GetFriendsProfileURLs():
 
     # Initialize a dictionary to store friend IDs and profile URLs
     friend_urls = {}
+    if len(friendList) == 0:
+        response = {
+        'success': True,
+        'friend_urls': friend_urls,
+        }
+        return jsonify(response)
 
     for friend_id in friendList:
         # Query S3 to get the profile image URL for each friend
