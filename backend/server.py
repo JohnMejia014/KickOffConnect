@@ -481,6 +481,7 @@ def SearchUsers():
             isFriend = True
 
 
+    friendInfo, exists = userHandler.findUser(friend)
 
     table = dynamo_resource.Table('Users')
 
